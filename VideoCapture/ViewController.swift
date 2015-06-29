@@ -35,7 +35,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avVideoDispatchQueue: dispatch_queue_t?
     
     // extraction information
-    var extractAnnotations: [Annotation] = []
     var extractValues: [Float] = []
     
     var ciContext: CIContext?
@@ -691,14 +690,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func didChangeAnnotations(newAnnotations: [Annotation]) {
-        extractAnnotations = newAnnotations
         extractValues.removeAll()
         
         tableAnnotations?.reloadData()
     }
     
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
-        return extractAnnotations.count
+        guard let annotView = self.annotableView else {
+            return 0
+        }
+        return annotView.annotations.count
     }
     
     func tableView(tableView: NSTableView, dataCellForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSCell? {
@@ -717,20 +718,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
-        guard let col = tableColumn else {
+        guard let col = tableColumn, let annotView = self.annotableView else {
             return nil
         }
         
         // handle column identifiers
         switch (col.identifier) {
         case "color":
-            if row < extractAnnotations.count {
-                return extractAnnotations[row].color
+            if row < annotView.annotations.count {
+                return annotView.annotations[row].color
             }
             return nil
         case "name":
-            if row < extractAnnotations.count {
-                return extractAnnotations[row].name
+            if row < annotView.annotations.count {
+                return annotView.annotations[row].name
             }
             return "ROI"
         case "value":
@@ -744,13 +745,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func tableView(tableView: NSTableView, setObjectValue object: AnyObject?, forTableColumn tableColumn: NSTableColumn?, row: Int) {
-        guard let col = tableColumn else {
+        guard let col = tableColumn, let annotView = self.annotableView else {
             return
         }
         
-        if "name" == col.identifier && row < extractAnnotations.count {
+        if "name" == col.identifier && row < annotView.annotations.count {
             if let newName = object as? String {
-                extractAnnotations[row].name = newName
+                annotView.annotations[row].name = newName
             }
         }
     }

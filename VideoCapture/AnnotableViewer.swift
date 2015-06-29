@@ -142,22 +142,22 @@ class AnnotableViewer: NSView {
     }
     
     // current annotation
-    var annotationInProgress: Annotation? {
+    private var annotationInProgress: Annotation? {
         didSet {
             self.needsDisplay = true
         }
     }
     
     // colors (advance after each draw)
-    var nextColor = 0
-    lazy var colors: [NSColor] = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
+    private var nextColor = 0
+    lazy private var colors: [NSColor] = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
     
     // shapes (advance on right click not contained within shape)
-    var nextShape = 0
-    lazy var shapes: [Annotation.Type] = [AnnotationCircle.self, AnnotationEllipse.self, AnnotationRectangle.self]
+    private var nextShape = 0
+    lazy private var shapes: [Annotation.Type] = [AnnotationCircle.self, AnnotationEllipse.self, AnnotationRectangle.self]
     
     // last click location
-    var locationDown: CGPoint?
+    private var locationDown: CGPoint?
     
     override func drawRect(dirtyRect: NSRect) {
         super.drawRect(dirtyRect)
