@@ -12,12 +12,14 @@ import CoreFoundation
 import CoreGraphics
 import CoreImage
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate {
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var listSerialPorts: NSPopUpButton?
     @IBOutlet var buttonToggle: NSButton?
     @IBOutlet var previewView: NSView?
+    @IBOutlet var annotableView: AnnotableViewer?
+    @IBOutlet var tableAnnotations: NSTableView?
     
     var deviceUniqueIDs = [Int: String]()
     
@@ -32,6 +34,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     var avVideoDispatchQueue: dispatch_queue_t?
     
+    // extraction information
+    var extractAnnotations: [Annotation] = []
+    var extractValues: [Float] = []
+    
     var ciContext: CIContext?
     
     var buffer: UnsafeMutablePointer<Void> = nil
@@ -40,16 +46,29 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // set delegats
+        annotableView?.delegate = self
+        annotableView?.wantsLayer = true
+        
+        // set table delegate
+        tableAnnotations?.setDelegate(self)
+        tableAnnotations?.setDataSource(self)
+        
         // fetch devices
-        self.updateDeviceLists()
+        updateDeviceLists()
     }
     
     override func viewDidAppear() {
         super.viewDidAppear()
         
         // initialize preview background
-        if let view = self.previewView, let root = view.layer {
+        if let view = previewView, let root = view.layer {
             root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
+        }
+        
+        if let view = annotableView, let root = view.layer {
+            view.wantsLayer = true
+            root.zPosition = 1.0
         }
     }
     
@@ -70,12 +89,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // terminate
         NSApp.terminate(nil)
-    }
-
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
     }
     
     func updateDeviceLists() {
@@ -675,6 +688,71 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
 //                label.stringValue = "\(val)"
 //            }
 //        }
+    }
+    
+    func didChangeAnnotations(newAnnotations: [Annotation]) {
+        extractAnnotations = newAnnotations
+        extractValues.removeAll()
+        
+        tableAnnotations?.reloadData()
+    }
+    
+    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+        return extractAnnotations.count
+    }
+    
+    func tableView(tableView: NSTableView, dataCellForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSCell? {
+        if let col = tableColumn {
+            if "color" == col.identifier {
+                return ColorSwatchCell()
+            }
+            
+            let c = NSCell(textCell: "")
+            if "name" == col.identifier {
+                c.editable = true
+            }
+            return c
+        }
+        return nil
+    }
+    
+    func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
+        guard let col = tableColumn else {
+            return nil
+        }
+        
+        // handle column identifiers
+        switch (col.identifier) {
+        case "color":
+            if row < extractAnnotations.count {
+                return extractAnnotations[row].color
+            }
+            return nil
+        case "name":
+            if row < extractAnnotations.count {
+                return extractAnnotations[row].name
+            }
+            return "ROI"
+        case "value":
+            if row < extractValues.count {
+                return extractValues[row]
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+    
+    func tableView(tableView: NSTableView, setObjectValue object: AnyObject?, forTableColumn tableColumn: NSTableColumn?, row: Int) {
+        guard let col = tableColumn else {
+            return
+        }
+        
+        if "name" == col.identifier && row < extractAnnotations.count {
+            if let newName = object as? String {
+                extractAnnotations[row].name = newName
+            }
+        }
     }
 }
 
