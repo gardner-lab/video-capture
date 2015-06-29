@@ -6,10 +6,10 @@
 //  Copyright (c) 2015 GardnerLab. All rights reserved.
 //
 
-import Foundation
 import Cocoa
 import AVFoundation
 import CoreFoundation
+import CoreGraphics
 import CoreImage
 
 class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -17,6 +17,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var buttonToggle: NSButton?
     @IBOutlet var previewView: NSView?
+    
+    @IBOutlet var labelTopLeft: NSTextField?
+    @IBOutlet var labelTopRight: NSTextField?
+    @IBOutlet var labelBottomLeft: NSTextField?
+    @IBOutlet var labelBottomRight: NSTextField?
     
     var deviceUniqueIDs = [Int: String]()
     
@@ -28,6 +33,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avVideoData: AVCaptureVideoDataOutput?
     
     var avVideoDispatchQueue: dispatch_queue_t?
+    
+    var ciContext: CIContext?
+    
+    var buffer: UnsafeMutablePointer<Void> = nil
+    var bufferSize = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -189,6 +199,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // Let the user select any images supported by
         // the AVMovie.
         panel.allowedFileTypes = AVMovie.movieTypes()
+        panel.allowsOtherFileTypes = false
+        panel.canCreateDirectories = true
         panel.nameFieldStringValue = "output.mov"
         panel.extensionHidden = false
         
@@ -231,6 +243,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         self.buttonToggle?.title = "Stop Processing"
         
         self.isRunning = true
+        
+        // create ci context
+        if nil == self.ciContext {
+            // options: [kCIContextOutputColorSpace: CGColorSpaceCreateDeviceGray()!] as [String: AnyObject]
+            self.ciContext = CIContext()
+        }
         
         // create capture session
         let session = AVCaptureSession.new()
@@ -356,6 +374,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             self.avPreviewLayer = nil
         }
         
+        // free up buffer
+        if 0 < self.bufferSize {
+            free(self.buffer)
+            self.buffer = nil
+            self.bufferSize = 0
+        }
+        
         self.isRunning = false
         
         // disable buttons
@@ -450,35 +475,85 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
-        NSLog("capture")
-        
         // get image buffer
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             return
         }
         
-        let w = CVPixelBufferGetWidth(imageBuffer), h = CVPixelBufferGetHeight(imageBuffer)
-        let r = CVPixelBufferGetBytesPerRow(imageBuffer)
+//        if let a = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) {
+//            let attachments = a.takeRetainedValue() as NSDictionary
+//        }
         
-        NSLog("W: \(w), H: \(h), R: \(r)")
+        let image = CIImage(CVImageBuffer: imageBuffer) //, options: attachments) // , options:attachments)
         
-        return
+//        if nil == self.cgBitmapContext || self.lastExtent != image.extent {
+//            // release existing
+//            self.cgBitmapContext = nil
+//            
+//            // create new
+//            let cgColorSpace = CGColorSpaceCreateDeviceGray()
+//            self.cgBitmapContext = CGBitmapContextCreate(nil, Int(image.extent.width), Int(image.extent.height), 8, 0, cgColorSpace, CGImageAlphaInfo.None.rawValue)
+//            
+//            // store last extent
+//            self.lastExtent = image.extent
+//            
+//            // failed
+//            if nil == self.cgBitmapContext {
+//                NSLog("Unable to create bitmap context.")
+//                self.stopProcessing()
+//                return;
+//            }
+//        }
         
-        let attachments: [String: AnyObject]?
-        if let a = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) {
-            attachments = a.takeRetainedValue() as! Dictionary
+        let bounds = image.extent, width = Int(bounds.width), height = Int(bounds.height)
+        let bytesPerPixel: Int = 4 // four bytes per pixel kCIFormatARGB8
+        let bytesPerRow = Int(bytesPerPixel * width)
+        let bytesTotal = bytesPerRow * height
+        
+        // adjust buffer
+        if bytesTotal > self.bufferSize {
+            free(self.buffer)
+            self.buffer = calloc(bytesTotal, sizeof(UInt8))
+            self.bufferSize = bytesTotal
         }
-        else {
-            attachments = nil
+        
+        self.ciContext?.render(image, toBitmap: self.buffer, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
+        
+        let bytes = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.buffer), count: Int(bytesTotal))
+        var q: Int, brightnessByQuadrant: [Double] = [0, 0, 0, 0], halfWidth: Int = width / 2, halfHeight: Int = height / 2
+        for (var i = 0, x = 0, y = 0; i < bytesTotal; i += bytesPerPixel) {
+            // maintain coordinates
+            if width == ++x {
+                x = 0
+                ++y
+            }
+            
+            // get quadrant
+            switch (x >= halfWidth, y >= halfHeight) {
+            case (false, false):
+                q = 0
+            case (true, false):
+                q = 1
+            case (false, true):
+                q = 2
+            case (true, true):
+                q = 3
+            }
+            
+            // calculate brightness
+            let red = Double(bytes[i + 1]), green = Double(bytes[i + 2]), blue = Double(bytes[i + 3])
+            let brightness = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+            
+            brightnessByQuadrant[q] += brightness
         }
-        let ciImage = CIImage(CVImageBuffer: imageBuffer, options: attachments)
         
-        // when processing an existing frame we want any new frames to be automatically dropped
-        // queueing this block to execute on the videoDataOutputQueue serial queue ensures this
-        // see the header doc for setSampleBufferDelegate:queue: for more information
-        
-        let e = ciImage.extent
-        NSLog("\(e)")
+        let avg = 4.0 / (Double(width) * Double(height))
+        for (lq, l) in [self.labelTopLeft, self.labelTopRight, self.labelBottomLeft, self.labelBottomRight].enumerate() {
+            if let label = l {
+                let val = Int(brightnessByQuadrant[lq] * avg)
+                label.stringValue = "\(val)"
+            }
+        }
     }
 }
 
