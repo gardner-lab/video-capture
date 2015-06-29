@@ -15,21 +15,19 @@ import CoreImage
 class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
+    @IBOutlet var listSerialPorts: NSPopUpButton?
     @IBOutlet var buttonToggle: NSButton?
     @IBOutlet var previewView: NSView?
-    
-    @IBOutlet var labelTopLeft: NSTextField?
-    @IBOutlet var labelTopRight: NSTextField?
-    @IBOutlet var labelBottomLeft: NSTextField?
-    @IBOutlet var labelBottomRight: NSTextField?
     
     var deviceUniqueIDs = [Int: String]()
     
     // session information
     var isRunning = false
     var avSession: AVCaptureSession?
+    var avInputVideo: AVCaptureInput?
+    var avInputAudio: AVCaptureInput?
     var avPreviewLayer: AVCaptureVideoPreviewLayer?
-    var avMovieOut: AVCaptureMovieFileOutput?
+    var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
     
     var avVideoDispatchQueue: dispatch_queue_t?
@@ -42,13 +40,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //let session = AVCaptureSession()
+        // fetch devices
         self.updateDeviceLists()
+    }
+    
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        
+        // initialize preview background
+        if let view = self.previewView, let root = view.layer {
+            root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
+        }
     }
     
     override func viewWillDisappear() {
         // end any capturing video
         self.stopProcessing()
+        
+        // end any session
+        self.stopSession()
         
         // will disappear
         super.viewWillDisappear();
@@ -128,80 +138,85 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         self.deviceUniqueIDs = newDeviceUniqueIDs
     }
     
-    func getVideoDevice() -> AVCaptureDevice? {
-        if let list = self.listVideoSources {
-            if let selected = list.selectedItem {
-                if let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
-                    let dev = AVCaptureDevice(uniqueID: deviceUniqueID)
-                    if dev.hasMediaType(AVMediaTypeVideo) || dev.hasMediaType(AVMediaTypeMuxed) {
-                        return dev
-                    }
-                }
-            }
+    func getVideoDeviceID() -> String? {
+        if let list = self.listVideoSources, let selected = list.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+            return deviceUniqueID
         }
         return nil
     }
     
-    func getAudioDevice() -> AVCaptureDevice? {
-        if let list = self.listAudioSources {
-            if let selected = list.selectedItem {
-                if let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
-                    let dev = AVCaptureDevice(uniqueID: deviceUniqueID)
-                    if dev.hasMediaType(AVMediaTypeAudio) || dev.hasMediaType(AVMediaTypeMuxed) {
-                        return dev
-                    }
-                }
-            }
+    func getAudioDeviceID() -> String? {
+        if let list = self.listAudioSources, let selected = list.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+            return deviceUniqueID
         }
         return nil
     }
     
-    func addInput(device: AVCaptureDevice) -> Bool {
+    func getDevice(deviceUniqueID: String, mediaTypes: [String]) -> AVCaptureDevice? {
+        let dev = AVCaptureDevice(uniqueID: deviceUniqueID)
+        if !mediaTypes.isEmpty {
+            for mediaType in mediaTypes {
+                if dev.hasMediaType(mediaType) {
+                    return dev
+                }
+            }
+            return nil
+        }
+        return dev
+    }
+    
+    func addInput(device: AVCaptureDevice) -> AVCaptureDeviceInput? {
         // has session?
         guard let session = self.avSession else {
-            return false
+            return nil
         }
         
         do {
             let input = try AVCaptureDeviceInput(device: device)
             if session.canAddInput(input) {
                 session.addInput(input)
+                return input
             }
-            else {
-                // log error
-                NSLog("Unable to add desired input device.")
-                
-                // clear session and fail
-                return false
-            }
+            
+            // log error
+            NSLog("Unable to add desired input device.")
         }
         catch {
             // log error
             let e = error as NSError
             let desc = e.localizedDescription
             NSLog("Capturing device input failed: \(desc)")
-            
-            // clear session and fail
-            return false
         }
         
-        return true
+        return nil
     }
     
-    func startProcessing() {
+    func promptToStart() {
         guard !self.isRunning else {
             return;
         }
         
+        let videoDeviceID = self.getVideoDeviceID()
+        let audioDeviceID = self.getAudioDeviceID()
+        if nil == videoDeviceID && nil == audioDeviceID {
+            NSLog("No device selected.")
+            return;
+        }
+        
         let panel = NSSavePanel()
-        panel.title = "Save Movie"
+        panel.title = (nil == videoDeviceID ? "Save Audio" : "Save Movie")
         
         // Let the user select any images supported by
         // the AVMovie.
-        panel.allowedFileTypes = AVMovie.movieTypes()
-        panel.allowsOtherFileTypes = false
+        if nil != videoDeviceID {
+            panel.allowedFileTypes = AVMovie.movieTypes()
+            panel.allowsOtherFileTypes = false
+            panel.nameFieldStringValue = "output.mov"
+        }
+        else {
+            panel.nameFieldStringValue = "output.aac"
+        }
         panel.canCreateDirectories = true
-        panel.nameFieldStringValue = "output.mov"
         panel.extensionHidden = false
         
         // callback for handling response
@@ -223,77 +238,40 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func startProcessing(file: NSURL) -> Bool {
-        guard !self.isRunning else {
-            return false;
+    func startSession() {
+        if nil == self.avSession {
+            // create capture session
+            let session = AVCaptureSession.new()
+            self.avSession = session
+            session.sessionPreset = AVCaptureSessionPresetMedium
+            
+            session.startRunning()
         }
-        
-        var audioDevice = self.getVideoDevice()
-        var videoDevice = self.getAudioDevice()
-        
-        // must select one
-        if nil == audioDevice && nil == videoDevice {
-            NSLog("No device selected.");
-            return false;
-        }
-        
-        // disable buttons
-        self.listVideoSources?.enabled = false
-        self.listAudioSources?.enabled = false
-        self.buttonToggle?.title = "Stop Processing"
-        
-        self.isRunning = true
-        
-        // create ci context
-        if nil == self.ciContext {
-            // options: [kCIContextOutputColorSpace: CGColorSpaceCreateDeviceGray()!] as [String: AnyObject]
-            self.ciContext = CIContext()
-        }
-        
-        // create capture session
-        let session = AVCaptureSession.new()
-        self.avSession = session
-        session.sessionPreset = AVCaptureSessionPresetMedium
-        
-        // add inputs
-        if nil != videoDevice {
-            if !self.addInput(videoDevice!) {
-                videoDevice = nil
-            }
-        }
-        
-        if nil != audioDevice {
-            if !self.addInput(audioDevice!) {
-                audioDevice = nil
-            }
-        }
-        
-        // neither?
-        if nil == audioDevice && nil == videoDevice {
-            self.avSession = nil
-            self.stopProcessing()
-            return false
-        }
-        
-        // SETUP OUTPUTS
         
         // preview layer
         if let view = self.previewView {
-            let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+            let previewLayer = AVCaptureVideoPreviewLayer(session: self.avSession!)
             self.avPreviewLayer = previewLayer
             previewLayer.videoGravity = AVLayerVideoGravityResizeAspect
             previewLayer.frame = view.bounds
-            previewLayer.connection.automaticallyAdjustsVideoMirroring = false
-            previewLayer.connection.videoMirrored = false
             
             // add to view hierarchy
             if let root = view.layer {
                 root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
                 root.addSublayer(previewLayer)
             }
-            else {
-                NSLog("No layer.")
-            }
+        }
+    }
+    
+    func createVideoOutputs(file: NSURL) -> Bool {
+        guard let session = self.avSession else {
+            return false
+        }
+        
+        // create ci context
+        if nil == self.ciContext {
+            // options: [kCIContextOutputColorSpace: CGColorSpaceCreateDeviceGray()!] as [String: AnyObject]
+            self.ciContext = CIContext()
         }
         
         // raw data
@@ -309,29 +287,76 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         if !session.canAddOutput(videoData) {
             NSLog("Unable to add video data output.")
-            self.avSession = nil
-            self.stopProcessing()
             return false
         }
         session.addOutput(videoData)
         
-        
         // writer
         let movieOut = AVCaptureMovieFileOutput()
-        self.avMovieOut = movieOut
+        self.avFileOut = movieOut
         if !session.canAddOutput(movieOut) {
             NSLog("Unable to add movie file output.")
-            self.avSession = nil
-            self.stopProcessing()
             return false
         }
         session.addOutput(movieOut)
-
-        // start session
-        session.startRunning()
-
+        
         // start writer
         movieOut.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        
+        return true
+    }
+    
+    func createAudioOutputs(file: NSURL) -> Bool {
+        guard let session = self.avSession else {
+            return false
+        }
+        
+        // writer
+        let audioOut = AVCaptureAudioFileOutput()
+        self.avFileOut = audioOut
+        if !session.canAddOutput(audioOut) {
+            NSLog("Unable to add audio file output.")
+            return false
+        }
+        session.addOutput(audioOut)
+        
+        // start writer
+        audioOut.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        
+        return true
+    }
+    
+    func startProcessing(file: NSURL) -> Bool {
+        guard !self.isRunning else {
+            return false;
+        }
+        
+        // get capture device
+        if nil == self.avInputVideo && nil == self.avInputAudio {
+            NSLog("No device selected.");
+            return false;
+        }
+        
+        // disable buttons
+        self.listVideoSources?.enabled = false
+        self.listAudioSources?.enabled = false
+        self.buttonToggle?.title = "Stop Processing"
+        
+        self.isRunning = true
+        
+        // SETUP OUTPUTS
+        if nil != self.avInputVideo {
+            // unable to create video output
+            if !self.createVideoOutputs(file) {
+                self.stopProcessing()
+            }
+        }
+        else {
+            // unable to create audio output
+            if !self.createAudioOutputs(file) {
+                self.stopProcessing()
+            }
+        }
         
         return true
     }
@@ -352,26 +377,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // stop writing
-        if let movieOut = self.avMovieOut {
-            if movieOut.recording {
-                movieOut.stopRecording()
+        if let fileOut = self.avFileOut {
+            if fileOut.recording {
+                fileOut.stopRecording()
                 return
             }
-            self.avMovieOut = nil
-        }
-        
-        // stop session
-        if let session = self.avSession {
-            session.stopRunning()
-            
-            self.avSession = nil
-        }
-        
-        // release preview layer
-        if let previewLayer = self.avPreviewLayer {
-            previewLayer.removeFromSuperlayer()
-            previewLayer.session = nil
-            self.avPreviewLayer = nil
+            self.avFileOut = nil
         }
         
         // free up buffer
@@ -387,27 +398,137 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         self.listVideoSources?.enabled = true
         self.listAudioSources?.enabled = true
         self.buttonToggle?.title = "Start Processing"
+    }
+    
+    func stopSession() {
+        // stop inputs
+        if let videoInput = self.avInputVideo {
+            if nil != self.avSession {
+                self.avSession!.removeInput(videoInput)
+            }
+            self.avInputVideo = nil
+        }
         
+        if let audioInput = self.avInputAudio {
+            if nil != self.avSession {
+                self.avSession!.removeInput(audioInput)
+            }
+            self.avInputAudio = nil
+        }
+        
+        // stop session
+        if let session = self.avSession {
+            session.stopRunning()
+            
+            self.avSession = nil
+        }
+        
+        // release preview layer
+        if let previewLayer = self.avPreviewLayer {
+            previewLayer.removeFromSuperlayer()
+            previewLayer.session = nil
+            self.avPreviewLayer = nil
+        }
     }
 
     @IBAction func selectVideoSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton {
-            if let selected = button.selectedItem {
-                if let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
-                    NSLog("Device ID: \(deviceUniqueID)")
+        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+            NSLog("Device ID: \(deviceUniqueID)")
+            
+            // get existing device
+            if nil != self.avInputVideo {
+                // should be defined
+                assert(nil != self.avSession)
+                
+                if let inputVideoDevice = self.avInputVideo! as? AVCaptureDeviceInput {
+                    if inputVideoDevice.device.uniqueID == deviceUniqueID {
+                        NSLog("Same device.")
+                        return
+                    }
                 }
+                
+                // remove existing
+                self.avSession!.removeInput(self.avInputVideo!)
+                self.avInputVideo = nil
+            }
+            else {
+                // start sesion
+                self.startSession()
+            }
+            
+            // get device and add it
+            if let videoDevice = self.getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
+                // add input
+                self.avInputVideo = self.addInput(videoDevice)
+                
+                // start preview layer
+                if nil != self.avInputVideo {
+                    // update preview layer
+                    if let previewLayer = self.avPreviewLayer {
+                        previewLayer.connection.automaticallyAdjustsVideoMirroring = false
+                        previewLayer.connection.videoMirrored = false
+                    }
+                }
+            }
+        }
+        else {
+            if nil != self.avInputVideo {
+                // should be defined
+                assert(nil != self.avSession)
+                
+                
+                // remove video
+                self.avSession!.removeInput(self.avInputVideo!)
+                self.avInputVideo = nil
             }
         }
     }
     
     @IBAction func selectAudioSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton {
-            if let selected = button.selectedItem {
-                if let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
-                    NSLog("Device ID: \(deviceUniqueID)")
+        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+            NSLog("Device ID: \(deviceUniqueID)")
+            
+            // get existing device
+            if nil != self.avInputAudio {
+                // should be defined
+                assert(nil != self.avSession)
+                
+                if let inputAudioDevice = self.avInputAudio! as? AVCaptureDeviceInput {
+                    if inputAudioDevice.device.uniqueID == deviceUniqueID {
+                        NSLog("Same device.")
+                        return
+                    }
                 }
+                
+                // remove existing
+                self.avSession!.removeInput(self.avInputAudio!)
+                self.avInputAudio = nil
+            }
+            else {
+                // start sesion
+                self.startSession()
+            }
+            
+            // get device and add it
+            if let audioDevice = self.getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
+                self.avInputAudio = self.addInput(audioDevice)
             }
         }
+        else {
+            if nil != self.avInputAudio {
+                // should be defined
+                assert(nil != self.avSession)
+                
+                
+                // remove audio
+                self.avSession!.removeInput(self.avInputAudio!)
+                self.avInputAudio = nil
+            }
+        }
+    }
+    
+    @IBAction func selectSerialPort(sender: AnyObject?) {
+        
     }
 
     @IBAction func toggleProcessing(sender: AnyObject?) {
@@ -417,7 +538,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         else {
             // start processing
-            self.startProcessing()
+            self.promptToStart()
         }
     }
     
@@ -439,7 +560,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             NSLog("Failure! \(error)")
             
             // clear move
-            self.avMovieOut = nil
+            self.avFileOut = nil
             
             // stop processing
             self.stopProcessing()
@@ -466,7 +587,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // still recording? likely switched files
-        if let movieOut = self.avMovieOut where movieOut.recording {
+        if let fileOut = self.avFileOut where fileOut.recording {
             return
         }
         
@@ -547,13 +668,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             brightnessByQuadrant[q] += brightness
         }
         
-        let avg = 4.0 / (Double(width) * Double(height))
-        for (lq, l) in [self.labelTopLeft, self.labelTopRight, self.labelBottomLeft, self.labelBottomRight].enumerate() {
-            if let label = l {
-                let val = Int(brightnessByQuadrant[lq] * avg)
-                label.stringValue = "\(val)"
-            }
-        }
+//        let avg = 4.0 / (Double(width) * Double(height))
+//        for (lq, l) in [self.labelTopLeft, self.labelTopRight, self.labelBottomLeft, self.labelBottomRight].enumerate() {
+//            if let label = l {
+//                let val = Int(brightnessByQuadrant[lq] * avg)
+//                label.stringValue = "\(val)"
+//            }
+//        }
     }
 }
 
