@@ -8,14 +8,36 @@
 
 import Cocoa
 
+/// Note all points are relative [0. - 1., 0. - 1.] with an upper left origin
+/// as this better matches the video signal.
 protocol Annotation {
     var name: String { get set }
     var color: NSColor { get set }
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor)
-    func drawFilled(context: NSGraphicsContext)
-    func drawOutline(context: NSGraphicsContext)
+    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect)
+    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect)
     func containsPoint(point: NSPoint) -> Bool
+}
+
+extension Annotation {
+    private func makeAbsolutePoint(point: NSPoint, inRect rect: NSRect) -> NSPoint {
+        let x = (point.x * rect.size.width) + rect.origin.x
+        let y = (rect.size.height - (point.y * rect.size.height)) + rect.origin.y
+        return NSPoint(x: x, y: y)
+    }
+    
+    private func makeAbsoluteSize(size: NSSize, inRect rect: NSRect) -> NSSize {
+        return NSSize(width: size.width * rect.width, height: size.height * rect.height)
+    }
+    
+    private func makeAbsoluteRect(rect: NSRect, inRect frame: NSRect) -> NSRect {
+        let width = rect.size.width * frame.size.width
+        let height = rect.size.height * frame.size.height
+        let x = (rect.origin.x * frame.size.width) + frame.origin.x
+        let y = (frame.size.height - (rect.origin.y * frame.size.height)) + frame.origin.y - height
+        return NSRect(x: x, y: y, width: width, height: height)
+    }
 }
 
 private func distance(a: CGPoint, _ b: CGPoint) -> CGFloat {
@@ -37,17 +59,26 @@ struct AnnotationCircle: Annotation {
         color = c
     }
     
-    func drawFilled(context: NSGraphicsContext) {
+    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
-        let path = NSBezierPath(ovalInRect: NSRect(origin: NSPoint(x: center.x - radius, y: center.y - radius), size: NSSize(width: radius * 2, height: radius * 2)))
+        let drawOrigin = NSPoint(x: center.x - radius, y: center.y - radius)
+        let drawSize = NSSize(width: radius * 2, height: radius * 2)
+        let drawRect = makeAbsoluteRect(NSRect(origin: drawOrigin, size: drawSize), inRect: rect)
+        
+        let path = NSBezierPath(ovalInRect: drawRect)
         path.fill()
     }
     
-    func drawOutline(context: NSGraphicsContext) {
+    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
         color.setStroke()
         
-        let path = NSBezierPath(ovalInRect: NSRect(origin: NSPoint(x: center.x - radius, y: center.y - radius), size: NSSize(width: radius * 2, height: radius * 2)))
+        let drawOrigin = NSPoint(x: center.x - radius, y: center.y - radius)
+        let drawSize = NSSize(width: radius * 2, height: radius * 2)
+        let drawRect = makeAbsoluteRect(NSRect(origin: drawOrigin, size: drawSize), inRect: rect)
+
+        
+        let path = NSBezierPath(ovalInRect: drawRect)
         path.lineWidth = 4.0
         path.stroke()
     }
@@ -69,17 +100,19 @@ struct AnnotationEllipse: Annotation {
         color = c
     }
     
-    func drawFilled(context: NSGraphicsContext) {
+    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
-        let path = NSBezierPath(ovalInRect: NSRect(origin: origin, size: size))
+        let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
+        let path = NSBezierPath(ovalInRect: drawRect)
         path.fill()
     }
     
-    func drawOutline(context: NSGraphicsContext) {
+    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
         color.setStroke()
         
-        let path = NSBezierPath(ovalInRect: NSRect(origin: origin, size: size))
+        let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
+        let path = NSBezierPath(ovalInRect: drawRect)
         path.lineWidth = 4.0
         path.stroke()
     }
@@ -104,14 +137,18 @@ struct AnnotationRectangle: Annotation {
         color = c
     }
     
-    func drawFilled(context: NSGraphicsContext) {
+    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
-        NSRectFill(NSRect(origin: origin, size: size))
+        
+        let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
+        NSRectFill(drawRect)
     }
     
-    func drawOutline(context: NSGraphicsContext) {
+    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
-        NSFrameRectWithWidth(NSRect(origin: origin, size: size), 4.0)
+        
+        let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
+        NSFrameRectWithWidth(drawRect, 4.0)
     }
     
     func containsPoint(point: NSPoint) -> Bool {
@@ -164,14 +201,20 @@ class AnnotableViewer: NSView {
 
         // draw annotations
         if let nsContext = NSGraphicsContext.currentContext() {
+            let drawRect = NSRect(origin: CGPoint(x: 0.0, y: 0.0), size: self.frame.size)
             for annot in annotations {
-                annot.drawOutline(nsContext)
+                annot.drawOutline(nsContext, inRect: drawRect)
             }
             if let annot = self.annotationInProgress {
-                annot.drawOutline(nsContext)
+                annot.drawOutline(nsContext, inRect: drawRect)
             }
             //CGContextTranslateCTM(context, self.origin.x, self.origin.y)
         }
+    }
+    
+    func getRelativePositionFromGlobalPoint(globalPoint: NSPoint) -> NSPoint {
+        let localPoint = convertPoint(globalPoint, fromView: nil)
+        return NSPoint(x: localPoint.x / self.frame.size.width, y: (self.frame.size.height - localPoint.y) / self.frame.height)
     }
     
     override func mouseDown(theEvent: NSEvent) {
@@ -179,7 +222,7 @@ class AnnotableViewer: NSView {
         super.mouseDown(theEvent)
         
         // location down
-        locationDown = convertPoint(theEvent.locationInWindow, fromView: nil)
+        locationDown = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
     }
     
     override func rightMouseUp(theEvent : NSEvent) {
@@ -190,7 +233,7 @@ class AnnotableViewer: NSView {
             return
         }
         
-        let locationCur = convertPoint(theEvent.locationInWindow, fromView: nil)
+        let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
         
         for var i = annotations.count - 1; i >= 0; --i {
             if annotations[i].containsPoint(locationCur) {
@@ -214,7 +257,7 @@ class AnnotableViewer: NSView {
         super.mouseDragged(theEvent)
         
         if nil != self.locationDown {
-            let locationCur = convertPoint(theEvent.locationInWindow, fromView: nil)
+            let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
             let type = shapes[nextShape]
             let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
             annotationInProgress = annot
@@ -226,10 +269,10 @@ class AnnotableViewer: NSView {
         
         // has annotation
         if nil != locationDown {
-            let locationCur = convertPoint(theEvent.locationInWindow, fromView: nil)
+            let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
             
             // minimum distance
-            if distance(locationCur, locationDown!) >= 10 {
+            if distance(locationCur, locationDown!) >= (10 / max(self.frame.size.width, self.frame.size.height)) {
                 let type = self.shapes[nextShape]
                 let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
                 annotations.append(annot)
