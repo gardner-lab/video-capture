@@ -8,9 +8,13 @@
 
 import Cocoa
 
+// counter for IDs for annotations
+var nextId = 1
+
 /// Note all points are relative [0. - 1., 0. - 1.] with an upper left origin
 /// as this better matches the video signal.
 protocol Annotation {
+    var id: Int { get }
     var name: String { get set }
     var color: NSColor { get set }
     
@@ -18,8 +22,10 @@ protocol Annotation {
     func drawFilled(context: NSGraphicsContext, inRect rect: NSRect)
     func drawOutline(context: NSGraphicsContext, inRect rect: NSRect)
     func containsPoint(point: NSPoint) -> Bool
+    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)]
 }
 
+/// Helepr functions to convert the relative points of the annotations back into LLO pixel coorindates for drawing.
 extension Annotation {
     private func makeAbsolutePoint(point: NSPoint, inRect rect: NSRect) -> NSPoint {
         let x = (point.x * rect.size.width) + rect.origin.x
@@ -46,12 +52,14 @@ private func distance(a: CGPoint, _ b: CGPoint) -> CGFloat {
 }
 
 struct AnnotationCircle: Annotation {
+    let id: Int
     var name = "ROI (circle)"
     var center: NSPoint
     var radius: CGFloat
     var color: NSColor
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) {
+        id = ++nextId
         center = a
         
         let x = a.x - b.x, y = a.y - b.y
@@ -86,15 +94,42 @@ struct AnnotationCircle: Annotation {
     func containsPoint(point: NSPoint) -> Bool {
         return (distance(point, center) <= radius)
     }
+    
+    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        
+        let r = maxDim * radius
+        
+        // image integer coordinates
+        let imageOriginX = Int(center.x * maxDim - r - rect.origin.x), imageOriginY = Int(center.y * maxDim - r - rect.origin.y)
+        let imageSizeWidth = Int(r * 2.0), imageSizeHeight = Int(r * 2.0)
+        
+        var ret: [(Int, Int)] = []
+        ret.reserveCapacity(imageSizeWidth * imageSizeHeight)
+        for x in 0...imageSizeWidth {
+            for y in 0...imageSizeHeight {
+                // check ample distance
+                let a = CGFloat(x) - r, b = CGFloat(y) - r
+                if r < sqrt((a * a) + (b * b)) {
+                    continue
+                }
+                ret.append(imageOriginX + x, imageOriginY + y)
+            }
+        }
+        return ret
+    }
 }
 
 struct AnnotationEllipse: Annotation {
+    let id: Int
     var name = "ROI (ellipse)"
     var origin: NSPoint
     var size: NSSize
     var color: NSColor
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) {
+        id = ++nextId
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
         color = c
@@ -121,17 +156,45 @@ struct AnnotationEllipse: Annotation {
         let hw = size.width / 2, hh = size.height / 2
         let center = NSPoint(x: origin.x + hw, y: origin.y + hh)
         let x = (point.x - center.x) / hw, y = (point.y - center.y) / hh
-        return (sqrt((x * x) + (y * y)) <= 1)
+        return ((x * x) + (y * y)) <= 1 // sqrt( ) not needed
+    }
+    
+    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        
+        // oval coordinates
+        let hw = (size.width * maxDim) / 2.0, hh = (size.height * maxDim) / 2.0
+        
+        // image integer coordinates
+        let imageOriginX = Int(origin.x * maxDim - rect.origin.x), imageOriginY = Int(origin.y * maxDim - rect.origin.y)
+        let imageSizeWidth = Int(size.width * maxDim), imageSizeHeight = Int(size.height * maxDim)
+        
+        var ret: [(Int, Int)] = []
+        ret.reserveCapacity(imageSizeWidth * imageSizeHeight)
+        for x in 0...imageSizeWidth {
+            for y in 0...imageSizeHeight {
+                // check ample distance
+                let a = (CGFloat(x) - hw) / hw, b = (CGFloat(y) - hh) / hh
+                if 1 < ((a * a) + (b * b)) {
+                    continue
+                }
+                ret.append(imageOriginX + x, imageOriginY + y)
+            }
+        }
+        return ret
     }
 }
 
 struct AnnotationRectangle: Annotation {
+    let id: Int
     var name = "ROI (rect)"
     var origin: NSPoint
     var size: NSSize
     var color: NSColor
     
     init(startPoint a: CGPoint, endPoint b: CGPoint, color c: NSColor) {
+        id = ++nextId
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
         color = c
@@ -155,6 +218,21 @@ struct AnnotationRectangle: Annotation {
         let diff = NSPoint(x: point.x - origin.x, y: point.y - origin.y)
         return 0 <= diff.x && 0 <= diff.y && size.width >= diff.x && size.height >= diff.y
     }
+    
+    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        let imageOriginX = Int(origin.x * maxDim - rect.origin.x), imageOriginY = Int(origin.y * maxDim - rect.origin.y)
+        let imageSizeWidth = Int(size.width * maxDim), imageSizeHeight = Int(size.height * maxDim)
+        var ret: [(Int, Int)] = []
+        ret.reserveCapacity(imageSizeWidth * imageSizeHeight)
+        for x in imageOriginX..<(imageOriginX + imageSizeWidth) {
+            for y in imageOriginY..<(imageOriginY + imageSizeHeight) {
+                ret.append((x, y))
+            }
+        }
+        return ret
+    }
 }
 
 protocol AnnotableViewerDelegate {
@@ -163,13 +241,6 @@ protocol AnnotableViewerDelegate {
 
 class AnnotableViewer: NSView {
     var delegate: AnnotableViewerDelegate?
-    
-    // origin
-    internal var origin = CGPoint(x: 0.0, y: 0.0) {
-        didSet {
-            self.needsDisplay = true
-        }
-    }
     
     // drawn annotations
     internal var annotations: [Annotation] = [] {
@@ -182,6 +253,13 @@ class AnnotableViewer: NSView {
     private var annotationInProgress: Annotation? {
         didSet {
             self.needsDisplay = true
+        }
+    }
+    
+    var enabled: Bool = true {
+        didSet {
+            self.locationDown = nil
+            self.annotationInProgress = nil
         }
     }
     
@@ -208,10 +286,11 @@ class AnnotableViewer: NSView {
             if let annot = self.annotationInProgress {
                 annot.drawOutline(nsContext, inRect: drawRect)
             }
-            //CGContextTranslateCTM(context, self.origin.x, self.origin.y)
         }
     }
     
+    /// Convert the coordinates of a click from Mac LLO pixel coordinates to a sacle independent, uper left
+    /// origin coordinate space [0, 1], [0, 1]
     func getRelativePositionFromGlobalPoint(globalPoint: NSPoint) -> NSPoint {
         let localPoint = convertPoint(globalPoint, fromView: nil)
         return NSPoint(x: localPoint.x / self.frame.size.width, y: (self.frame.size.height - localPoint.y) / self.frame.height)
@@ -221,12 +300,21 @@ class AnnotableViewer: NSView {
         // call super
         super.mouseDown(theEvent)
         
+        if !enabled {
+            return
+        }
+        
         // location down
         locationDown = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
     }
     
     override func rightMouseUp(theEvent : NSEvent) {
         super.rightMouseUp(theEvent)
+        
+        // not editable
+        if !enabled {
+            return
+        }
         
         // only single click
         if 1 != theEvent.clickCount {
@@ -256,6 +344,11 @@ class AnnotableViewer: NSView {
     override func mouseDragged(theEvent: NSEvent) {
         super.mouseDragged(theEvent)
         
+        // not editable
+        if !enabled {
+            return
+        }
+        
         if nil != self.locationDown {
             let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
             let type = shapes[nextShape]
@@ -266,6 +359,11 @@ class AnnotableViewer: NSView {
     
     override func mouseUp(theEvent: NSEvent) {
         super.mouseUp(theEvent)
+        
+        // not editable
+        if !enabled {
+            return
+        }
         
         // has annotation
         if nil != locationDown {

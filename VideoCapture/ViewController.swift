@@ -36,6 +36,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // extraction information
     var extractValues: [Float] = []
+    var extractBounds = CGSize(width: 0.0, height: 0.0)
+    var extractArray: [(pixel: Int, annotation: Int)] = []
+    
+    // timer to redraw interface (saves time)
+    var timerRedraw: NSTimer?
     
     var ciContext: CIContext?
     
@@ -339,77 +344,96 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func startProcessing(file: NSURL) -> Bool {
-        guard !self.isRunning else {
+        guard !isRunning else {
             return false;
         }
         
         // get capture device
-        if nil == self.avInputVideo && nil == self.avInputAudio {
+        if nil == avInputVideo && nil == avInputAudio {
             NSLog("No device selected.");
             return false;
         }
         
         // disable buttons
-        self.listVideoSources?.enabled = false
-        self.listAudioSources?.enabled = false
-        self.buttonToggle?.title = "Stop Processing"
+        listVideoSources?.enabled = false
+        listAudioSources?.enabled = false
+        listSerialPorts?.enabled = false
+        annotableView?.enabled = false
+        buttonToggle?.title = "Stop Processing"
         
-        self.isRunning = true
+        isRunning = true
         
         // SETUP OUTPUTS
-        if nil != self.avInputVideo {
+        if nil != avInputVideo {
             // unable to create video output
-            if !self.createVideoOutputs(file) {
-                self.stopProcessing()
+            if !createVideoOutputs(file) {
+                stopProcessing()
             }
         }
         else {
             // unable to create audio output
-            if !self.createAudioOutputs(file) {
-                self.stopProcessing()
+            if !createAudioOutputs(file) {
+                stopProcessing()
             }
         }
+        
+        // setup timer
+        timerRedraw = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerUpdateValues:", userInfo: nil, repeats: true)
         
         return true
     }
     
     func stopProcessing() {
-        guard self.isRunning else {
+        guard isRunning else {
             return;
         }
         
+        // stop timer
+        if nil != self.timerRedraw {
+            self.timerRedraw!.invalidate()
+            self.timerRedraw = nil
+        }
+        
         // stop data output
-        if nil != self.avVideoData {
-            self.avVideoData = nil;
+        if nil != avVideoData {
+            if nil != avSession {
+                avSession!.removeOutput(avVideoData!)
+            }
+            avVideoData = nil
         }
         
         // release dispatch queue
-        if nil != self.avVideoDispatchQueue {
-            self.avVideoDispatchQueue = nil;
+        if nil != avVideoDispatchQueue {
+            avVideoDispatchQueue = nil
         }
         
         // stop writing
-        if let fileOut = self.avFileOut {
+        if let fileOut = avFileOut {
             if fileOut.recording {
                 fileOut.stopRecording()
                 return
             }
-            self.avFileOut = nil
+            if nil != avSession {
+                avSession!.removeOutput(avFileOut!)
+            }
+            avFileOut = nil
         }
         
         // free up buffer
-        if 0 < self.bufferSize {
-            free(self.buffer)
-            self.buffer = nil
-            self.bufferSize = 0
+        if 0 < bufferSize {
+            free(buffer)
+            buffer = nil
+            bufferSize = 0
         }
         
-        self.isRunning = false
+        isRunning = false
         
         // disable buttons
-        self.listVideoSources?.enabled = true
-        self.listAudioSources?.enabled = true
-        self.buttonToggle?.title = "Start Processing"
+        listVideoSources?.enabled = true
+        listAudioSources?.enabled = true
+        listSerialPorts?.enabled = true
+        annotableView?.enabled = true
+        buttonToggle?.title = "Start Processing"
     }
     
     func stopSession() {
@@ -479,6 +503,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                     if let previewLayer = self.avPreviewLayer {
                         previewLayer.connection.automaticallyAdjustsVideoMirroring = false
                         previewLayer.connection.videoMirrored = false
+                        
+                        NSLog("\(previewLayer.frame)")
                     }
                 }
             }
@@ -607,11 +633,55 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         self.stopProcessing()
     }
     
+    private func updateExtractionList(dimensions: CGSize) { // , _ rep: NSBitmapImageRep
+        // build mapping between square annotable dimensions and recntagular video dimensions
+        // including the largest dimension, which servers as the sacling factor
+        let maxDim: CGFloat, videoFrame: CGRect
+        if dimensions.width > dimensions.height {
+            maxDim = dimensions.width
+            videoFrame = CGRect(origin: CGPoint(x: 0.0, y: (maxDim - dimensions.height) / 2.0), size: dimensions)
+        }
+        else if dimensions.height > dimensions.width {
+            maxDim = dimensions.height
+            videoFrame = CGRect(origin: CGPoint(x: (maxDim - dimensions.width) / 2.0, y: 0.0), size: dimensions)
+        }
+        else {
+            maxDim = dimensions.width
+            videoFrame = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: dimensions)
+        }
+        let maxX = Int(dimensions.width), maxY = Int(dimensions.height)
+        
+        extractArray.removeAll()
+        if let view = self.annotableView {
+            for (i, annot) in view.annotations.enumerate() {
+                for (x, y) in annot.generateImageCoordinates(videoFrame) {
+                    // NSLog("x: \(x), y: \(y)")
+                    if x < 0 || x >= maxX || y < 0 || y >= maxY {
+                        continue
+                    }
+                    
+                    // debugging
+//                    rep.setColor(annot.color, atX: x, y: y)
+                    
+                    extractArray.append(pixel: maxX * y + x, annotation: i)
+                }
+            }
+        }
+
+        // debugging
+//        let prop = [String : AnyObject]()
+//        let data = rep.representationUsingType(NSBitmapImageFileType.NSPNGFileType, properties: prop)
+//        data?.writeToURL(NSURL(fileURLWithPath: "/Users/nathan/Desktop/debug.png"), atomically: false)
+        
+    }
+    
     func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
         // get image buffer
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             return
         }
+        
+        //NSLog(CVImageBufferGetColorSpace(imageBuffer))
         
 //        if let a = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) {
 //            let attachments = a.takeRetainedValue() as NSDictionary
@@ -638,10 +708,24 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
 //            }
 //        }
         
-        let bounds = image.extent, width = Int(bounds.width), height = Int(bounds.height)
+        let bounds = image.extent, width = Int(bounds.size.width), height = Int(bounds.size.height)
         let bytesPerPixel: Int = 4 // four bytes per pixel kCIFormatARGB8
         let bytesPerRow = Int(bytesPerPixel * width)
         let bytesTotal = bytesPerRow * height
+        
+        if bounds.size != extractBounds {
+            
+//            let rep = NSBitmapImageRep(CIImage: image)
+//            let img = NSImage(size: rep.size)
+//            img.addRepresentation(rep)
+//            
+            // update extraction list
+            updateExtractionList(bounds.size)
+            
+            
+            // update extract bounds
+            extractBounds = bounds.size
+        }
         
         // adjust buffer
         if bytesTotal > self.bufferSize {
@@ -653,45 +737,41 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         self.ciContext?.render(image, toBitmap: self.buffer, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
         
         let bytes = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.buffer), count: Int(bytesTotal))
-        var q: Int, brightnessByQuadrant: [Double] = [0, 0, 0, 0], halfWidth: Int = width / 2, halfHeight: Int = height / 2
-        for (var i = 0, x = 0, y = 0; i < bytesTotal; i += bytesPerPixel) {
-            // maintain coordinates
-            if width == ++x {
-                x = 0
-                ++y
+        var annotSum = [Float](count: extractArray.count, repeatedValue: 0.0)
+        var annotCnt = [Int](count: extractArray.count, repeatedValue: 0)
+        for (pixel, annotIdx) in extractArray {
+            if annotIdx >= annotSum.count {
+                continue
             }
-            
-            // get quadrant
-            switch (x >= halfWidth, y >= halfHeight) {
-            case (false, false):
-                q = 0
-            case (true, false):
-                q = 1
-            case (false, true):
-                q = 2
-            case (true, true):
-                q = 3
-            }
-            
-            // calculate brightness
-            let red = Double(bytes[i + 1]), green = Double(bytes[i + 2]), blue = Double(bytes[i + 3])
+            let i = pixel * bytesPerPixel
+            let red = Float(bytes[i + 1]), green = Float(bytes[i + 2]), blue = Float(bytes[i + 3])
             let brightness = 0.2126 * red + 0.7152 * green + 0.0722 * blue
             
-            brightnessByQuadrant[q] += brightness
+            // increment values
+            annotSum[annotIdx] += brightness
+            annotCnt[annotIdx]++
         }
         
-//        let avg = 4.0 / (Double(width) * Double(height))
-//        for (lq, l) in [self.labelTopLeft, self.labelTopRight, self.labelBottomLeft, self.labelBottomRight].enumerate() {
-//            if let label = l {
-//                let val = Int(brightnessByQuadrant[lq] * avg)
-//                label.stringValue = "\(val)"
-//            }
-//        }
+        // update values
+        extractValues = zip(annotSum, annotCnt).map {
+            sum, cnt in return cnt > 0 ? sum / Float(cnt) : 0.0
+        }
+    }
+    
+    func timerUpdateValues(timer: NSTimer!) {
+        if let tv = self.tableAnnotations {
+            tv.reloadDataForRowIndexes(NSIndexSet(indexesInRange: NSRange(location: 0, length: extractValues.count)), columnIndexes: NSIndexSet(index: 2))
+        }
     }
     
     func didChangeAnnotations(newAnnotations: [Annotation]) {
+        // clear extract values
         extractValues.removeAll()
         
+        // reset bounds (force reloading list of pixels)
+        extractBounds = CGSize(width: 0.0, height: 0.0)
+        
+        // force redrawing of table
         tableAnnotations?.reloadData()
     }
     
@@ -704,15 +784,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     func tableView(tableView: NSTableView, dataCellForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSCell? {
         if let col = tableColumn {
-            if "color" == col.identifier {
+            switch col.identifier {
+            case "color":
                 return ColorSwatchCell()
-            }
-            
-            let c = NSCell(textCell: "")
-            if "name" == col.identifier {
+                
+            case "name":
+                let c = NSCell(textCell: "")
                 c.editable = true
+                return c
+                
+            case "value":
+                let c = NSCell(textCell: "")
+                c.alignment = NSTextAlignment.Right
+                return c
+                
+            default:
+                return NSCell(textCell: "")
             }
-            return c
         }
         return nil
     }
@@ -736,7 +824,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return "ROI"
         case "value":
             if row < extractValues.count {
-                return extractValues[row]
+                return Int(extractValues[row])
             }
             return nil
         default:

@@ -96,11 +96,11 @@
 			isa = PBXGroup;
 			children = (
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
+				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
 				D8013F9B1B4037870053F452 /* Images.xcassets */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
-				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
 				D8013F951B4037870053F452 /* Supporting Files */,
 			);
 			path = VideoCapture;
@@ -188,7 +188,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "VideoCapture" */;
+			buildConfigurationList = D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "videocapture" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -415,7 +415,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "VideoCapture" */ = {
+		D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "videocapture" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D8013FAC1B4037870053F452 /* Debug */,
