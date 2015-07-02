@@ -15,6 +15,7 @@
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
+		D87DB6C31B45958B00131082 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87DB6C21B45958B00131082 /* Annotations.swift */; };
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
@@ -22,6 +23,7 @@
 		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
 		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
+		D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E4A1B4593ED0052F4C7 /* Document.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +56,7 @@
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
+		D87DB6C21B45958B00131082 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -61,6 +64,7 @@
 		D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIO.swift; sourceTree = "<group>"; };
 		D8E48E0A1B458E250052F4C7 /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		D8E48E0D1B45904E0052F4C7 /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
+		D8E48E4A1B4593ED0052F4C7 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,10 +117,12 @@
 			isa = PBXGroup;
 			children = (
 				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
+				D87DB6C21B45958B00131082 /* Annotations.swift */,
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
 				D8E48E0D1B45904E0052F4C7 /* Common.swift */,
+				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
 				D8013F9B1B4037870053F452 /* Images.xcassets */,
@@ -209,6 +215,7 @@
 				TargetAttributes = {
 					D8013F911B4037870053F452 = {
 						CreatedOnToolsVersion = 6.3.2;
+						DevelopmentTeam = WRZPP65FJN;
 					};
 					D8013FA31B4037870053F452 = {
 						CreatedOnToolsVersion = 6.3.2;
@@ -275,6 +282,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */,
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
@@ -282,6 +290,7 @@
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
+				D87DB6C31B45958B00131082 /* Annotations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,12 +409,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
@@ -413,12 +425,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
