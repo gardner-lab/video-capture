@@ -8,18 +8,40 @@
 
 import Cocoa
 
+/// The video capture mode determines interface accessibility
+enum VideoCaptureMode {
+    case Configure
+    case Monitor // monitor for triggering
+    case TriggeredCapture // capturing, because triggered
+    case ManualCapture // capturing, because manually triggered
+    
+    func isCapturing() -> Bool {
+        return self == .TriggeredCapture || self == .ManualCapture
+    }
+    
+    func canEdit() -> Bool {
+        return self == .Configure
+    }
+}
+
 /// A document represents a capture session, and includes preferences about all annotations and all devices.
 class Document : NSDocument {
+    // session name
+    var name: String = "Capture Session"
+    
     // documentation information
-    let devVideo: String = ""
-    let devAudio: String = ""
-    let devSerial: String = ""
+    var devVideo: String = ""
+    var devAudio: String = ""
+    var devSerial: String = ""
     
     // output directory
-    let outputDirectory: String = ""
+    var outputDirectory: String = ""
     
     // annotation index
-    let listAnnotations: [Annotation] = []
+    var listAnnotations: [Annotation] = []
+    
+    // led brightness
+    var ledBrightness: UInt8 = 0
     
     
     override init() {
@@ -44,15 +66,66 @@ class Document : NSDocument {
     }
     
     override func dataOfType(typeName: String) throws -> NSData {
-        // Insert code here to write your document to data of the specified type. If outError != nil, ensure that you create and set an appropriate error when returning nil.
-        // You can also choose to override fileWrapperOfType:error:, writeToURL:ofType:error:, or writeToURL:ofType:forSaveOperation:originalContentsURL:error: instead.
-        throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+        // only handle one type
+        guard "edu.GardnerLab.VideoCaptureSession" == typeName else {
+            throw NSError(domain: NSOSStatusErrorDomain, code: writErr, userInfo: nil) // unimpErr
+        }
+        
+        var dict = [String: AnyObject]()
+        dict["Version"] = 1
+        dict["Name"] = name
+        dict["DeviceVideo"] = devVideo
+        dict["DeviceAudio"] = devAudio
+        dict["DeviceSerial"] = devSerial
+        dict["OuputDirectory"] = outputDirectory
+        dict["LEDBrightness"] = Int(ledBrightness)
+        
+        do {
+            let data = try NSPropertyListSerialization.dataWithPropertyList(dict, format: .BinaryFormat_v1_0, options: 0)
+            return data
+        }
+        catch {
+            DLog("WRITE ERROR: serialization \(error)")
+            throw NSError(domain: NSOSStatusErrorDomain, code: writErr, userInfo: nil)
+        }
     }
     
     override func readFromData(data: NSData, ofType typeName: String) throws {
-        // Insert code here to read your document from the given data of the specified type. If outError != nil, ensure that you create and set an appropriate error when returning false.
-        // You can also choose to override readFromFileWrapper:ofType:error: or readFromURL:ofType:error: instead.
-        // If you override either of these, you should also override -isEntireFileLoaded to return NO if the contents are lazily loaded.
-        throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+        // only handle one type
+        guard "edu.GardnerLab.VideoCaptureSession" == typeName else {
+            throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil) // unimpErr
+        }
+        
+        // read dictionary
+        let rawData: AnyObject
+        do {
+            rawData = try NSPropertyListSerialization.propertyListWithData(data, options: NSPropertyListReadOptions.Immutable, format: nil)
+        }
+        catch {
+            DLog("READ ERROR: deserialization \(error)")
+            
+            throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil)
+        }
+        
+        // convert to dictionary type
+        guard let dict = rawData as? [String: AnyObject] else {
+            DLog("READ ERROR: cast failed")
+            
+            throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil)
+        }
+        
+        // check version flag
+        guard let ver = dict["Version"] where (ver as? Int) == 1 else {
+            DLog("READ ERROR: version check failed")
+            
+            throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil)
+        }
+        
+        name = dict["Name"] as? String ?? "Capture Session"
+        devVideo = dict["DeviceVideo"] as? String ?? ""
+        devAudio = dict["DeviceAudio"] as? String ?? ""
+        devSerial = dict["DeviceSerial"] as? String ?? ""
+        outputDirectory = dict["OutputDirectory"] as? String ?? ""
+        ledBrightness = UInt8(dict["LEDBrightness"] as? Int ?? 0)
     }
 }
