@@ -18,6 +18,8 @@
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
+		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
+		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +29,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = D8013F911B4037870053F452;
 			remoteInfo = VideoCapture;
+		};
+		D8C386BC1B441AD600DE70EA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9DCA89121A2BB106009285EB;
+			remoteInfo = ORSSerial;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -46,6 +55,8 @@
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
+		D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIO.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */,
 				D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */,
 				D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */,
 				D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */,
@@ -73,6 +85,7 @@
 		D8013F891B4037870053F452 = {
 			isa = PBXGroup;
 			children = (
+				D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */,
 				D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */,
 				D8875E881B40776100270CE0 /* CoreFoundation.framework */,
 				D8875E861B40770700270CE0 /* CoreImage.framework */,
@@ -98,6 +111,7 @@
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
+				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
 				D8013F9B1B4037870053F452 /* Images.xcassets */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
@@ -129,6 +143,14 @@
 				D8013FA91B4037870053F452 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D8C386B91B441AD600DE70EA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D8C386BD1B441AD600DE70EA /* ORSSerial.framework */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -188,7 +210,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "videocapture" */;
+			buildConfigurationList = D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "VideoCapture" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -199,6 +221,12 @@
 			mainGroup = D8013F891B4037870053F452;
 			productRefGroup = D8013F931B4037870053F452 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = D8C386B91B441AD600DE70EA /* Products */;
+					ProjectRef = D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				D8013F911B4037870053F452 /* VideoCapture */,
@@ -206,6 +234,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		D8C386BD1B441AD600DE70EA /* ORSSerial.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ORSSerial.framework;
+			remoteRef = D8C386BC1B441AD600DE70EA /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D8013F901B4037870053F452 /* Resources */ = {
@@ -231,6 +269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
@@ -415,7 +454,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "videocapture" */ = {
+		D8013F8D1B4037870053F452 /* Build configuration list for PBXProject "VideoCapture" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D8013FAC1B4037870053F452 /* Debug */,

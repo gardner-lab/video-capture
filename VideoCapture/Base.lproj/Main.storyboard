@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="8121.20" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="8121.20" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8121.20"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
@@ -688,21 +688,6 @@
                                     <action selector="selectVideoSource:" target="XfG-lQ-9wD" id="6sT-yP-RaU"/>
                                 </connections>
                             </popUpButton>
-                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gst-KI-PKh">
-                                <rect key="frame" x="18" y="374" width="225" height="26"/>
-                                <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="mvf-Wh-KXn">
-                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="menu"/>
-                                    <menu key="menu" id="ccE-yX-E7d">
-                                        <items>
-                                            <menuItem title="Arduino" id="jIL-Dm-3ae"/>
-                                        </items>
-                                    </menu>
-                                </popUpButtonCell>
-                                <connections>
-                                    <action selector="selectSerialPort:" target="XfG-lQ-9wD" id="hZl-It-ulG"/>
-                                </connections>
-                            </popUpButton>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="neZ-Dt-SJB">
                                 <rect key="frame" x="18" y="405" width="225" height="26"/>
                                 <popUpButtonCell key="cell" type="push" title="Audio" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="B2S-ga-Rr9" id="LTm-HL-Mgi">
@@ -729,13 +714,13 @@
                                 </connections>
                             </button>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-hv-t7c">
-                                <rect key="frame" x="20" y="61" width="220" height="296"/>
+                                <rect key="frame" x="20" y="61" width="220" height="252"/>
                                 <clipView key="contentView" id="CK7-pG-0jI">
-                                    <rect key="frame" x="1" y="17" width="218" height="263"/>
+                                    <rect key="frame" x="1" y="17" width="218" height="234"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="vm2-5k-HNv" id="ur6-Ur-zr2">
-                                            <rect key="frame" x="0.0" y="0.0" width="220" height="263"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="218" height="234"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -747,13 +732,9 @@
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                     </tableHeaderCell>
-                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="Xti-Cf-hks">
-                                                        <font key="font" metaFont="system"/>
-                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
+                                                    <customCell key="dataCell" alignment="left" id="dE7-I4-EDX" customClass="ColorSwatchCell" customModule="VideoCapture" customModuleProvider="target"/>
                                                 </tableColumn>
-                                                <tableColumn identifier="name" width="95.36713340877921" minWidth="40" maxWidth="1000" id="WDx-0q-zOz">
+                                                <tableColumn identifier="name" width="93.36713340877921" minWidth="40" maxWidth="1000" id="WDx-0q-zOz">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Name">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -772,7 +753,7 @@
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                     </tableHeaderCell>
-                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="Xcd-0u-nZd">
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="right" title="Text Cell" id="Xcd-0u-nZd">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -784,16 +765,16 @@
                                     </subviews>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </clipView>
-                                <scroller key="horizontalScroller" verticalHuggingPriority="750" doubleValue="0.1168348266655812" horizontal="YES" id="FXa-uC-KXT">
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="0.1168348266655812" horizontal="YES" id="FXa-uC-KXT">
                                     <rect key="frame" x="1" y="280" width="218" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="Biy-pW-4o8">
-                                    <rect key="frame" x="-14" y="9" width="15" height="0.0"/>
+                                    <rect key="frame" x="204" y="17" width="15" height="0.0"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <tableHeaderView key="headerView" id="vm2-5k-HNv">
-                                    <rect key="frame" x="0.0" y="0.0" width="220" height="17"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="218" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableHeaderView>
                             </scrollView>
@@ -819,6 +800,36 @@
                                     <constraint firstAttribute="bottom" secondItem="gKo-yq-jzH" secondAttribute="bottom" id="iAC-Jd-12v"/>
                                 </constraints>
                             </customView>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ZyL-3c-Q7T">
+                                <rect key="frame" x="18" y="331" width="224" height="21"/>
+                                <sliderCell key="cell" enabled="NO" state="on" alignment="left" maxValue="255" tickMarkPosition="above" sliderType="linear" id="4bf-ya-sZC"/>
+                                <connections>
+                                    <action selector="setLedBrightness:" target="XfG-lQ-9wD" id="qik-IX-JHr"/>
+                                </connections>
+                            </slider>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0Ej-hu-93S">
+                                <rect key="frame" x="18" y="350" width="30" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="LED" id="yCH-OG-eUU">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gst-KI-PKh">
+                                <rect key="frame" x="18" y="374" width="225" height="26"/>
+                                <popUpButtonCell key="cell" type="push" title="Arduino" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jIL-Dm-3ae" id="mvf-Wh-KXn">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="ccE-yX-E7d">
+                                        <items>
+                                            <menuItem title="Arduino" state="on" id="jIL-Dm-3ae"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="selectSerialPort:" target="XfG-lQ-9wD" id="Wd4-JU-hKd"/>
+                                </connections>
+                            </popUpButton>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="7Bp-BT-xUt" secondAttribute="trailing" constant="20" id="0hc-gU-EeO"/>
@@ -826,19 +837,24 @@
                             <constraint firstItem="aZh-fI-0zG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="7yJ-Z2-lWg"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="gst-KI-PKh" secondAttribute="trailing" constant="20" id="8E7-je-H9b"/>
                             <constraint firstItem="EdX-Vc-JjP" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="8mn-dn-Rza"/>
+                            <constraint firstItem="0Ej-hu-93S" firstAttribute="top" secondItem="gst-KI-PKh" secondAttribute="bottom" constant="10" id="BBQ-15-Bdm"/>
+                            <constraint firstItem="ZyL-3c-Q7T" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="CVZ-rw-DdA"/>
                             <constraint firstAttribute="bottom" secondItem="aZh-fI-0zG" secondAttribute="bottom" constant="20" id="Dk6-RO-h1v"/>
                             <constraint firstItem="fEc-hv-t7c" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="KnE-Zt-yZP"/>
                             <constraint firstItem="neZ-Dt-SJB" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="KzC-wT-hIB"/>
                             <constraint firstItem="aZh-fI-0zG" firstAttribute="top" secondItem="fEc-hv-t7c" secondAttribute="bottom" constant="20" id="RmO-DT-3gf"/>
-                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="gst-KI-PKh" secondAttribute="bottom" constant="20" id="WE2-aq-WYE"/>
+                            <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="ZyL-3c-Q7T" secondAttribute="trailing" constant="20" id="URY-t3-rdQ"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="top" secondItem="neZ-Dt-SJB" secondAttribute="bottom" constant="10" id="WXQ-cE-wlw"/>
+                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="ZyL-3c-Q7T" secondAttribute="bottom" constant="20" id="Wmn-7B-NlS"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="aZh-fI-0zG" secondAttribute="trailing" constant="20" id="c94-yX-meR"/>
+                            <constraint firstItem="0Ej-hu-93S" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="dmR-zt-YJq"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="eQ1-kd-EaF"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="fEc-hv-t7c" secondAttribute="trailing" constant="20" id="fiS-Jk-0Wj"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="neZ-Dt-SJB" secondAttribute="trailing" constant="20" id="isV-tD-unp"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="EdX-Vc-JjP" secondAttribute="trailing" constant="20" id="mJ2-sC-qAe"/>
                             <constraint firstAttribute="bottom" secondItem="7Bp-BT-xUt" secondAttribute="bottom" constant="20" id="rpj-TG-G53"/>
                             <constraint firstItem="neZ-Dt-SJB" firstAttribute="top" secondItem="EdX-Vc-JjP" secondAttribute="bottom" constant="10" id="t6J-06-MDu"/>
+                            <constraint firstItem="ZyL-3c-Q7T" firstAttribute="top" secondItem="0Ej-hu-93S" secondAttribute="bottom" id="uii-kN-3QL"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="zhM-Ug-aHj"/>
                         </constraints>
                     </view>
@@ -849,6 +865,7 @@
                         <outlet property="listSerialPorts" destination="gst-KI-PKh" id="083-iY-1Cb"/>
                         <outlet property="listVideoSources" destination="EdX-Vc-JjP" id="0q4-QZ-2bb"/>
                         <outlet property="previewView" destination="Ra3-tA-3Ku" id="rwb-hL-cOB"/>
+                        <outlet property="sliderLedBrightness" destination="ZyL-3c-Q7T" id="car-HI-Px1"/>
                         <outlet property="tableAnnotations" destination="ur6-Ur-zr2" id="6El-c3-2PO"/>
                         <outlet property="view" destination="m2S-Jp-Qdl" id="bl6-jL-P0I"/>
                     </connections>

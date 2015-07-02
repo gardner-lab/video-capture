@@ -11,17 +11,47 @@ import AVFoundation
 import CoreFoundation
 import CoreGraphics
 import CoreImage
+import ORSSerial
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate, ArduinoIODelegate {
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var listSerialPorts: NSPopUpButton?
+    @IBOutlet var sliderLedBrightness: NSSlider?
     @IBOutlet var buttonToggle: NSButton?
     @IBOutlet var previewView: NSView?
-    @IBOutlet var annotableView: AnnotableViewer?
-    @IBOutlet var tableAnnotations: NSTableView?
+    @IBOutlet var annotableView: AnnotableViewer? {
+        didSet {
+            oldValue?.delegate = nil
+            annotableView?.delegate = self
+            annotableView?.wantsLayer = true
+        }
+    }
+    @IBOutlet var tableAnnotations: NSTableView? {
+        didSet {
+            oldValue?.setDelegate(nil)
+            oldValue?.setDataSource(nil)
+            tableAnnotations?.setDelegate(self)
+            tableAnnotations?.setDataSource(self)
+        }
+    }
     
     var deviceUniqueIDs = [Int: String]()
+    
+    var editable = true {
+        didSet {
+            listVideoSources?.enabled = editable
+            listAudioSources?.enabled = editable
+            listSerialPorts?.enabled = editable
+            sliderLedBrightness?.enabled = editable && nil != ioArduino
+            if let tv = tableAnnotations {
+                let col = tv.columnWithIdentifier("name")
+                if 0 <= col {
+                    tv.tableColumns[col].editable = editable
+                }
+            }
+        }
+    }
     
     // session information
     var isRunning = false
@@ -33,6 +63,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avVideoData: AVCaptureVideoDataOutput?
     
     var avVideoDispatchQueue: dispatch_queue_t?
+    
+    // serial communications
+    var ioArduino: ArduinoIO? {
+        didSet {
+            oldValue?.delegate = nil
+            ioArduino?.delegate = self
+            
+            // update serial port
+            sliderLedBrightness?.enabled = editable && nil != ioArduino
+        }
+    }
     
     // extraction information
     var extractValues: [Float] = []
@@ -50,20 +91,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // set delegats
-        annotableView?.delegate = self
-        annotableView?.wantsLayer = true
-        
-        // set table delegate
-        tableAnnotations?.setDelegate(self)
-        tableAnnotations?.setDataSource(self)
-        
         // fetch devices
         updateDeviceLists()
     }
     
     override func viewDidAppear() {
         super.viewDidAppear()
+        
+        // listen for serial changes
+        let nc = NSNotificationCenter.defaultCenter()
+        nc.addObserver(self, selector: "serialPortsWereConnected:", name: ORSSerialPortsWereConnectedNotification, object: nil)
+        nc.addObserver(self, selector: "serialPortsWereDisconnected:", name: ORSSerialPortsWereDisconnectedNotification, object: nil)
         
         // initialize preview background
         if let view = previewView, let root = view.layer {
@@ -77,6 +115,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     override func viewWillDisappear() {
+        // remove notification center
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+        
         // end any capturing video
         self.stopProcessing()
         
@@ -122,9 +163,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         var newDeviceUniqueIDs = [Int: String]()
         var newDeviceIndex = 1
         
+        // video sources
         if let list = self.listVideoSources {
             list.removeAllItems()
-            list.addItemWithTitle("Video");
+            list.addItemWithTitle("Video")
             for d in devices_video {
                 let dev: AVCaptureDevice = d as! AVCaptureDevice
                 let item = NSMenuItem()
@@ -137,6 +179,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             list.synchronizeTitleAndSelectedItem()
         }
         
+        // audio sources
         if let list = self.listAudioSources {
             list.removeAllItems()
             list.addItemWithTitle("Audio")
@@ -147,6 +190,21 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
+                newDeviceIndex++
+            }
+            list.synchronizeTitleAndSelectedItem()
+        }
+        
+        // serial ports
+        if let list = self.listSerialPorts {
+            list.removeAllItems()
+            list.addItemWithTitle("Arduino")
+            for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts as! [ORSSerialPort] {
+                let item = NSMenuItem()
+                item.title = port.name
+                item.tag = newDeviceIndex
+                list.menu?.addItem(item)
+                newDeviceUniqueIDs[newDeviceIndex] = port.path
                 newDeviceIndex++
             }
             list.synchronizeTitleAndSelectedItem()
@@ -294,7 +352,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // raw data
         let videoData = AVCaptureVideoDataOutput()
         self.avVideoData = videoData
-        videoData.videoSettings = nil // [kCVPixelBufferPixelFormatTypeKey: Int(kCVPixelFormatType_16Gray)] as [NSObject: AnyObject] // nil: native format
+        videoData.videoSettings = nil // nil: native format
         videoData.alwaysDiscardsLateVideoFrames = true
         
         // create serial dispatch queue
@@ -355,11 +413,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // disable buttons
-        listVideoSources?.enabled = false
-        listAudioSources?.enabled = false
-        listSerialPorts?.enabled = false
-        annotableView?.enabled = false
-        buttonToggle?.title = "Stop Processing"
+        editable = false
+        buttonToggle?.title = "Stop Capturing"
         
         isRunning = true
         
@@ -429,11 +484,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         isRunning = false
         
         // disable buttons
-        listVideoSources?.enabled = true
-        listAudioSources?.enabled = true
-        listSerialPorts?.enabled = true
-        annotableView?.enabled = true
-        buttonToggle?.title = "Start Processing"
+        buttonToggle?.title = "Start Capturing"
+        editable = true
     }
     
     func stopSession() {
@@ -465,18 +517,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             previewLayer.session = nil
             self.avPreviewLayer = nil
         }
+        
+        // release arduino
+        if nil != self.ioArduino {
+            self.ioArduino = nil
+        }
     }
 
     @IBAction func selectVideoSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             NSLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
-            if nil != self.avInputVideo {
+            if nil != avInputVideo {
                 // should be defined
-                assert(nil != self.avSession)
+                assert(nil != avSession)
                 
-                if let inputVideoDevice = self.avInputVideo! as? AVCaptureDeviceInput {
+                if let inputVideoDevice = avInputVideo! as? AVCaptureDeviceInput {
                     if inputVideoDevice.device.uniqueID == deviceUniqueID {
                         NSLog("Same device.")
                         return
@@ -484,23 +541,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
                 
                 // remove existing
-                self.avSession!.removeInput(self.avInputVideo!)
-                self.avInputVideo = nil
+                avSession!.removeInput(avInputVideo!)
+                avInputVideo = nil
             }
             else {
                 // start sesion
-                self.startSession()
+                startSession()
             }
             
             // get device and add it
-            if let videoDevice = self.getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
+            if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
                 // add input
-                self.avInputVideo = self.addInput(videoDevice)
+                avInputVideo = addInput(videoDevice)
                 
                 // start preview layer
-                if nil != self.avInputVideo {
+                if nil != avInputVideo {
                     // update preview layer
-                    if let previewLayer = self.avPreviewLayer {
+                    if let previewLayer = avPreviewLayer {
                         previewLayer.connection.automaticallyAdjustsVideoMirroring = false
                         previewLayer.connection.videoMirrored = false
                         
@@ -510,28 +567,28 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         else {
-            if nil != self.avInputVideo {
+            if nil != avInputVideo {
                 // should be defined
-                assert(nil != self.avSession)
+                assert(nil != avSession)
                 
                 
                 // remove video
-                self.avSession!.removeInput(self.avInputVideo!)
-                self.avInputVideo = nil
+                avSession!.removeInput(avInputVideo!)
+                avInputVideo = nil
             }
         }
     }
     
     @IBAction func selectAudioSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = self.deviceUniqueIDs[selected.tag] {
+        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             NSLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
-            if nil != self.avInputAudio {
+            if nil != avInputAudio {
                 // should be defined
-                assert(nil != self.avSession)
+                assert(nil != avSession)
                 
-                if let inputAudioDevice = self.avInputAudio! as? AVCaptureDeviceInput {
+                if let inputAudioDevice = avInputAudio! as? AVCaptureDeviceInput {
                     if inputAudioDevice.device.uniqueID == deviceUniqueID {
                         NSLog("Same device.")
                         return
@@ -539,34 +596,65 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
                 
                 // remove existing
-                self.avSession!.removeInput(self.avInputAudio!)
-                self.avInputAudio = nil
+                avSession!.removeInput(avInputAudio!)
+                avInputAudio = nil
             }
             else {
                 // start sesion
-                self.startSession()
+                startSession()
             }
             
             // get device and add it
-            if let audioDevice = self.getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
-                self.avInputAudio = self.addInput(audioDevice)
+            if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
+                avInputAudio = addInput(audioDevice)
             }
         }
         else {
-            if nil != self.avInputAudio {
+            if nil != avInputAudio {
                 // should be defined
                 assert(nil != self.avSession)
                 
                 
                 // remove audio
-                self.avSession!.removeInput(self.avInputAudio!)
-                self.avInputAudio = nil
+                avSession!.removeInput(avInputAudio!)
+                avInputAudio = nil
             }
         }
     }
     
     @IBAction func selectSerialPort(sender: AnyObject?) {
-        
+        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
+            NSLog("Device Path: \(devicePath)")
+            
+            // get existing device
+            if nil != ioArduino {
+                if ioArduino!.serial?.path == devicePath {
+                    NSLog("Same device.")
+                    return
+                }
+                
+                // remove device
+                ioArduino = nil
+            }
+            
+            // open new port
+            do {
+                try ioArduino = ArduinoIO(path: devicePath)
+                try ioArduino!.setPinMode(4, to: ArduinoIOPin.Output) // pin 4: digital camera relay
+                try ioArduino!.setPinMode(9, to: ArduinoIOPin.Output) // pin 9: digital white noise stimulation
+                try ioArduino!.setPinMode(13, to: ArduinoIOPin.Output) // pin 13: analog brightness
+            }
+            catch {
+                ioArduino = nil
+            }
+        }
+        else {
+            // has open port?
+            if nil != ioArduino {
+                // remove open port
+                ioArduino = nil
+            }
+        }
     }
 
     @IBAction func toggleProcessing(sender: AnyObject?) {
@@ -681,80 +769,109 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return
         }
         
-        //NSLog(CVImageBufferGetColorSpace(imageBuffer))
-        
-//        if let a = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) {
-//            let attachments = a.takeRetainedValue() as NSDictionary
-//        }
-        
-        let image = CIImage(CVImageBuffer: imageBuffer) //, options: attachments) // , options:attachments)
-        
-//        if nil == self.cgBitmapContext || self.lastExtent != image.extent {
-//            // release existing
-//            self.cgBitmapContext = nil
-//            
-//            // create new
-//            let cgColorSpace = CGColorSpaceCreateDeviceGray()
-//            self.cgBitmapContext = CGBitmapContextCreate(nil, Int(image.extent.width), Int(image.extent.height), 8, 0, cgColorSpace, CGImageAlphaInfo.None.rawValue)
-//            
-//            // store last extent
-//            self.lastExtent = image.extent
-//            
-//            // failed
-//            if nil == self.cgBitmapContext {
-//                NSLog("Unable to create bitmap context.")
-//                self.stopProcessing()
-//                return;
-//            }
-//        }
-        
-        let bounds = image.extent, width = Int(bounds.size.width), height = Int(bounds.size.height)
-        let bytesPerPixel: Int = 4 // four bytes per pixel kCIFormatARGB8
-        let bytesPerRow = Int(bytesPerPixel * width)
-        let bytesTotal = bytesPerRow * height
-        
-        if bounds.size != extractBounds {
+        if kCVPixelFormatType_422YpCbCr8 == CVPixelBufferGetPixelFormatType(imageBuffer) {
+            // express processing, access buffer directly
+
+            let width = CVPixelBufferGetWidth(imageBuffer), height = CVPixelBufferGetHeight(imageBuffer)
+            let boundsSize = CGSize(width: width, height: height)
             
-//            let rep = NSBitmapImageRep(CIImage: image)
-//            let img = NSImage(size: rep.size)
-//            img.addRepresentation(rep)
-//            
-            // update extraction list
-            updateExtractionList(bounds.size)
-            
-            
-            // update extract bounds
-            extractBounds = bounds.size
-        }
-        
-        // adjust buffer
-        if bytesTotal > self.bufferSize {
-            free(self.buffer)
-            self.buffer = calloc(bytesTotal, sizeof(UInt8))
-            self.bufferSize = bytesTotal
-        }
-        
-        self.ciContext?.render(image, toBitmap: self.buffer, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
-        
-        let bytes = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.buffer), count: Int(bytesTotal))
-        var annotSum = [Float](count: extractArray.count, repeatedValue: 0.0)
-        var annotCnt = [Int](count: extractArray.count, repeatedValue: 0)
-        for (pixel, annotIdx) in extractArray {
-            if annotIdx >= annotSum.count {
-                continue
+            // check extraction list
+            if boundsSize != extractBounds {
+                // update extraction list
+                updateExtractionList(boundsSize)
+                
+                // update extract bounds
+                extractBounds = boundsSize
             }
-            let i = pixel * bytesPerPixel
-            let red = Float(bytes[i + 1]), green = Float(bytes[i + 2]), blue = Float(bytes[i + 3])
-            let brightness = 0.2126 * red + 0.7152 * green + 0.0722 * blue
             
-            // increment values
-            annotSum[annotIdx] += brightness
-            annotCnt[annotIdx]++
+            // lock buffer
+            CVPixelBufferLockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
+            
+            // get buffer
+            let bytesPerPixel = 2
+            let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer)
+            let bytesTotal = bytesPerRow * height
+            let bytes = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(CVPixelBufferGetBaseAddress(imageBuffer)), count: Int(bytesTotal))
+            
+            var annotSum = [Float](count: extractArray.count, repeatedValue: 0.0)
+            var annotCnt = [Int](count: extractArray.count, repeatedValue: 0)
+            for (pixel, annotIdx) in extractArray {
+                if annotIdx >= annotSum.count {
+                    continue
+                }
+                let i = pixel * bytesPerPixel + 1
+                let brightness = Float(bytes[i])
+                
+                // increment values
+                annotSum[annotIdx] += brightness
+                annotCnt[annotIdx]++
+            }
+            
+            // unlock buffer
+            CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
+            
+            // update values
+            extractValues = zip(annotSum, annotCnt).map {
+                sum, cnt in return cnt > 0 ? sum / Float(cnt) : 0.0
+            }
         }
-        
-        // update values
-        extractValues = zip(annotSum, annotCnt).map {
-            sum, cnt in return cnt > 0 ? sum / Float(cnt) : 0.0
+        else {
+            NSLog("Using slower processing chain.")
+            
+            //        if let a = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate) {
+            //            let attachments = a.takeRetainedValue() as NSDictionary
+            //        }
+            
+            let image = CIImage(CVImageBuffer: imageBuffer) //, options: attachments) // , options:attachments)
+            
+            let bounds = image.extent, width = Int(bounds.size.width), height = Int(bounds.size.height)
+            let bytesPerPixel: Int = 4 // four bytes per pixel kCIFormatARGB8
+            let bytesPerRow = Int(bytesPerPixel * width)
+            let bytesTotal = bytesPerRow * height
+            
+            // check extraction list
+            if bounds.size != extractBounds {
+                //            let rep = NSBitmapImageRep(CIImage: image)
+                //            let img = NSImage(size: rep.size)
+                //            img.addRepresentation(rep)
+                //
+                // update extraction list
+                updateExtractionList(bounds.size)
+                
+                
+                // update extract bounds
+                extractBounds = bounds.size
+            }
+            
+            // adjust buffer
+            if bytesTotal > self.bufferSize {
+                free(self.buffer)
+                self.buffer = calloc(bytesTotal, sizeof(UInt8))
+                self.bufferSize = bytesTotal
+            }
+            
+            self.ciContext?.render(image, toBitmap: self.buffer, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
+            
+            let bytes = UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.buffer), count: Int(bytesTotal))
+            var annotSum = [Float](count: extractArray.count, repeatedValue: 0.0)
+            var annotCnt = [Int](count: extractArray.count, repeatedValue: 0)
+            for (pixel, annotIdx) in extractArray {
+                if annotIdx >= annotSum.count {
+                    continue
+                }
+                let i = pixel * bytesPerPixel
+                let red = Float(bytes[i + 1]), green = Float(bytes[i + 2]), blue = Float(bytes[i + 3])
+                let brightness = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+                
+                // increment values
+                annotSum[annotIdx] += brightness
+                annotCnt[annotIdx]++
+            }
+            
+            // update values
+            extractValues = zip(annotSum, annotCnt).map {
+                sum, cnt in return cnt > 0 ? sum / Float(cnt) : 0.0
+            }
         }
     }
     
@@ -780,29 +897,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return 0
         }
         return annotView.annotations.count
-    }
-    
-    func tableView(tableView: NSTableView, dataCellForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSCell? {
-        if let col = tableColumn {
-            switch col.identifier {
-            case "color":
-                return ColorSwatchCell()
-                
-            case "name":
-                let c = NSCell(textCell: "")
-                c.editable = true
-                return c
-                
-            case "value":
-                let c = NSCell(textCell: "")
-                c.alignment = NSTextAlignment.Right
-                return c
-                
-            default:
-                return NSCell(textCell: "")
-            }
-        }
-        return nil
     }
     
     func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject? {
@@ -841,6 +935,60 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if let newName = object as? String {
                 annotView.annotations[row].name = newName
             }
+        }
+    }
+    
+    // serial port
+    func serialPortsWereConnected(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let connectedPorts = userInfo[ORSConnectedSerialPortsKey] as! [ORSSerialPort]
+            NSLog("Ports were connected: \(connectedPorts)")
+            updateDeviceLists()
+        }
+    }
+    
+    func serialPortsWereDisconnected(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let disconnectedPorts: [ORSSerialPort] = userInfo[ORSDisconnectedSerialPortsKey] as! [ORSSerialPort]
+            NSLog("Ports were disconnected: \(disconnectedPorts)")
+            updateDeviceLists()
+        }
+    }
+    
+    // arduino protocol
+    
+    func resetArduino() {
+        NSLog("ARDUINO reset")
+        
+        if isRunning {
+            stopProcessing()
+        }
+        
+        // clear arduino
+        ioArduino = nil
+        
+        // reset arduino selection
+        listAudioSources?.selectItemAtIndex(0)
+    }
+    
+    @IBAction func setLedBrightness(sender: AnyObject?) {
+        if let s = sender, let slider = s as? NSSlider, let arduino = self.ioArduino {
+            do {
+                NSLog("ARDUINO brightness \(slider.integerValue)")
+                try arduino.writeTo(13, analogValue: UInt8(slider.integerValue))
+            }
+            catch {
+                NSLog("ARDUINO brightness: failed! \(error)")
+            }
+        }
+    }
+    
+    func arduinoError(message: String, isPermanent: Bool) {
+        NSLog("Arduino Error: \(message)")
+        
+        // permanent error
+        if isPermanent {
+            resetArduino()
         }
     }
 }
