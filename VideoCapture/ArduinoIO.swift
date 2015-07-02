@@ -9,6 +9,7 @@
 import Foundation
 import ORSSerial
 
+let kStartupTime = 2.0
 let kTimeoutDuration: NSTimeInterval = 0.5
 
 private enum ArduinoIOState {
@@ -206,7 +207,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         state = .WaitingToOpen
         
         // setup timer
-        NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "completeOpen:", userInfo: nil, repeats: false)
+        NSTimer.scheduledTimerWithTimeInterval(kStartupTime, target: self, selector: "completeOpen:", userInfo: nil, repeats: false)
     }
     
     /// Opening process takes 2~6 seconds. Inital requests are held until Arduino is online.
@@ -215,7 +216,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             return
         }
         
-        NSLog("ARDUINO OPEN")
+        DLog("ARDUINO OPEN")
         
         // set state to opened
         state = .Opened
@@ -352,7 +353,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         let data = NSData(bytes: dataBytes, length: dataBytes.count)
         send(data)
         
-        NSLog("ARDUINO WRITE \(pin): \(digitalValue)")
+        DLog("ARDUINO WRITE \(pin): \(digitalValue)")
     }
     
     func readDigitalValueFrom(pin: Int, andExecute cb: (Bool?) -> Void) throws {
@@ -394,7 +395,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         let data = NSData(bytes: dataBytes, length: dataBytes.count)
         send(data)
         
-        NSLog("ARDUINO WRITE \(pin): \(analogValue)")
+        DLog("ARDUINO WRITE \(pin): \(analogValue)")
     }
     
     func readAnalogValueFrom(pin: Int, andExecute cb: (UInt8?) -> Void) throws {
@@ -420,16 +421,16 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     // MARK: - ORSSerialPortDelegate
     
     func serialPortWasOpened(serialPort: ORSSerialPort) {
-        NSLog("SERIAL OPENED: \(serialPort)")
+        DLog("SERIAL OPENED: \(serialPort)")
     }
     
     func serialPortWasClosed(serialPort: ORSSerialPort) {
-        NSLog("SERIAL CLOSED: \(serialPort)")
+        DLog("SERIAL CLOSED: \(serialPort)")
     }
     
     func serialPort(serialPort: ORSSerialPort, didReceiveData data: NSData) {
         if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
-            NSLog("SERIAL \(serialPort) RECEIVED: \(string)")
+            DLog("SERIAL \(serialPort) RECEIVED: \(string)")
         }
     }
     
@@ -529,6 +530,8 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     func serialPortWasRemovedFromSystem(serialPort: ORSSerialPort) {
+        NSLog("SERIAL \(serialPort) REMOVED")
+        
         if state == .WaitingToOpen || state == .Opened {
             // send to delegate
             delegate?.arduinoError("Disconnected", isPermanent: true)
@@ -540,7 +543,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     func serialPort(serialPort: ORSSerialPort, didEncounterError error: NSError) {
-        NSLog("SerialPort \(serialPort) encountered an error \(error)")
+        NSLog("SERIAL \(serialPort) ERROR: \(error)")
         
         // send to delegate
         delegate?.arduinoError("Error: \(error.localizedDescription)", isPermanent: false)

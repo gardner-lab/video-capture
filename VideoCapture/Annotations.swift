@@ -20,6 +20,7 @@ protocol Annotation {
     func drawOutline(context: NSGraphicsContext, inRect rect: NSRect)
     func containsPoint(point: NSPoint) -> Bool
     func generateImageCoordinates(rect: NSRect) -> [(Int, Int)]
+    func generateImageDescription(rect: NSRect) -> String
 }
 
 /// Helepr functions to convert the relative points of the annotations back into LLO pixel coorindates for drawing.
@@ -116,6 +117,16 @@ struct AnnotationCircle: Annotation {
         }
         return ret
     }
+    
+    func generateImageDescription(rect: NSRect) -> String {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        
+        // image integer coordinates
+        let imageCenterX = Int(center.x * maxDim - rect.origin.x), imageCenterY = Int(center.y * maxDim - rect.origin.y), imageRadius = Int(maxDim * radius)
+        
+        return "Circle; center = (\(imageCenterX), \(imageCenterY)); radius = \(imageRadius)"
+    }
 }
 
 struct AnnotationEllipse: Annotation {
@@ -181,6 +192,17 @@ struct AnnotationEllipse: Annotation {
         }
         return ret
     }
+    
+    func generateImageDescription(rect: NSRect) -> String {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        
+        // image integer coordinates
+        let imageOriginX = Int(origin.x * maxDim - rect.origin.x), imageOriginY = Int(origin.y * maxDim - rect.origin.y)
+        let imageSizeWidth = Int(size.width * maxDim), imageSizeHeight = Int(size.height * maxDim)
+        
+        return "Ellipse; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
+    }
 }
 
 struct AnnotationRectangle: Annotation {
@@ -229,5 +251,16 @@ struct AnnotationRectangle: Annotation {
             }
         }
         return ret
+    }
+    
+    func generateImageDescription(rect: NSRect) -> String {
+        // scale everything according to the maximum dimension
+        let maxDim = max(rect.size.width, rect.size.height)
+        
+        // image integer coordinates
+        let imageOriginX = Int(origin.x * maxDim - rect.origin.x), imageOriginY = Int(origin.y * maxDim - rect.origin.y)
+        let imageSizeWidth = Int(size.width * maxDim), imageSizeHeight = Int(size.height * maxDim)
+        
+        return "Rectangle; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
     }
 }
