@@ -215,7 +215,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             return
         }
         
-        NSLog("Arduino open")
+        NSLog("ARDUINO OPEN")
         
         // set state to opened
         state = .Opened
@@ -420,18 +420,16 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     // MARK: - ORSSerialPortDelegate
     
     func serialPortWasOpened(serialPort: ORSSerialPort) {
-        NSLog("SerialPort \(serialPort) was opened")
+        NSLog("SERIAL OPENED: \(serialPort)")
     }
     
     func serialPortWasClosed(serialPort: ORSSerialPort) {
-        NSLog("SerialPort \(serialPort) was closed")
+        NSLog("SERIAL CLOSED: \(serialPort)")
     }
     
     func serialPort(serialPort: ORSSerialPort, didReceiveData data: NSData) {
         if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
-            //self.receivedDataTextView.textStorage?.mutableString.appendString(string as String)
-            //self.receivedDataTextView.needsDisplay = true
-            NSLog("SerialPort \(serialPort) received \(string)")
+            NSLog("SERIAL \(serialPort) RECEIVED: \(string)")
         }
     }
     
@@ -463,7 +461,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             }
             
             // log sketch
-            NSLog("Arduino Sketch: \(sketch)")
+            NSLog("ARDUINO SKETCH: \(sketch)")
             
             if sketch == .Unknown {
                 // send to delegate
@@ -477,7 +475,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             runPendingConnectionQueue()
             
         case .ReadDigital(let pin, let cb):
-            NSLog("READ \(pin): \(dataAsString)")
+            NSLog("ARDUINO READ \(pin): \(dataAsString)")
             switch dataAsString {
             case "0": cb(false)
             case "1": cb(true)
@@ -485,7 +483,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             }
         
         case .ReadAnalog(let pin, let cb):
-            NSLog("READ \(pin): \(dataAsString)")
+            NSLog("ARDUINO READ \(pin): \(dataAsString)")
             if let val = Int(dataAsString) where val >= 0 && val <= 255 {
                 cb(UInt8(val))
             }
@@ -504,7 +502,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         requestInfo.removeValueForKey(reqId)
         
         // log it
-        NSLog("Arduino Time Out: \(reqType)")
+        NSLog("ARDUINO TIMEOUT: \(reqType)")
         
         switch reqType {
         case .SketchInitialize:

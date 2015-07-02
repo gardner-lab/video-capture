@@ -20,6 +20,8 @@
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
 		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
 		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
+		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
+		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,8 @@
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
 		D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIO.swift; sourceTree = "<group>"; };
+		D8E48E0A1B458E250052F4C7 /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		D8E48E0D1B45904E0052F4C7 /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,11 +112,13 @@
 		D8013F941B4037870053F452 /* VideoCapture */ = {
 			isa = PBXGroup;
 			children = (
-				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
-				D8013F991B4037870053F452 /* ViewController.swift */,
+				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
+				D8E48E0D1B45904E0052F4C7 /* Common.swift */,
+				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
+				D8013F991B4037870053F452 /* ViewController.swift */,
 				D8013F9B1B4037870053F452 /* Images.xcassets */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
 				D8013F951B4037870053F452 /* Supporting Files */,
@@ -271,9 +277,11 @@
 			files = (
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
+				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
+				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,6 +403,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				OTHER_SWIFT_FLAGS = "-DDEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -407,6 +416,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
