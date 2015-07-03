@@ -471,8 +471,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func createVideoOutputs(file: NSURL) -> Bool {
-        guard let session = self.avSession else {
+    private func createVideoData() -> Bool {
+        // already created
+        guard nil == avVideoData else {
+            return true
+        }
+        guard let session = avSession else {
             return false
         }
         
@@ -493,7 +497,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(videoData)
         
-        // writer
+        return true
+    }
+    
+    private func createVideoFile() -> Bool {
+        // already created
+        guard nil == avFileOut else {
+            return true
+        }
+        guard let session = avSession else {
+            return false
+        }
+        
         let movieOut = AVCaptureMovieFileOutput()
         self.avFileOut = movieOut
         if !session.canAddOutput(movieOut) {
@@ -502,18 +517,39 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(movieOut)
         
+        return true
+    }
+    
+    private func createVideoOutputs(file: NSURL) -> Bool {
+        // create raw data stream
+        if nil == avVideoData {
+            if !createVideoData() {
+                return false
+            }
+        }
+        
+        // writer
+        if nil == avVideoData {
+            if !createVideoFile() {
+                return false
+            }
+        }
+        
         // start writer
-        movieOut.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        self.avFileOut!.startRecordingToOutputFileURL(file, recordingDelegate:self)
         
         return true
     }
     
-    func createAudioOutputs(file: NSURL) -> Bool {
-        guard let session = self.avSession else {
+    func createAudioFile() -> Bool {
+        // already created
+        guard nil == avFileOut else {
+            return true
+        }
+        guard let session = avSession else {
             return false
         }
         
-        // writer
         let audioOut = AVCaptureAudioFileOutput()
         self.avFileOut = audioOut
         if !session.canAddOutput(audioOut) {
@@ -522,8 +558,21 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(audioOut)
         
+        return true
+    }
+    
+    func createAudioOutputs(file: NSURL) -> Bool {
+        // writer
+        if nil == avVideoData {
+            if !createAudioFile() {
+                return false
+            }
+        }
+        
         // start writer
-        audioOut.startRecordingToOutputFileURL(file, outputFileType: AVFileTypeAppleM4A, recordingDelegate: self)
+        if let audioOut = avFileOut! as? AVCaptureAudioFileOutput {
+            audioOut.startRecordingToOutputFileURL(file, outputFileType: AVFileTypeAppleM4A, recordingDelegate: self)
+        }
         
         return true
     }
@@ -580,42 +629,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    func startCapturing(file: NSURL) -> Bool {
-        guard !mode.isCapturing() else {
-            return false
-        }
-        
-        // get capture device
-        if nil == avInputVideo && nil == avInputAudio {
-            DLog("No device selected.")
-            return false
-        }
-        
-        // update mode
-        if mode.isMonitoring() {
-            mode = .TriggeredCapture
-        }
-        else {
-            mode = .ManualCapture
-        }
-        
-        // SETUP OUTPUTS
+    private func setupBeforeCapture() -> Bool {
+        // create video inputs
         if nil != avInputVideo {
-            // unable to create video output
-            if !createVideoOutputs(file) {
-                stopDueToPermanentError()
+            if !createVideoData() {
                 return false
             }
-            
-            // file for data
-            if let fileForData = file.URLByDeletingPathExtension?.URLByAppendingPathExtension("csv") {
-                openDataFile(fileForData)
+            if !createVideoFile() {
+                return false
             }
         }
         else {
-            // unable to create audio output
-            if !createAudioOutputs(file) {
-                stopDueToPermanentError()
+            if !createAudioFile() {
                 return false
             }
         }
@@ -626,12 +651,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    /// Stops current capture session. Will return to monitoring if automatically triggered, otherwise will return to configuration mode.
-    func stopCapturing() {
-        guard mode.isCapturing() else {
-            return;
-        }
-        
+    private func tearDownAfterCapture() {
         // stop timer
         if nil != self.timerRedraw {
             self.timerRedraw!.invalidate()
@@ -658,11 +678,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // stop writing
-        if let fileOut = avFileOut {
-            if fileOut.recording {
-                fileOut.stopRecording()
-                return
-            }
+        if nil != avFileOut {
             if nil != avSession {
                 avSession!.removeOutput(avFileOut!)
             }
@@ -675,12 +691,78 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             buffer = nil
             bufferSize = 0
         }
+    }
+    
+    func startCapturing(file: NSURL) -> Bool {
+        guard !mode.isCapturing() else {
+            return false
+        }
+        
+        // get capture device
+        if nil == avInputVideo && nil == avInputAudio {
+            DLog("No device selected.")
+            return false
+        }
+        
+        // update mode
+        if mode.isMonitoring() {
+            mode = .TriggeredCapture
+        }
+        else {
+            mode = .ManualCapture
+            
+            // setup
+            if !setupBeforeCapture() {
+                stopDueToPermanentError()
+            }
+        }
+        
+        // SETUP OUTPUTS
+        if nil != avInputVideo {
+            // unable to create video output
+            if !createVideoOutputs(file) {
+                stopDueToPermanentError()
+                return false
+            }
+            
+            // file for data
+            if let fileForData = file.URLByDeletingPathExtension?.URLByAppendingPathExtension("csv") {
+                openDataFile(fileForData)
+            }
+        }
+        else {
+            // unable to create audio output
+            if !createAudioOutputs(file) {
+                stopDueToPermanentError()
+                return false
+            }
+        }
+        
+        return true
+    }
+    
+    /// Stops current capture session. Will return to monitoring if automatically triggered, otherwise will return to configuration mode.
+    func stopCapturing() {
+        guard mode.isCapturing() else {
+            return
+        }
+        
+        // stop writing
+        if let fileOut = avFileOut {
+            if fileOut.recording {
+                fileOut.stopRecording()
+                return
+            }
+        }
         
         // swithc interface mode
         if mode.isMonitoring() {
             mode = .Monitor
         }
         else {
+            // tear down
+            tearDownAfterCapture()
+            
             mode = .Configure
         }
     }
@@ -728,13 +810,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // update mode
         mode = .Monitor
         
+        // setup
+        if !setupBeforeCapture() {
+            stopDueToPermanentError()
+        }
+        
         // strat timer
         timerMonitor = NSTimer.scheduledTimerWithTimeInterval(appPreferences.triggerPollTime, target: self, selector: "monitorCheckTrigger:", userInfo: nil, repeats: true)
         
         // turn off led and camera
         do {
             try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
         }
         catch {
             
@@ -757,7 +844,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if isTriggered {
             // turn on LED and camera
             do {
-                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
+                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
                 if let ledBrightness = sliderLedBrightness?.integerValue {
                     try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
                 }
@@ -774,7 +861,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // format
             let formatter = NSDateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            formatter.dateFormat = "yyyy-MM-dd HH mm ss"
             
             // build file name
             let name = formatter.stringFromDate(NSDate()) + (avInputVideo == nil ? ".m4a" : ".mov")
@@ -790,7 +877,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // turn off LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
             }
             catch {
                 
@@ -830,21 +917,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return
         }
         
+        // stop timer
+        if nil != timerMonitor {
+            timerMonitor!.invalidate()
+            timerMonitor = nil
+        }
+        
         // stop capturing
         if mode.isCapturing() {
+            // pretend to be manual capture (ensures stop capture tears down capturing apartus)
+            mode = .ManualCapture
+            
+            // send stop capturing message
             stopCapturing()
+            
+            return
         }
         
-        // stop timer
-        if nil != self.timerMonitor {
-            self.timerMonitor!.invalidate()
-            self.timerMonitor = nil
-        }
-        
-        // clear directory (not needed)
-        if nil != self.dirOut {
-            self.dirOut = nil
-        }
+        // tear down
+        tearDownAfterCapture()
         
         mode = .Configure
     }

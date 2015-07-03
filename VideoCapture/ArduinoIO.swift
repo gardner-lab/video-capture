@@ -398,6 +398,16 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         DLog("ARDUINO WRITE \(pin): \(analogValue)")
     }
     
+//    func writeTo(pin: Int, analogValue: UInt16) throws {
+//        let v = (Float(analogValue) / 1023.0) * 255.0
+//        if v > 255 {
+//            writeTo(pin, analogValue: 255)
+//        }
+//        else {
+//            writeTo(pin, analogValue: UInt8(v))
+//        }
+//    }
+    
     func readAnalogValueFrom(pin: Int, andExecute cb: (UInt16?) -> Void) throws {
         guard canInteract() else {
             throw ArduinoIOError.PortNotOpen
@@ -429,9 +439,10 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     func serialPort(serialPort: ORSSerialPort, didReceiveData data: NSData) {
-        if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
-            DLog("SERIAL \(serialPort) RECEIVED: \(string)")
-        }
+        // debugging
+//        if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
+//            DLog("SERIAL \(serialPort) RECEIVED: \(string)")
+//        }
     }
     
     func serialPort(serialPort: ORSSerialPort, didReceiveResponse responseData: NSData, toRequest request: ORSSerialRequest) {
