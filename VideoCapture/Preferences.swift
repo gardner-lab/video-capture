@@ -15,5 +15,7 @@ struct Preferences {
     let pinDigitalWhiteNoise = 9
     let pinAnalogLED = 13
     
-    let timePollTrigger = 0.25
+    // how often to poll trigger
+    let triggerPollTime = 0.05
+    let triggerValue: UInt16 = 500
 }

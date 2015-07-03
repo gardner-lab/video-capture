@@ -13,12 +13,41 @@ import CoreGraphics
 import CoreImage
 import ORSSerial
 
+/// The video capture mode determines interface accessibility
+enum VideoCaptureMode {
+    case Configure
+    case Monitor // monitor for triggering
+    case TriggeredCapture // capturing, because triggered
+    case ManualCapture // capturing, because manually triggered
+    
+    func isMonitoring() -> Bool {
+        return self == .TriggeredCapture || self == .Monitor
+    }
+    
+    func isCapturing() -> Bool {
+        return self == .TriggeredCapture || self == .ManualCapture
+    }
+    
+    func isEditable() -> Bool {
+        return self == .Configure
+    }
+}
+
 class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate, ArduinoIODelegate {
+    // document mode
+    var mode = VideoCaptureMode.Configure {
+        didSet {
+            refreshInterface()
+        }
+    }
+    
+    @IBOutlet var textName: NSTextField?
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var listSerialPorts: NSPopUpButton?
     @IBOutlet var sliderLedBrightness: NSSlider?
-    @IBOutlet var buttonToggle: NSButton?
+    @IBOutlet var buttonCapture: NSButton?
+    @IBOutlet var buttonMonitor: NSButton?
     @IBOutlet var previewView: NSView?
     @IBOutlet var annotableView: AnnotableViewer? {
         didSet {
@@ -38,26 +67,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     var deviceUniqueIDs = [Int: String]()
     
-    var editable = true {
-        didSet {
-            listVideoSources?.enabled = editable
-            listAudioSources?.enabled = editable
-            listSerialPorts?.enabled = editable
-            sliderLedBrightness?.enabled = editable && nil != ioArduino
-            if let tv = tableAnnotations {
-                let col = tv.columnWithIdentifier("name")
-                if 0 <= col {
-                    tv.tableColumns[col].editable = editable
-                }
-            }
-        }
-    }
-    
     // app preferences
     var appPreferences = Preferences()
     
     // session information
-    var isRunning = false
     var avSession: AVCaptureSession?
     var avInputVideo: AVCaptureInput? {
         willSet {
@@ -71,11 +84,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
             }
         }
+        didSet {
+            refreshInterface()
+        }
     }
-    var avInputAudio: AVCaptureInput?
+    var avInputAudio: AVCaptureInput? {
+        didSet {
+            refreshInterface()
+        }
+    }
     var avPreviewLayer: AVCaptureVideoPreviewLayer?
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
+    var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
     var avVideoDispatchQueue: dispatch_queue_t?
@@ -86,8 +107,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             oldValue?.delegate = nil
             ioArduino?.delegate = self
             
-            // update serial port
-            sliderLedBrightness?.enabled = editable && nil != ioArduino
+            // refresh interface
+            refreshInterface()
         }
     }
     
@@ -99,9 +120,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // timer to redraw interface (saves time)
     var timerRedraw: NSTimer?
     
-    
     // timer to dim LED and turn off camera
-    var timerRevertMode: NSTimer?
+    //var timerRevertMode: NSTimer?
+    
+    // timer for monitoring
+    var timerMonitor: NSTimer?
     
     // used by manual reading system
     var ciContext: CIContext?
@@ -134,14 +157,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             view.wantsLayer = true
             root.zPosition = 1.0
         }
+        
+        // refresh interface
+        refreshInterface()
     }
     
     override func viewWillDisappear() {
         // remove notification center
         NSNotificationCenter.defaultCenter().removeObserver(self)
-        
-        // end any capturing video
-        self.stopProcessing()
         
         // end any session
         self.stopSession()
@@ -156,6 +179,47 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // terminate
         //NSApp.terminate(nil)
+    }
+    
+    private func refreshInterface() {
+        // editability
+        let editable = mode.isEditable()
+        textName?.enabled = editable
+        listVideoSources?.enabled = editable
+        listAudioSources?.enabled = editable
+        listSerialPorts?.enabled = editable
+        sliderLedBrightness?.enabled = editable && nil != ioArduino
+        // annotation names
+        if let tv = tableAnnotations {
+            let col = tv.columnWithIdentifier("name")
+            if 0 <= col {
+                tv.tableColumns[col].editable = editable
+            }
+        }
+        
+        // button modes
+        switch mode {
+        case .Configure:
+            buttonCapture?.enabled = (nil != avInputVideo || nil != avInputAudio)
+            buttonCapture?.title = "Start Capturing"
+            buttonMonitor?.enabled = nil != ioArduino && (nil != avInputVideo || nil != avInputAudio)
+            buttonMonitor?.title = "Start Monitoring"
+        case .ManualCapture:
+            buttonCapture?.enabled = true
+            buttonCapture?.title = "Stop Capturing"
+            buttonMonitor?.enabled = false
+            buttonMonitor?.title = "Start Monitoring"
+        case .TriggeredCapture:
+            buttonCapture?.enabled = false
+            buttonCapture?.title = "Stop Capturing"
+            buttonMonitor?.enabled = true
+            buttonMonitor?.title = "Stop Monitoring"
+        case .Monitor:
+            buttonCapture?.enabled = false
+            buttonCapture?.title = "Start Capturing"
+            buttonMonitor?.enabled = true
+            buttonMonitor?.title = "Stop Monitoring"
+        }
     }
     
     func updateDeviceLists() {
@@ -176,12 +240,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return dev.hasMediaType(AVMediaTypeAudio) || dev.hasMediaType(AVMediaTypeMuxed)
         })
         
-//        let cb = {
-//            (d: AnyObject?) -> String in
-//            let dev: AVCaptureDevice = d as! AVCaptureDevice
-//            return dev.uniqueID // dev.localizedName
-//        }
-        
         var newDeviceUniqueIDs = [Int: String]()
         var newDeviceIndex = 1
         
@@ -198,7 +256,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
                 newDeviceIndex++
             }
-            list.synchronizeTitleAndSelectedItem()
+            list.synchronizeTitleAndSelectedItem() // TODO: fix
         }
         
         // audio sources
@@ -214,7 +272,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
                 newDeviceIndex++
             }
-            list.synchronizeTitleAndSelectedItem()
+            list.synchronizeTitleAndSelectedItem() // TODO: fix
         }
         
         // serial ports
@@ -229,7 +287,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 newDeviceUniqueIDs[newDeviceIndex] = port.path
                 newDeviceIndex++
             }
-            list.synchronizeTitleAndSelectedItem()
+            list.synchronizeTitleAndSelectedItem() // TODO: fix
         }
         
         self.deviceUniqueIDs = newDeviceUniqueIDs
@@ -276,42 +334,52 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             // log error
-            NSLog("Unable to add desired input device.")
+            DLog("Unable to add desired input device.")
         }
         catch {
             // log error
             let e = error as NSError
             let desc = e.localizedDescription
-            NSLog("Capturing device input failed: \(desc)")
+            DLog("Capturing device input failed: \(desc)")
         }
         
         return nil
     }
     
-    func promptToStart() {
-        guard !self.isRunning else {
-            return;
+    func promptToStartCapturing() {
+        // can only start capture from an editable mode
+        guard mode.isEditable() else {
+            return
         }
         
         let videoDeviceID = self.getVideoDeviceID()
         let audioDeviceID = self.getAudioDeviceID()
         if nil == videoDeviceID && nil == audioDeviceID {
-            NSLog("No device selected.")
-            return;
+            DLog("No device selected.")
+            return
         }
         
         let panel = NSSavePanel()
         panel.title = (nil == videoDeviceID ? "Save Audio" : "Save Movie")
+        
+        // get prefix
+        var prefix = "Output"
+        if let field = textName {
+            if !field.stringValue.isEmpty {
+                prefix = field.stringValue
+            }
+        }
         
         // Let the user select any images supported by
         // the AVMovie.
         if nil != videoDeviceID {
             panel.allowedFileTypes = AVMovie.movieTypes()
             panel.allowsOtherFileTypes = false
-            panel.nameFieldStringValue = "output.mov"
+            panel.nameFieldStringValue = prefix + ".mov"
         }
         else {
-            panel.nameFieldStringValue = "output.aac"
+            panel.allowedFileTypes = [AVFileTypeAppleM4A]
+            panel.nameFieldStringValue = prefix + ".m4a"
         }
         panel.canCreateDirectories = true
         panel.extensionHidden = false
@@ -321,7 +389,50 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             (result: Int) -> Void in
             if NSFileHandlingPanelOKButton == result {
                 if let url = panel.URL {
-                    self.startProcessing(url)
+                    self.startCapturing(url)
+                }
+            }
+        }
+        
+        // show
+        if let win = NSApp.keyWindow {
+            panel.beginSheetModalForWindow(win, completionHandler: cb)
+        }
+        else {
+            panel.beginWithCompletionHandler(cb)
+        }
+    }
+    
+    func promptToStartMonitoring() {
+        // can only start from an editable mode
+        guard mode.isEditable() else {
+            return
+        }
+        
+        if nil == self.ioArduino {
+            DLog("No arduino selected.")
+            return
+        }
+        
+        let videoDeviceID = self.getVideoDeviceID()
+        let audioDeviceID = self.getAudioDeviceID()
+        if nil == videoDeviceID && nil == audioDeviceID {
+            DLog("No device selected.")
+            return
+        }
+        
+        let panel = NSOpenPanel()
+        panel.title = "Select Output Directory"
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        
+        // callback for handling response
+        let cb = {
+            (result: Int) -> Void in
+            if NSFileHandlingPanelOKButton == result {
+                if let url = panel.URL {
+                    self.startMonitoring(url)
                 }
             }
         }
@@ -377,7 +488,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         videoData.setSampleBufferDelegate(self, queue: videoDispatchQueue)
         
         if !session.canAddOutput(videoData) {
-            NSLog("Unable to add video data output.")
+            DLog("Unable to add video data output.")
             return false
         }
         session.addOutput(videoData)
@@ -386,7 +497,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let movieOut = AVCaptureMovieFileOutput()
         self.avFileOut = movieOut
         if !session.canAddOutput(movieOut) {
-            NSLog("Unable to add movie file output.")
+            DLog("Unable to add movie file output.")
             return false
         }
         session.addOutput(movieOut)
@@ -412,7 +523,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         session.addOutput(audioOut)
         
         // start writer
-        audioOut.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        audioOut.startRecordingToOutputFileURL(file, outputFileType: AVFileTypeAppleM4A, recordingDelegate: self)
         
         return true
     }
@@ -469,28 +580,30 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    func startProcessing(file: NSURL) -> Bool {
-        guard !isRunning else {
+    func startCapturing(file: NSURL) -> Bool {
+        guard !mode.isCapturing() else {
             return false
         }
         
         // get capture device
         if nil == avInputVideo && nil == avInputAudio {
-            DLog("No device selected.");
-            return false;
+            DLog("No device selected.")
+            return false
         }
         
-        // disable buttons
-        editable = false
-        buttonToggle?.title = "Stop Capturing"
-        
-        isRunning = true
+        // update mode
+        if mode.isMonitoring() {
+            mode = .TriggeredCapture
+        }
+        else {
+            mode = .ManualCapture
+        }
         
         // SETUP OUTPUTS
         if nil != avInputVideo {
             // unable to create video output
             if !createVideoOutputs(file) {
-                stopProcessing()
+                stopDueToPermanentError()
                 return false
             }
             
@@ -502,7 +615,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         else {
             // unable to create audio output
             if !createAudioOutputs(file) {
-                stopProcessing()
+                stopDueToPermanentError()
                 return false
             }
         }
@@ -513,8 +626,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    func stopProcessing() {
-        guard isRunning else {
+    /// Stops current capture session. Will return to monitoring if automatically triggered, otherwise will return to configuration mode.
+    func stopCapturing() {
+        guard mode.isCapturing() else {
             return;
         }
         
@@ -562,14 +676,187 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             bufferSize = 0
         }
         
-        isRunning = false
+        // swithc interface mode
+        if mode.isMonitoring() {
+            mode = .Monitor
+        }
+        else {
+            mode = .Configure
+        }
+    }
+    
+    func startMonitoring(directory: NSURL) -> Bool {
+        guard mode.isEditable() else {
+            return false
+        }
         
-        // disable buttons
-        buttonToggle?.title = "Start Capturing"
-        editable = true
+        guard var path = directory.path else {
+            return false
+        }
+        
+        // has arduino
+        if nil == ioArduino {
+            DLog("No arduino selected.")
+            return false
+        }
+        
+        // get capture device
+        if nil == avInputVideo && nil == avInputAudio {
+            DLog("No device selected.")
+            return false
+        }
+        
+        // file directory
+        if !path.hasSuffix("/") {
+            path += "/"
+        }
+        if !NSFileManager.defaultManager().isWritableFileAtPath(path) {
+            let alert = NSAlert()
+            alert.messageText = "Unable to write"
+            alert.informativeText = "The selected directory is not writable."
+            alert.addButtonWithTitle("Ok")
+            if let win = NSApp.keyWindow {
+                alert.beginSheetModalForWindow(win, completionHandler:nil)
+            }
+            else {
+                alert.runModal()
+            }
+            return false
+        }
+        self.dirOut = directory
+        
+        // update mode
+        mode = .Monitor
+        
+        // strat timer
+        timerMonitor = NSTimer.scheduledTimerWithTimeInterval(appPreferences.triggerPollTime, target: self, selector: "monitorCheckTrigger:", userInfo: nil, repeats: true)
+        
+        // turn off led and camera
+        do {
+            try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+        }
+        catch {
+            
+        }
+        
+        return true
+    }
+    
+    func monitorReceiveTrigger(value: UInt16) {
+        // trigger value
+        let isTriggered = (value > self.appPreferences.triggerValue)
+        let isCapturing = self.mode.isCapturing()
+        
+        // right mode
+        if isTriggered == isCapturing {
+            return
+        }
+        
+        // has triggered? start capturing
+        if isTriggered {
+            // turn on LED and camera
+            do {
+                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
+                if let ledBrightness = sliderLedBrightness?.integerValue {
+                    try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
+                }
+            }
+            catch {
+                
+            }
+            
+            guard let dir = dirOut else {
+                DLog("Output directory has gone away.")
+                stopMonitoring()
+                return
+            }
+            
+            // format
+            let formatter = NSDateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            
+            // build file name
+            let name = formatter.stringFromDate(NSDate()) + (avInputVideo == nil ? ".m4a" : ".mov")
+            let file = dir.URLByAppendingPathComponent(name)
+            
+            // start capturing
+            startCapturing(file)
+        }
+        else {
+            // stop capturing
+            self.stopCapturing()
+            
+            // turn off LED and camera
+            do {
+                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+            }
+            catch {
+                
+            }
+        }
+        
+    }
+    
+    func monitorCheckTrigger(timer: NSTimer!) {
+        guard let arduino = ioArduino else {
+            DLog("POLLING failed")
+            stopMonitoring()
+            return
+        }
+        
+        do {
+            try arduino.readAnalogValueFrom(appPreferences.pinAnalogTrigger, andExecute: {
+                (val: UInt16?) -> Void in
+                guard let value = val else {
+                    DLog("POLLING failed: no value")
+                    self.stopMonitoring()
+                    return
+                }
+                
+                // receive trigger
+                self.monitorReceiveTrigger(value)
+            })
+        }
+        catch {
+            DLog("POLLING failed")
+            stopMonitoring()
+        }
+    }
+    
+    func stopMonitoring() {
+        guard mode.isMonitoring() else {
+            return
+        }
+        
+        // stop capturing
+        if mode.isCapturing() {
+            stopCapturing()
+        }
+        
+        // stop timer
+        if nil != self.timerMonitor {
+            self.timerMonitor!.invalidate()
+            self.timerMonitor = nil
+        }
+        
+        // clear directory (not needed)
+        if nil != self.dirOut {
+            self.dirOut = nil
+        }
+        
+        mode = .Configure
     }
     
     func stopSession() {
+        if mode.isMonitoring() {
+            stopMonitoring()
+        }
+        else if mode.isCapturing() {
+            stopCapturing()
+        }
+        
         // stop inputs
         if let videoInput = self.avInputVideo {
             if nil != self.avSession {
@@ -602,6 +889,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // release arduino
         if nil != self.ioArduino {
             self.ioArduino = nil
+        }
+    }
+    
+    /// Stops capturing & monitoring.
+    func stopDueToPermanentError() {
+        if mode.isMonitoring() {
+            stopMonitoring()
+        }
+        else if mode.isCapturing() {
+            stopCapturing()
         }
     }
 
@@ -642,7 +939,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                         previewLayer.connection.automaticallyAdjustsVideoMirroring = false
                         previewLayer.connection.videoMirrored = false
                         
-                        NSLog("\(previewLayer.frame)")
+                        DLog("\(previewLayer.frame)")
                     }
                 }
             }
@@ -744,14 +1041,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
 
-    @IBAction func toggleProcessing(sender: AnyObject?) {
-        if (self.isRunning) {
+    @IBAction func toggleCapturing(sender: AnyObject?) {
+        if mode.isCapturing() {
             // stop processing
-            self.stopProcessing()
+            stopCapturing()
         }
         else {
             // start processing
-            self.promptToStart()
+            promptToStartCapturing()
+        }
+    }
+    
+    @IBAction func toggleMonitoring(send: AnyObject?) {
+        if mode.isMonitoring() {
+            // stop monitoring
+            stopMonitoring()
+        }
+        else {
+            // start monitoring
+            promptToStartMonitoring()
         }
     }
     
@@ -776,7 +1084,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             self.avFileOut = nil
             
             // stop processing
-            self.stopProcessing()
+            stopDueToPermanentError()
             
             // show alert
             let alert = NSAlert()
@@ -805,7 +1113,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // called as part of the stopping process
-        self.stopProcessing()
+        stopCapturing()
     }
     
     private func updateExtractionList(dimensions: CGSize) { // , _ rep: NSBitmapImageRep
@@ -832,7 +1140,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                 // generate image coordinates
                 for (x, y) in annot.generateImageCoordinates(videoFrame) {
-                    // NSLog("x: \(x), y: \(y)")
                     if x < 0 || x >= maxX || y < 0 || y >= maxY {
                         continue
                     }
@@ -930,7 +1237,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // check extraction list
             if bounds.size != extractBounds {
-                DLog("Using slower processing chain.")
+                DLog("!!! SLOWER PROCESSING !!!")
+                DLog("Format: \(CVPixelBufferGetPixelFormatType(imageBuffer))")
                 
                 //            let rep = NSBitmapImageRep(CIImage: image)
                 //            let img = NSImage(size: rep.size)
@@ -938,7 +1246,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 //
                 // update extraction list
                 updateExtractionList(bounds.size)
-                
                 
                 // update extract bounds
                 extractBounds = bounds.size
@@ -1095,9 +1402,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func resetArduino() {
         DLog("ARDUINO reset")
         
-        if isRunning {
-            stopProcessing()
-        }
+        stopDueToPermanentError()
         
         // clear arduino
         ioArduino = nil

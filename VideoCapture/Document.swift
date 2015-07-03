@@ -8,22 +8,6 @@
 
 import Cocoa
 
-/// The video capture mode determines interface accessibility
-enum VideoCaptureMode {
-    case Configure
-    case Monitor // monitor for triggering
-    case TriggeredCapture // capturing, because triggered
-    case ManualCapture // capturing, because manually triggered
-    
-    func isCapturing() -> Bool {
-        return self == .TriggeredCapture || self == .ManualCapture
-    }
-    
-    func canEdit() -> Bool {
-        return self == .Configure
-    }
-}
-
 /// A document represents a capture session, and includes preferences about all annotations and all devices.
 class Document : NSDocument {
     // session name

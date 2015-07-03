@@ -24,7 +24,7 @@ private enum ArduinoIOState {
 private enum ArduinoIORequest {
     case SketchInitialize
     case ReadDigital(Int, (Bool?) -> Void)
-    case ReadAnalog(Int, (UInt8?) -> Void)
+    case ReadAnalog(Int, (UInt16?) -> Void)
 }
 
 enum ArduinoIOError: ErrorType {
@@ -314,7 +314,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             throw ArduinoIOError.PortNotOpen
         }
         
-        NSLog("ARDUINO CONFIG \(pin): \(to)")
+        DLog("ARDUINO CONFIG \(pin): \(to)")
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [48, 97 + UInt8(pin), 48 + UInt8(to.rawValue)]
@@ -398,7 +398,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         DLog("ARDUINO WRITE \(pin): \(analogValue)")
     }
     
-    func readAnalogValueFrom(pin: Int, andExecute cb: (UInt8?) -> Void) throws {
+    func readAnalogValueFrom(pin: Int, andExecute cb: (UInt16?) -> Void) throws {
         guard canInteract() else {
             throw ArduinoIOError.PortNotOpen
         }
@@ -462,7 +462,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             }
             
             // log sketch
-            NSLog("ARDUINO SKETCH: \(sketch)")
+            DLog("ARDUINO SKETCH: \(sketch)")
             
             if sketch == .Unknown {
                 // send to delegate
@@ -476,7 +476,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             runPendingConnectionQueue()
             
         case .ReadDigital(let pin, let cb):
-            NSLog("ARDUINO READ \(pin): \(dataAsString)")
+            DLog("ARDUINO READ \(pin): \(dataAsString)")
             switch dataAsString {
             case "0": cb(false)
             case "1": cb(true)
@@ -484,9 +484,9 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             }
         
         case .ReadAnalog(let pin, let cb):
-            NSLog("ARDUINO READ \(pin): \(dataAsString)")
-            if let val = Int(dataAsString) where val >= 0 && val <= 255 {
-                cb(UInt8(val))
+            DLog("ARDUINO READ \(pin): \(dataAsString)")
+            if let val = Int(dataAsString) where val >= 0 && val <= 1023 {
+                cb(UInt16(val))
             }
             else {
                 cb(nil)
@@ -503,7 +503,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         requestInfo.removeValueForKey(reqId)
         
         // log it
-        NSLog("ARDUINO TIMEOUT: \(reqType)")
+        DLog("ARDUINO TIMEOUT: \(reqType)")
         
         switch reqType {
         case .SketchInitialize:
@@ -530,7 +530,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     func serialPortWasRemovedFromSystem(serialPort: ORSSerialPort) {
-        NSLog("SERIAL \(serialPort) REMOVED")
+        DLog("SERIAL \(serialPort) REMOVED")
         
         if state == .WaitingToOpen || state == .Opened {
             // send to delegate
@@ -543,7 +543,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     func serialPort(serialPort: ORSSerialPort, didEncounterError error: NSError) {
-        NSLog("SERIAL \(serialPort) ERROR: \(error)")
+        DLog("SERIAL \(serialPort) ERROR: \(error)")
         
         // send to delegate
         delegate?.arduinoError("Error: \(error.localizedDescription)", isPermanent: false)
