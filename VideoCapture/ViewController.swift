@@ -122,6 +122,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let nc = NSNotificationCenter.defaultCenter()
         nc.addObserver(self, selector: "serialPortsWereConnected:", name: ORSSerialPortsWereConnectedNotification, object: nil)
         nc.addObserver(self, selector: "serialPortsWereDisconnected:", name: ORSSerialPortsWereDisconnectedNotification, object: nil)
+        nc.addObserver(self, selector: "avDeviceWasConnected:", name: AVCaptureDeviceWasConnectedNotification, object: nil)
+        nc.addObserver(self, selector: "avDeviceWasDisconnected:", name: AVCaptureDeviceWasDisconnectedNotification, object: nil)
         
         // initialize preview background
         if let view = previewView, let root = view.layer {
@@ -1060,11 +1062,22 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
+    // monitoring
+    func avDeviceWasConnected(notification: NSNotification) {
+        updateDeviceLists()
+        DLog("AV Devices were connected")
+    }
+    
+    func avDeviceWasDisconnected(notification: NSNotification) {
+        updateDeviceLists()
+        DLog("AV Devices were disconnected")
+    }
+    
     // serial port
     func serialPortsWereConnected(notification: NSNotification) {
         if let userInfo = notification.userInfo {
             let connectedPorts = userInfo[ORSConnectedSerialPortsKey] as! [ORSSerialPort]
-            NSLog("Ports were connected: \(connectedPorts)")
+            DLog("Ports were connected: \(connectedPorts)")
             updateDeviceLists()
         }
     }
@@ -1072,7 +1085,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func serialPortsWereDisconnected(notification: NSNotification) {
         if let userInfo = notification.userInfo {
             let disconnectedPorts: [ORSSerialPort] = userInfo[ORSDisconnectedSerialPortsKey] as! [ORSSerialPort]
-            NSLog("Ports were disconnected: \(disconnectedPorts)")
+            DLog("Ports were disconnected: \(disconnectedPorts)")
             updateDeviceLists()
         }
     }
