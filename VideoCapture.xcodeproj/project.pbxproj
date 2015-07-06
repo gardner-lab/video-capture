@@ -434,7 +434,7 @@
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = "edu.gardner.video-capture";
 				PRODUCT_MODULE_NAME = VideoCapture;
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
@@ -451,7 +451,7 @@
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = "edu.gardner.video-capture";
 				PRODUCT_MODULE_NAME = VideoCapture;
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";

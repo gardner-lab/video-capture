@@ -19,7 +19,7 @@
 			<string>Editor</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>edu.GardnerLab.VideoCaptureSession</string>
+				<string>edu.gardner.video-session</string>
 			</array>
 			<key>LSTypeIsPackage</key>
 			<integer>0</integer>
@@ -67,7 +67,7 @@
 			<key>UTTypeIconFile</key>
 			<string>Icon</string>
 			<key>UTTypeIdentifier</key>
-			<string>edu.GardnerLab.VideoCaptureSession</string>
+			<string>edu.gardner.video-session</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>

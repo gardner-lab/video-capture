@@ -136,6 +136,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     var avVideoDispatchQueue: dispatch_queue_t?
     
+    // should be unused
+    override var representedObject: AnyObject? {
+        didSet {
+            DLog("SET")
+        }
+    }
     var document: Document?
     
     // serial communications
@@ -264,6 +270,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             else {
                 listSerialPorts?.selectItemAtIndex(0)
             }
+            
+            annotableView?.annotations = doc.listAnnotations
+            tableAnnotations?.reloadData()
         }
     }
     
@@ -291,6 +300,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             else {
                 doc.devSerial = ""
             }
+            doc.listAnnotations = annotableView?.annotations ?? []
             doc.updateChangeCount(.ChangeDone)
         }
     }
@@ -854,6 +864,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // write header information
         var headers = ""
+        
+        // reserve capacity
+        headers.reserveCapacity(256)
         
         if let doc = document {
             headers += "Session,\"\(doc.name)\"\n"
@@ -1469,6 +1482,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // string for describing output (stored to shape)
             if nil != self.dataOut {
                 var regionString = "Region"
+                regionString.reserveCapacity(64)
                 for annot in view.annotations {
                     regionString += ",\"" + annot.generateImageDescription(videoFrame) + "\""
                 }
@@ -1609,6 +1623,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // build sample string
             var sampleString = "\(timestampAsSeconds)"
+            sampleString.reserveCapacity(64)
             for val in extractValues {
                 sampleString += ",\(val)"
             }
@@ -1636,6 +1651,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // force redrawing of table
         tableAnnotations?.reloadData()
+        
+        // update document
+        copyToDocument()
     }
     
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {

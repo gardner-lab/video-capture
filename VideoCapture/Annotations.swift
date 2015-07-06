@@ -8,6 +8,10 @@
 
 import Cocoa
 
+enum AnnotationParseError: ErrorType {
+    case MissingValue
+}
+
 /// Note all points are relative [0. - 1., 0. - 1.] with an upper left origin
 /// as this better matches the video signal.
 protocol Annotation {
@@ -16,11 +20,13 @@ protocol Annotation {
     var color: NSColor { get set }
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor)
+    init(fromDictionary d: [String: AnyObject]) throws
     func drawFilled(context: NSGraphicsContext, inRect rect: NSRect)
     func drawOutline(context: NSGraphicsContext, inRect rect: NSRect)
     func containsPoint(point: NSPoint) -> Bool
     func generateImageCoordinates(rect: NSRect) -> [(Int, Int)]
     func generateImageDescription(rect: NSRect) -> String
+    func toDictionary() -> [String: AnyObject]
 }
 
 /// Helepr functions to convert the relative points of the annotations back into LLO pixel coorindates for drawing.
@@ -63,6 +69,45 @@ struct AnnotationCircle: Annotation {
         let x = a.x - b.x, y = a.y - b.y
         radius = sqrt((x * x) + (y * y))
         color = c
+    }
+    
+    init(fromDictionary d: [String: AnyObject]) throws {
+        // set id
+        if let theVal = d["Id"], let theId = theVal as? Int {
+            id = theId
+        }
+        else {
+            id = ++nextId
+        }
+        
+        // name
+        if let theVal = d["Name"], let theName = theVal as? String {
+            name = theName
+        }
+        
+        // center
+        if let theVal = d["CenterX"], let theX = theVal as? CGFloat, let theOtherVal = d["CenterY"], let theY = theOtherVal as? CGFloat {
+            center = NSPoint(x: theX, y: theY)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // radius
+        if let theVal = d["Radius"], let theRadius = theVal as? CGFloat {
+            radius = theRadius
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // color
+        if let firstVal = d["ColorRed"], let theRed = firstVal as? CGFloat, let secondVal = d["ColorGreen"], let theGreen = secondVal as? CGFloat, let thirdVal = d["ColorBlue"], let theBlue = thirdVal as? CGFloat {
+            color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
     }
     
     func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
@@ -127,6 +172,22 @@ struct AnnotationCircle: Annotation {
         
         return "Circle; center = (\(imageCenterX), \(imageCenterY)); radius = \(imageRadius)"
     }
+    
+    func toDictionary() -> [String: AnyObject] {
+        var ret = [String: AnyObject]()
+        ret["Id"] = id
+        ret["Name"] = name
+        ret["ColorRed"] = color.redComponent
+        ret["ColorGreen"] = color.greenComponent
+        ret["ColorBlue"] = color.blueComponent
+        
+        // shape specific
+        ret["CenterX"] = center.x
+        ret["CenterY"] = center.y
+        ret["Radius"] = radius
+        
+        return ret
+    }
 }
 
 struct AnnotationEllipse: Annotation {
@@ -141,6 +202,45 @@ struct AnnotationEllipse: Annotation {
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
         color = c
+    }
+    
+    init(fromDictionary d: [String: AnyObject]) throws {
+        // set id
+        if let theVal = d["Id"], let theId = theVal as? Int {
+            id = theId
+        }
+        else {
+            id = ++nextId
+        }
+        
+        // name
+        if let theVal = d["Name"], let theName = theVal as? String {
+            name = theName
+        }
+        
+        // origin
+        if let firstVal = d["OriginX"], let theX = firstVal as? CGFloat, let secondVal = d["OriginY"], let theY = secondVal as? CGFloat {
+            origin = NSPoint(x: theX, y: theY)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // size
+        if let firstVal = d["SizeWidth"], let theWidth = firstVal as? CGFloat, let secondVal = d["SizeHeight"], let theHeight = secondVal as? CGFloat {
+            size = NSSize(width: theWidth, height: theHeight)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // color
+        if let firstVal = d["ColorRed"], let theRed = firstVal as? CGFloat, let secondVal = d["ColorGreen"], let theGreen = secondVal as? CGFloat, let thirdVal = d["ColorBlue"], let theBlue = thirdVal as? CGFloat {
+            color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
     }
     
     func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
@@ -203,6 +303,23 @@ struct AnnotationEllipse: Annotation {
         
         return "Ellipse; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
     }
+    
+    func toDictionary() -> [String: AnyObject] {
+        var ret = [String: AnyObject]()
+        ret["Id"] = id
+        ret["Name"] = name
+        ret["ColorRed"] = color.redComponent
+        ret["ColorGreen"] = color.greenComponent
+        ret["ColorBlue"] = color.blueComponent
+        
+        // shape specific
+        ret["OriginX"] = origin.x
+        ret["OriginY"] = origin.y
+        ret["SizeWidth"] = size.width
+        ret["SizeHeight"] = size.height
+        
+        return ret
+    }
 }
 
 struct AnnotationRectangle: Annotation {
@@ -217,6 +334,45 @@ struct AnnotationRectangle: Annotation {
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
         color = c
+    }
+    
+    init(fromDictionary d: [String: AnyObject]) throws {
+        // set id
+        if let theVal = d["Id"], let theId = theVal as? Int {
+            id = theId
+        }
+        else {
+            id = ++nextId
+        }
+        
+        // name
+        if let theVal = d["Name"], let theName = theVal as? String {
+            name = theName
+        }
+        
+        // origin
+        if let firstVal = d["OriginX"], let theX = firstVal as? CGFloat, let secondVal = d["OriginY"], let theY = secondVal as? CGFloat {
+            origin = NSPoint(x: theX, y: theY)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // size
+        if let firstVal = d["SizeWidth"], let theWidth = firstVal as? CGFloat, let secondVal = d["SizeHeight"], let theHeight = secondVal as? CGFloat {
+            size = NSSize(width: theWidth, height: theHeight)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
+        
+        // color
+        if let firstVal = d["ColorRed"], let theRed = firstVal as? CGFloat, let secondVal = d["ColorGreen"], let theGreen = secondVal as? CGFloat, let thirdVal = d["ColorBlue"], let theBlue = thirdVal as? CGFloat {
+            color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
+        }
+        else {
+            throw AnnotationParseError.MissingValue
+        }
     }
     
     func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
@@ -262,5 +418,22 @@ struct AnnotationRectangle: Annotation {
         let imageSizeWidth = Int(size.width * maxDim), imageSizeHeight = Int(size.height * maxDim)
         
         return "Rectangle; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
+    }
+    
+    func toDictionary() -> [String: AnyObject] {
+        var ret = [String: AnyObject]()
+        ret["Id"] = id
+        ret["Name"] = name
+        ret["ColorRed"] = color.redComponent
+        ret["ColorGreen"] = color.greenComponent
+        ret["ColorBlue"] = color.blueComponent
+        
+        // shape specific
+        ret["OriginX"] = origin.x
+        ret["OriginY"] = origin.y
+        ret["SizeWidth"] = size.width
+        ret["SizeHeight"] = size.height
+        
+        return ret
     }
 }

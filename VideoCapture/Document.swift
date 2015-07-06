@@ -13,7 +13,7 @@ class Document : NSDocument {
     // session name
     var name: String = "Capture Session" {
         didSet {
-            setDisplayName(name.isEmpty ? nil : name)
+//            setDisplayName(name.isEmpty ? nil : name)
         }
     }
     
@@ -27,6 +27,8 @@ class Document : NSDocument {
     
     // annotation index
     var listAnnotations: [Annotation] = []
+    
+    lazy private var annotationTypes: [String: Annotation.Type] = ["circle": AnnotationCircle.self, "ellipse": AnnotationEllipse.self, "rectangle": AnnotationRectangle.self]
     
     // led brightness
     var ledBrightness: UInt8 = 0
@@ -55,7 +57,7 @@ class Document : NSDocument {
     
     override func dataOfType(typeName: String) throws -> NSData {
         // only handle one type
-        guard "edu.GardnerLab.VideoCaptureSession" == typeName else {
+        guard "edu.gardner.video-session" == typeName else {
             throw NSError(domain: NSOSStatusErrorDomain, code: writErr, userInfo: nil) // unimpErr
         }
         
@@ -67,6 +69,17 @@ class Document : NSDocument {
         dict["DeviceSerial"] = devSerial
         dict["OuputDirectory"] = outputDirectory
         dict["LEDBrightness"] = Int(ledBrightness)
+        dict["Annotations"] = listAnnotations.map {
+            a -> [String: AnyObject] in
+            var ret = a.toDictionary()
+            for (name, type) in self.annotationTypes {
+                if String(a.dynamicType) == String(type) {
+                    DLog("test \(name)")
+                    ret["Type"] = name
+                }
+            }
+            return ret
+        }
         
         do {
             let data = try NSPropertyListSerialization.dataWithPropertyList(dict, format: .BinaryFormat_v1_0, options: 0)
@@ -79,8 +92,10 @@ class Document : NSDocument {
     }
     
     override func readFromData(data: NSData, ofType typeName: String) throws {
+        DLog("read \(typeName)")
+        
         // only handle one type
-        guard "edu.GardnerLab.VideoCaptureSession" == typeName else {
+        guard "edu.gardner.video-session" == typeName else {
             throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil) // unimpErr
         }
         
@@ -115,5 +130,19 @@ class Document : NSDocument {
         devSerial = dict["DeviceSerial"] as? String ?? ""
         outputDirectory = dict["OutputDirectory"] as? String ?? ""
         ledBrightness = UInt8(dict["LEDBrightness"] as? Int ?? 0)
+
+        listAnnotations = []
+        if let a = dict["Annotations"], let annots = a as? [[String: AnyObject]] {
+            for a in annots {
+                if let theVal = a["Type"], let typeName = theVal as? String, let type = self.annotationTypes[typeName] {
+                    do {
+                        let newAnnotation = try type.init(fromDictionary: a)
+                        listAnnotations.append(newAnnotation)
+                    }
+                    catch {
+                    }
+                }
+            }
+        }
     }
 }
