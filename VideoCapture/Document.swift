@@ -11,7 +11,11 @@ import Cocoa
 /// A document represents a capture session, and includes preferences about all annotations and all devices.
 class Document : NSDocument {
     // session name
-    var name: String = "Capture Session"
+    var name: String = "Capture Session" {
+        didSet {
+            setDisplayName(name.isEmpty ? nil : name)
+        }
+    }
     
     // documentation information
     var devVideo: String = ""

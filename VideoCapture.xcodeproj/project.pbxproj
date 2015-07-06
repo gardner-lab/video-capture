@@ -15,6 +15,8 @@
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
+		D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D856F6A81B4AFEAF00A75458 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D856F6A71B4AFEAF00A75458 /* Icon.icns */; };
 		D87DB6C31B45958B00131082 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87DB6C21B45958B00131082 /* Annotations.swift */; };
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
@@ -43,6 +45,19 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D856F6A31B4AEAAB00A75458 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D8013F921B4037870053F452 /* VideoCapture.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VideoCapture.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8013F961B4037870053F452 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -56,6 +71,7 @@
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
+		D856F6A71B4AFEAF00A75458 /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Icon.icns; path = ../Icon.icns; sourceTree = "<group>"; };
 		D87DB6C21B45958B00131082 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -125,6 +141,7 @@
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
+				D856F6A71B4AFEAF00A75458 /* Icon.icns */,
 				D8013F9B1B4037870053F452 /* Images.xcassets */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
 				D8013F951B4037870053F452 /* Supporting Files */,
@@ -175,6 +192,7 @@
 				D8013F8E1B4037870053F452 /* Sources */,
 				D8013F8F1B4037870053F452 /* Frameworks */,
 				D8013F901B4037870053F452 /* Resources */,
+				D856F6A31B4AEAAB00A75458 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -264,6 +282,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D8013F9C1B4037870053F452 /* Images.xcassets in Resources */,
+				D856F6A81B4AFEAF00A75458 /* Icon.icns in Resources */,
 				D8013F9F1B4037870053F452 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

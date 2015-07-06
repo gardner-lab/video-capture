@@ -11,6 +11,8 @@
 			<array>
 				<string>capsession</string>
 			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>Icon</string>
 			<key>CFBundleTypeName</key>
 			<string>Capture Session</string>
 			<key>CFBundleTypeRole</key>
@@ -58,10 +60,12 @@
 		<dict>
 			<key>UTTypeConformsTo</key>
 			<array>
-				<string>public.item</string>
+				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>Capture Session</string>
+			<key>UTTypeIconFile</key>
+			<string>Icon</string>
 			<key>UTTypeIdentifier</key>
 			<string>edu.GardnerLab.VideoCaptureSession</string>
 			<key>UTTypeTagSpecification</key>

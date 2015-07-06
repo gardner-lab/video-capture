@@ -74,10 +74,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avSession: AVCaptureSession?
     var avInputVideo: AVCaptureInput? {
         willSet {
-            // turn on power
-            if nil != ioArduino {
+            // has arduino?
+            if let arduino = ioArduino {
+                // toggle pin
                 do {
-                    try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: nil != newValue)
+                    try arduino.writeTo(appPreferences.pinDigitalCamera, digitalValue: nil != newValue)
                 }
                 catch {
                     DLog("ERROR Unable to toggle camera power.")
@@ -85,21 +86,57 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         didSet {
+            // update interface options
             refreshInterface()
+            
+            // changed state
+            if (nil == oldValue) != (nil == avInputVideo) {
+                refreshOutputs()
+            }
         }
     }
     var avInputAudio: AVCaptureInput? {
         didSet {
             refreshInterface()
+            
+            // changed state
+            if (nil == oldValue) != (nil == avInputAudio) {
+                refreshOutputs()
+            }
         }
     }
-    var avPreviewLayer: AVCaptureVideoPreviewLayer?
+    var avPreviewLayer: AVCaptureVideoPreviewLayer? {
+        didSet {
+            // clean up old value
+            if let oldPreviewLayer = oldValue {
+                oldPreviewLayer.removeFromSuperlayer()
+                oldPreviewLayer.session = nil
+            }
+            // setup new value
+            if let newPreviewLayer = avPreviewLayer {
+                newPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspect
+                
+                // add it
+                if let containingView = self.previewView {
+                    newPreviewLayer.frame = containingView.bounds
+                
+                    // add to view hierarchy
+                    if let root = containingView.layer {
+                        root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
+                        root.addSublayer(newPreviewLayer)
+                    }
+                }
+            }
+        }
+    }
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
     var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
     var avVideoDispatchQueue: dispatch_queue_t?
+    
+    var document: Document?
     
     // serial communications
     var ioArduino: ArduinoIO? {
@@ -148,6 +185,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         nc.addObserver(self, selector: "avDeviceWasConnected:", name: AVCaptureDeviceWasConnectedNotification, object: nil)
         nc.addObserver(self, selector: "avDeviceWasDisconnected:", name: AVCaptureDeviceWasDisconnectedNotification, object: nil)
         
+        // connect document
+        if let doc = view.window?.windowController?.document {
+            document = doc as? Document
+            copyFromDocument()
+        }
+        
         // initialize preview background
         if let view = previewView, let root = view.layer {
             root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
@@ -167,7 +210,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         NSNotificationCenter.defaultCenter().removeObserver(self)
         
         // end any session
-        self.stopSession()
+        stopVideoData()
+        stopVideoFile()
+        stopAudioFile()
+        stopSession()
         
         // will disappear
         super.viewWillDisappear();
@@ -179,6 +225,74 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // terminate
         //NSApp.terminate(nil)
+    }
+    
+    private func copyFromDocument() {
+        if let doc = document {
+            DLog("DOCUMENT ->")
+            
+            textName?.stringValue = doc.name
+            sliderLedBrightness?.integerValue = Int(doc.ledBrightness)
+            
+            var tagVideo = -1, tagAudio = -1, tagSerial = -1
+            for (key, val) in deviceUniqueIDs.generate() {
+                switch val {
+                case doc.devVideo: tagVideo = key
+                case doc.devAudio: tagAudio = key
+                case doc.devSerial: tagSerial = key
+                default: break
+                }
+            }
+            
+            if 0 <= tagVideo {
+                listVideoSources?.selectItemWithTag(tagVideo)
+            }
+            else {
+                listVideoSources?.selectItemAtIndex(0)
+            }
+            
+            if 0 <= tagAudio {
+                listAudioSources?.selectItemWithTag(tagAudio)
+            }
+            else {
+                listAudioSources?.selectItemAtIndex(0)
+            }
+            
+            if 0 <= tagSerial {
+                listSerialPorts?.selectItemWithTag(tagSerial)
+            }
+            else {
+                listSerialPorts?.selectItemAtIndex(0)
+            }
+        }
+    }
+    
+    private func copyToDocument() {
+        if let doc = document {
+            DLog("DOCUMENT <-")
+            
+            doc.name = textName?.stringValue ?? ""
+            doc.ledBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0 )
+            if let inputVideo = avInputVideo, let inputVideoDevice = inputVideo as? AVCaptureDeviceInput {
+                doc.devVideo = inputVideoDevice.device.uniqueID
+            }
+            else {
+                doc.devVideo = ""
+            }
+            if let inputAudio = avInputAudio, let inputAudioDevice = inputAudio as? AVCaptureDeviceInput {
+                doc.devAudio = inputAudioDevice.device.uniqueID
+            }
+            else {
+                doc.devAudio = ""
+            }
+            if let arduino = ioArduino {
+                doc.devSerial = arduino.serial?.path ?? ""
+            }
+            else {
+                doc.devSerial = ""
+            }
+            doc.updateChangeCount(.ChangeDone)
+        }
     }
     
     private func refreshInterface() {
@@ -245,6 +359,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // video sources
         if let list = self.listVideoSources {
+            let selectedUniqueID: String
+            if let inputVideo = avInputVideo, let inputVideoDevice = inputVideo as? AVCaptureDeviceInput {
+                selectedUniqueID = inputVideoDevice.device.uniqueID
+            }
+            else {
+                selectedUniqueID = ""
+            }
+            var selectTag = -1
+            
             list.removeAllItems()
             list.addItemWithTitle("Video")
             for d in devices_video {
@@ -254,13 +377,31 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
+                if dev.uniqueID == selectedUniqueID {
+                    selectTag = newDeviceIndex
+                }
                 newDeviceIndex++
             }
-            list.synchronizeTitleAndSelectedItem() // TODO: fix
+            if 0 <= selectTag {
+                list.selectItemWithTag(selectTag)
+            }
+            else {
+                list.selectItemAtIndex(0)
+            }
+            list.synchronizeTitleAndSelectedItem()
         }
         
         // audio sources
         if let list = self.listAudioSources {
+            let selectedUniqueID: String
+            if let inputAudio = avInputAudio, let inputAudioDevice = inputAudio as? AVCaptureDeviceInput {
+                selectedUniqueID = inputAudioDevice.device.uniqueID
+            }
+            else {
+                selectedUniqueID = ""
+            }
+            var selectTag = -1
+            
             list.removeAllItems()
             list.addItemWithTitle("Audio")
             for d in devices_audio {
@@ -270,13 +411,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
+                if dev.uniqueID == selectedUniqueID {
+                    selectTag = newDeviceIndex
+                }
                 newDeviceIndex++
+            }
+            if 0 <= selectTag {
+                list.selectItemWithTag(selectTag)
+            }
+            else {
+                list.selectItemAtIndex(0)
             }
             list.synchronizeTitleAndSelectedItem() // TODO: fix
         }
         
         // serial ports
         if let list = self.listSerialPorts {
+            let selectedUniqueID = ioArduino?.serial?.path ?? ""
+            var selectTag = -1
+            
             list.removeAllItems()
             list.addItemWithTitle("Arduino")
             for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts as! [ORSSerialPort] {
@@ -285,7 +438,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = port.path
+                if port.path == selectedUniqueID {
+                    selectTag = newDeviceIndex
+                }
                 newDeviceIndex++
+            }
+            if 0 <= selectTag {
+                list.selectItemWithTag(selectTag)
+            }
+            else {
+                list.selectItemAtIndex(0)
             }
             list.synchronizeTitleAndSelectedItem() // TODO: fix
         }
@@ -451,27 +613,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // create capture session
             let session = AVCaptureSession.new()
             self.avSession = session
-            session.sessionPreset = AVCaptureSessionPresetMedium
+            session.sessionPreset = AVCaptureSessionPresetHigh
             
             session.startRunning()
         }
         
         // preview layer
-        if let view = self.previewView {
+        if nil == self.avPreviewLayer {
             let previewLayer = AVCaptureVideoPreviewLayer(session: self.avSession!)
             self.avPreviewLayer = previewLayer
-            previewLayer.videoGravity = AVLayerVideoGravityResizeAspect
-            previewLayer.frame = view.bounds
-            
-            // add to view hierarchy
-            if let root = view.layer {
-                root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
-                root.addSublayer(previewLayer)
-            }
         }
     }
     
-    private func createVideoData() -> Bool {
+    private func startVideoData() -> Bool {
         // already created
         guard nil == avVideoData else {
             return true
@@ -497,10 +651,41 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(videoData)
         
+        // create timer for redraw
+        timerRedraw = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerUpdateValues:", userInfo: nil, repeats: true)
+        
         return true
     }
     
-    private func createVideoFile() -> Bool {
+    private func stopVideoData() {
+        // stop timer
+        if let timer = self.timerRedraw {
+            timer.invalidate()
+            self.timerRedraw = nil
+        }
+        
+        // stop data output
+        if nil != avVideoData {
+            if let session = avSession {
+                session.removeOutput(avVideoData!)
+            }
+            avVideoData = nil
+        }
+        
+        // release dispatch queue
+        if nil != avVideoDispatchQueue {
+            avVideoDispatchQueue = nil
+        }
+        
+        // free up buffer
+        if 0 < bufferSize {
+            free(buffer)
+            buffer = nil
+            bufferSize = 0
+        }
+    }
+    
+    private func startVideoFile() -> Bool {
         // already created
         guard nil == avFileOut else {
             return true
@@ -520,28 +705,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    private func createVideoOutputs(file: NSURL) -> Bool {
-        // create raw data stream
-        if nil == avVideoData {
-            if !createVideoData() {
-                return false
+    private func stopVideoFile() {
+        // stop writing
+        if nil != avFileOut {
+            if let session = avSession {
+                session.removeOutput(avFileOut!)
             }
+            avFileOut = nil
         }
-        
-        // writer
-        if nil == avVideoData {
-            if !createVideoFile() {
-                return false
-            }
-        }
-        
-        // start writer
-        self.avFileOut!.startRecordingToOutputFileURL(file, recordingDelegate:self)
-        
-        return true
     }
     
-    func createAudioFile() -> Bool {
+    private func startAudioFile() -> Bool {
         // already created
         guard nil == avFileOut else {
             return true
@@ -561,10 +735,77 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
+    private func stopAudioFile() {
+        // stop writing
+        if nil != avFileOut {
+            if let session = avSession {
+                session.removeOutput(avFileOut!)
+            }
+            avFileOut = nil
+        }
+    }
+    
+    private func createVideoOutputs(file: NSURL) -> Bool {
+        // create raw data stream
+        if nil == avVideoData {
+            if !startVideoData() {
+                return false
+            }
+        }
+        
+        // writer
+        if nil == avFileOut {
+            if !startVideoFile() {
+                return false
+            }
+        }
+        
+        // start writer
+        self.avFileOut!.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        
+        return true
+    }
+    
+    private func refreshOutputs() {
+        if nil == avInputVideo && nil == avInputAudio {
+            // no inputs
+            stopVideoData()
+            stopVideoFile()
+            stopAudioFile()
+        }
+        else if nil == avInputVideo {
+            // has movie out?
+            stopVideoData()
+            if let _ = self.avFileOut as? AVCaptureMovieFileOutput {
+                stopVideoFile()
+            }
+            
+            startAudioFile()
+        }
+        else {
+            // has audio out?
+            if let _ = self.avFileOut as? AVCaptureAudioFileOutput {
+                stopAudioFile()
+            }
+            
+            if nil == avFileOut && nil == avVideoData {
+                startSession()
+                avSession?.beginConfiguration()
+                startVideoData()
+                startVideoFile()
+                avSession?.commitConfiguration()
+            }
+            else {
+                startVideoData()
+                startVideoFile()
+            }
+        }
+    }
+    
     func createAudioOutputs(file: NSURL) -> Bool {
         // writer
-        if nil == avVideoData {
-            if !createAudioFile() {
+        if nil == avFileOut {
+            if !startAudioFile() {
                 return false
             }
         }
@@ -632,65 +873,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func setupBeforeCapture() -> Bool {
         // create video inputs
         if nil != avInputVideo {
-            if !createVideoData() {
+            if !startVideoData() {
                 return false
             }
-            if !createVideoFile() {
+            if !startVideoFile() {
                 return false
             }
         }
         else {
-            if !createAudioFile() {
+            if !startAudioFile() {
                 return false
             }
         }
         
-        // setup timer
-        timerRedraw = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerUpdateValues:", userInfo: nil, repeats: true)
-        
         return true
-    }
-    
-    private func tearDownAfterCapture() {
-        // stop timer
-        if nil != self.timerRedraw {
-            self.timerRedraw!.invalidate()
-            self.timerRedraw = nil
-        }
-        
-        // stop data output
-        if nil != avVideoData {
-            if nil != avSession {
-                avSession!.removeOutput(avVideoData!)
-            }
-            avVideoData = nil
-        }
-        
-        // release dispatch queue
-        if nil != avVideoDispatchQueue {
-            avVideoDispatchQueue = nil
-        }
-        
-        // close file
-        if nil != dataOut {
-            dataOut?.closeFile()
-            dataOut = nil
-        }
-        
-        // stop writing
-        if nil != avFileOut {
-            if nil != avSession {
-                avSession!.removeOutput(avFileOut!)
-            }
-            avFileOut = nil
-        }
-        
-        // free up buffer
-        if 0 < bufferSize {
-            free(buffer)
-            buffer = nil
-            bufferSize = 0
-        }
     }
     
     func startCapturing(file: NSURL) -> Bool {
@@ -755,14 +951,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
-        // swithc interface mode
+        // switch interface mode
         if mode.isMonitoring() {
             mode = .Monitor
         }
         else {
-            // tear down
-            tearDownAfterCapture()
-            
             mode = .Configure
         }
     }
@@ -934,9 +1127,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return
         }
         
-        // tear down
-        tearDownAfterCapture()
-        
         mode = .Configure
     }
     
@@ -971,9 +1161,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // release preview layer
-        if let previewLayer = self.avPreviewLayer {
-            previewLayer.removeFromSuperlayer()
-            previewLayer.session = nil
+        if nil != self.avPreviewLayer {
             self.avPreviewLayer = nil
         }
         
@@ -1020,6 +1208,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // get device and add it
             if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
+                // update document
+                copyToDocument()
+                
+                // get formats
+//                for f in videoDevice.formats {
+//                    let f2 = f as! AVCaptureDeviceFormat
+//                    let d = CMVideoFormatDescriptionGetDimensions(f2.formatDescription)
+//                    DLog("\(d)")
+//                }
+                
                 // add input
                 avInputVideo = addInput(videoDevice)
                 
@@ -1029,13 +1227,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                     if let previewLayer = avPreviewLayer {
                         previewLayer.connection.automaticallyAdjustsVideoMirroring = false
                         previewLayer.connection.videoMirrored = false
-                        
-                        DLog("\(previewLayer.frame)")
                     }
                 }
             }
         }
         else {
+            // update document
+            copyToDocument()
+            
             if nil != avInputVideo {
                 // should be defined
                 assert(nil != avSession)
@@ -1075,14 +1274,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // get device and add it
             if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
+                // update document
+                copyToDocument()
+                
                 avInputAudio = addInput(audioDevice)
             }
         }
         else {
+            // update document
+            copyToDocument()
+            
             if nil != avInputAudio {
                 // should be defined
                 assert(nil != self.avSession)
-                
                 
                 // remove audio
                 avSession!.removeInput(avInputAudio!)
@@ -1122,8 +1326,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             catch {
                 ioArduino = nil
             }
+            
+            // update document
+            copyToDocument()
         }
         else {
+            // update document
+            copyToDocument()
+            
             // has open port?
             if nil != ioArduino {
                 // remove open port
@@ -1504,6 +1714,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     @IBAction func setLedBrightness(sender: AnyObject?) {
         if let s = sender, let slider = s as? NSSlider, let arduino = self.ioArduino {
+            copyToDocument()
             do {
                 DLog("ARDUINO brightness \(slider.integerValue)")
                 try arduino.writeTo(13, analogValue: UInt8(slider.integerValue))
@@ -1512,6 +1723,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 DLog("ARDUINO brightness: failed! \(error)")
             }
         }
+    }
+    
+    @IBAction func setName(sender: AnyObject?) {
+        //if let s = sender, let field = s as? NSTextField {
+        copyToDocument()
+        //}
     }
     
     func arduinoError(message: String, isPermanent: Bool) {
