@@ -853,7 +853,21 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // write header information
-        var headers = "Name"
+        var headers = ""
+        
+        if let doc = document {
+            headers += "Session,\"\(doc.name)\"\n"
+            headers += "Video,\"\(doc.devVideo)\"\n"
+            headers += "Audio,\"\(doc.devAudio)\"\n"
+            headers += "Arduino,\"\(doc.devSerial)\"\n"
+            headers += "LED Brightness,\"\(doc.ledBrightness)\"\n"
+        }
+        
+        let date = NSDate(), formatter = NSDateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        headers += "Date,\(formatter.stringFromDate(date))\n"
+        
+        headers += "Name"
         for annot in annotView.annotations {
             headers += ",\(annot.name)"
         }

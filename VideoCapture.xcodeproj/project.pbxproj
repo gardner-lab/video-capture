@@ -59,7 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D8013F921B4037870053F452 /* VideoCapture.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VideoCapture.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8013F921B4037870053F452 /* Video Capture.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Video Capture.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8013F961B4037870053F452 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D8013F971B4037870053F452 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D8013F991B4037870053F452 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -123,7 +123,7 @@
 		D8013F931B4037870053F452 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D8013F921B4037870053F452 /* VideoCapture.app */,
+				D8013F921B4037870053F452 /* Video Capture.app */,
 				D8013FA41B4037870053F452 /* VideoCaptureTests.xctest */,
 			);
 			name = Products;
@@ -200,7 +200,7 @@
 			);
 			name = VideoCapture;
 			productName = VideoCapture;
-			productReference = D8013F921B4037870053F452 /* VideoCapture.app */;
+			productReference = D8013F921B4037870053F452 /* Video Capture.app */;
 			productType = "com.apple.product-type.application";
 		};
 		D8013FA31B4037870053F452 /* VideoCaptureTests */ = {
@@ -435,7 +435,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = VideoCapture;
+				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
@@ -451,7 +452,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = VideoCapture;
+				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};

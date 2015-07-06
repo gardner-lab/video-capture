@@ -75,9 +75,7 @@
 					<string>capsession</string>
 				</array>
 				<key>public.mime-type</key>
-				<array>
-					<string>application/octet-stream</string>
-				</array>
+				<array/>
 			</dict>
 		</dict>
 	</array>
