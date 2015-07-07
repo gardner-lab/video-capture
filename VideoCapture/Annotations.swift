@@ -192,8 +192,11 @@ struct AnnotationEllipse: Annotation {
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) {
         id = ++nextId
+        
+        // use points as recntangle points (not that intuitive)
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
+        
         color = c
     }
     

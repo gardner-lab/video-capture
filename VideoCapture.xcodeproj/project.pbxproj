@@ -16,12 +16,12 @@
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
 		D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D856F6A81B4AFEAF00A75458 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D856F6A71B4AFEAF00A75458 /* Icon.icns */; };
 		D87DB6C31B45958B00131082 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87DB6C21B45958B00131082 /* Annotations.swift */; };
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
 		D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */; };
+		D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCE1B4C28200006ED7D /* Icon.icns */; };
 		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
 		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
@@ -72,12 +72,12 @@
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
-		D856F6A71B4AFEAF00A75458 /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Icon.icns; path = ../Icon.icns; sourceTree = "<group>"; };
 		D87DB6C21B45958B00131082 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AnnotableViewer.xib; sourceTree = "<group>"; };
+		D8C20BCE1B4C28200006ED7D /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
 		D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
 		D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIO.swift; sourceTree = "<group>"; };
 		D8E48E0A1B458E250052F4C7 /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
@@ -135,7 +135,6 @@
 			isa = PBXGroup;
 			children = (
 				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
-				D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */,
 				D87DB6C21B45958B00131082 /* Annotations.swift */,
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
@@ -144,9 +143,10 @@
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
-				D856F6A71B4AFEAF00A75458 /* Icon.icns */,
-				D8013F9B1B4037870053F452 /* Images.xcassets */,
+				D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
+				D8C20BCE1B4C28200006ED7D /* Icon.icns */,
+				D8013F9B1B4037870053F452 /* Images.xcassets */,
 				D8013F951B4037870053F452 /* Supporting Files */,
 			);
 			path = VideoCapture;
@@ -285,7 +285,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D8013F9C1B4037870053F452 /* Images.xcassets in Resources */,
-				D856F6A81B4AFEAF00A75458 /* Icon.icns in Resources */,
+				D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */,
 				D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */,
 				D8013F9F1B4037870053F452 /* Main.storyboard in Resources */,
 			);
