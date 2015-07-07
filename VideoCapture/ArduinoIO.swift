@@ -1,10 +1,8 @@
-//
 //  ArduinoIO.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 7/1/15.
-//  Copyright © 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 7/1/15.
+//  Copyright © 2015
 
 import Foundation
 import ORSSerial
@@ -12,21 +10,24 @@ import ORSSerial
 let kStartupTime = 2.0
 let kTimeoutDuration: NSTimeInterval = 0.5
 
+/// The state of the arduino and serial port.
 private enum ArduinoIOState {
     case Closed
     case Opened
-    case WaitingToOpen
+    case WaitingToOpen // Because of potential startup time, there is an inbetween period of 2 seconds during which requests are queued.
     //case WaitingToClose
     case Error
     case Uninitialized
 }
 
+/// Request information used to handle response.
 private enum ArduinoIORequest {
     case SketchInitialize
     case ReadDigital(Int, (Bool?) -> Void)
     case ReadAnalog(Int, (UInt16?) -> Void)
 }
 
+/// Errors associated with input and output.
 enum ArduinoIOError: ErrorType {
     case UnknownError
     case UnableToOpenPath
@@ -36,6 +37,8 @@ enum ArduinoIOError: ErrorType {
     case InvalidValue
 }
 
+
+/// Used to track the Sketch type
 enum ArduinoIOSketch: CustomStringConvertible {
     case Unknown
     case IO
@@ -87,6 +90,10 @@ protocol ArduinoIODelegate {
     func arduinoError(message: String, isPermanent: Bool)
 }
 
+/// An arduinio input output class based off of the 
+/// [MATLAB ArduinoIO package](http://www.mathworks.com/matlabcentral/fileexchange/32374-matlab-support-for-arduino--aka-arduinoio-package-),
+/// which provides a serial interface taht allows controlling pins on an Arduino device. This is meant to work with the exact sketches included
+/// in the MATLAB implementation. Currently, the class only supports the "adio.pde" sketch (although some of the groundwork has been laid for broader support).
 class ArduinoIO: NSObject, ORSSerialPortDelegate {
     // delegate
     var delegate: ArduinoIODelegate?
@@ -398,16 +405,6 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         DLog("ARDUINO WRITE \(pin): \(analogValue)")
     }
     
-//    func writeTo(pin: Int, analogValue: UInt16) throws {
-//        let v = (Float(analogValue) / 1023.0) * 255.0
-//        if v > 255 {
-//            writeTo(pin, analogValue: 255)
-//        }
-//        else {
-//            writeTo(pin, analogValue: UInt8(v))
-//        }
-//    }
-    
     func readAnalogValueFrom(pin: Int, andExecute cb: (UInt16?) -> Void) throws {
         guard canInteract() else {
             throw ArduinoIOError.PortNotOpen
@@ -415,9 +412,9 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         guard pin >= 0 && pin <= 15 else {
             throw ArduinoIOError.InvalidPin
         }
-//        guard pins[pin] == .Input else {
-//            throw ArduinoIOError.InvalidMode
-//        }
+        guard pin < 2 || pins[pin] == .Input else {
+            throw ArduinoIOError.InvalidMode
+        }
         guard nil != serial else {
             throw ArduinoIOError.PortNotOpen
         }

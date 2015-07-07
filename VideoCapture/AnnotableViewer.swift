@@ -1,25 +1,19 @@
-//
 //  AnnotableViewer.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 6/29/15.
-//  Copyright © 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 6/29/15.
+//  Copyright © 2015
 
 import Cocoa
 
 // counter for IDs for annotations
 var nextId = 1
 
-private func distance(a: CGPoint, _ b: CGPoint) -> CGFloat {
-    let x = a.x - b.x, y = a.y - b.y
-    return sqrt((x * x) + (y * y))
-}
-
 protocol AnnotableViewerDelegate {
     func didChangeAnnotations(newAnnotations: [Annotation])
 }
 
+/// Used for tracking the currently selected annotation tool.
 enum AnnotableTool {
     case ShapeCircle
     case ShapeEllipse

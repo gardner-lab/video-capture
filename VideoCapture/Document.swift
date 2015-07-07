@@ -1,14 +1,13 @@
-//
 //  Document.swift
 //  VideoCapture
 //
 //  Created by Nathan Perkins on 7/2/15.
-//  Copyright © 2015 GardnerLab. All rights reserved.
-//
+//  Copyright © 2015
 
 import Cocoa
 
-/// A document represents a capture session, and includes preferences about all annotations and all devices.
+/// A document represents a capture session, and includes preferences about all annotations and all devices. A very basic implementation that
+/// reads and writes details via a property list binary format.
 class Document : NSDocument {
     // session name
     var name: String = "Capture Session" {

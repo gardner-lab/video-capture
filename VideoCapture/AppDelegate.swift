@@ -1,10 +1,8 @@
-//
 //  AppDelegate.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 6/28/15.
-//  Copyright (c) 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 6/28/15.
+//  Copyright © 2015
 
 import Cocoa
 

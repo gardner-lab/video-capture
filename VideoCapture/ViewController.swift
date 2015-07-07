@@ -1,10 +1,8 @@
-//
 //  ViewController.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 6/28/15.
-//  Copyright (c) 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 6/28/15.
+//  Copyright © 2015
 
 import Cocoa
 import AVFoundation
@@ -13,7 +11,7 @@ import CoreGraphics
 import CoreImage
 import ORSSerial
 
-/// The video capture mode determines interface accessibility
+/// The video capture mode determines interface item behavior.
 enum VideoCaptureMode {
     case Configure
     case Monitor // monitor for triggering

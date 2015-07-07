@@ -1,13 +1,12 @@
-//
 //  Preferences.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 7/2/15.
-//  Copyright © 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 7/2/15.
+//  Copyright © 2015
 
 import Foundation
 
+/// Potentially customizable application preferences.
 struct Preferences {
     // pin preferences
     let pinAnalogTrigger = 0

@@ -1,10 +1,8 @@
-//
 //  Annotations.swift
 //  VideoCapture
 //
-//  Created by Nathan Perkins on 7/2/15.
-//  Copyright © 2015 GardnerLab. All rights reserved.
-//
+//  Created by L. Nathan Perkins on 7/2/15.
+//  Copyright © 2015
 
 import Cocoa
 
@@ -48,11 +46,6 @@ extension Annotation {
         let y = (frame.size.height - (rect.origin.y * frame.size.height)) + frame.origin.y - height
         return NSRect(x: x, y: y, width: width, height: height)
     }
-}
-
-private func distance(a: CGPoint, _ b: CGPoint) -> CGFloat {
-    let x = a.x - b.x, y = a.y - b.y
-    return sqrt((x * x) + (y * y))
 }
 
 struct AnnotationCircle: Annotation {
