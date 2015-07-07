@@ -20,8 +20,27 @@ protocol AnnotableViewerDelegate {
     func didChangeAnnotations(newAnnotations: [Annotation])
 }
 
+enum AnnotableTool {
+    case ShapeCircle
+    case ShapeEllipse
+    case ShapeRectangle
+    case Delete
+    
+    func getType() -> Annotation.Type? {
+        switch self {
+        case ShapeCircle: return AnnotationCircle.self
+        case ShapeEllipse: return AnnotationEllipse.self
+        case ShapeRectangle: return AnnotationRectangle.self
+        default: return nil
+        }
+    }
+}
+
 class AnnotableViewer: NSView {
     var delegate: AnnotableViewerDelegate?
+    
+    @IBOutlet var view: NSView?
+    @IBOutlet var segmentedSelector: NSSegmentedControl?
     
     // drawn annotations
     internal var annotations: [Annotation] = [] {
@@ -39,8 +58,23 @@ class AnnotableViewer: NSView {
     
     var enabled: Bool = true {
         didSet {
-            self.locationDown = nil
-            self.annotationInProgress = nil
+            locationDown = nil
+            annotationInProgress = nil
+            segmentedSelector?.enabled = enabled
+        }
+    }
+    
+    // current tool
+    var tool = AnnotableTool.ShapeEllipse {
+        didSet {
+            if oldValue != tool {
+                if nil != locationDown {
+                    locationDown = nil
+                }
+                if nil != annotationInProgress {
+                    annotationInProgress = nil
+                }
+            }
         }
     }
     
@@ -48,12 +82,21 @@ class AnnotableViewer: NSView {
     private var nextColor = 0
     lazy private var colors: [NSColor] = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
     
-    // shapes (advance on right click not contained within shape)
-    private var nextShape = 0
-    lazy private var shapes: [Annotation.Type] = [AnnotationCircle.self, AnnotationEllipse.self, AnnotationRectangle.self]
-    
     // last click location
     private var locationDown: CGPoint?
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        
+        let className = self.className, nibName = className.componentsSeparatedByString(".").last!
+        if NSBundle.mainBundle().loadNibNamed(nibName, owner: self, topLevelObjects: nil) {
+            DLog("\(frame)")
+            if let v = view {
+                v.frame = frame
+                addSubview(v)
+            }
+        }
+    }
     
     override func drawRect(dirtyRect: NSRect) {
         super.drawRect(dirtyRect)
@@ -89,7 +132,83 @@ class AnnotableViewer: NSView {
         locationDown = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
     }
     
-    override func rightMouseUp(theEvent : NSEvent) {
+    override func mouseDragged(theEvent: NSEvent) {
+        super.mouseDragged(theEvent)
+        
+        // not editable
+        if !enabled {
+            return
+        }
+        
+        if nil != self.locationDown {
+            if let type = tool.getType() {
+                let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
+                    
+                let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
+                annotationInProgress = annot
+            }
+        }
+    }
+    
+    override func mouseUp(theEvent: NSEvent) {
+        super.mouseUp(theEvent)
+        
+        // not editable
+        if !enabled {
+            return
+        }
+        
+        // single click
+        if 1 == theEvent.clickCount {
+            // is delete tool?
+            if tool == .Delete {
+                let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
+                
+                for var i = annotations.count - 1; i >= 0; --i {
+                    if annotations[i].containsPoint(locationCur) {
+                        // remove annotation
+                        annotations.removeAtIndex(i)
+                        
+                        // call delegate
+                        delegate?.didChangeAnnotations(annotations)
+                        
+                        return
+                    }
+                }
+            }
+            
+            locationDown = nil
+            annotationInProgress = nil
+            
+            return
+        }
+        
+        // has annotation
+        if nil != locationDown {
+            if let type = tool.getType() {
+                let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
+                
+                // minimum distance
+                if distance(locationCur, locationDown!) >= (10 / max(self.frame.size.width, self.frame.size.height)) {
+                    let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
+                    annotations.append(annot)
+                    
+                    // call delegate
+                    delegate?.didChangeAnnotations(annotations)
+                    
+                    // rotate array
+                    if colors.count <= ++nextColor {
+                        nextColor = 0
+                    }
+                }
+            }
+        }
+        
+        locationDown = nil
+        annotationInProgress = nil
+    }
+    
+    override func rightMouseUp(theEvent: NSEvent) {
         super.rightMouseUp(theEvent)
         
         // not editable
@@ -115,58 +234,15 @@ class AnnotableViewer: NSView {
                 return
             }
         }
-        
-        // change annotation type
-        if shapes.count <= ++nextShape {
-            nextShape = 0
-        }
     }
     
-    override func mouseDragged(theEvent: NSEvent) {
-        super.mouseDragged(theEvent)
-        
-        // not editable
-        if !enabled {
-            return
-        }
-        
-        if nil != self.locationDown {
-            let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
-            let type = shapes[nextShape]
-            let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
-            annotationInProgress = annot
-        }
-    }
-    
-    override func mouseUp(theEvent: NSEvent) {
-        super.mouseUp(theEvent)
-        
-        // not editable
-        if !enabled {
-            return
-        }
-        
-        // has annotation
-        if nil != locationDown {
-            let locationCur = getRelativePositionFromGlobalPoint(theEvent.locationInWindow)
-            
-            // minimum distance
-            if distance(locationCur, locationDown!) >= (10 / max(self.frame.size.width, self.frame.size.height)) {
-                let type = self.shapes[nextShape]
-                let annot = type.init(startPoint: locationDown!, endPoint: locationCur, color: colors[nextColor])
-                annotations.append(annot)
-                
-                // call delegate
-                delegate?.didChangeAnnotations(annotations)
-                
-                // rotate array
-                if colors.count <= ++nextColor {
-                    nextColor = 0
-                }
+    @IBAction func selectTool(sender: AnyObject?) {
+        if let s = sender, let seg = s as? NSSegmentedControl {
+            let tools = [AnnotableTool.ShapeCircle, AnnotableTool.ShapeEllipse, AnnotableTool.ShapeRectangle, AnnotableTool.Delete]
+            let id = seg.selectedSegment
+            if 0 <= id && id < tools.count {
+                tool = tools[id]
             }
         }
-        
-        locationDown = nil
-        annotationInProgress = nil
     }
 }

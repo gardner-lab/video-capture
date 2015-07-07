@@ -122,7 +122,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                     // add to view hierarchy
                     if let root = containingView.layer {
-                        root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
+                        root.backgroundColor = CGColorCreateGenericGray(0.2, 1.0)
+                        //CGColorGetConstantColor(kCGColorBlack)
                         root.addSublayer(newPreviewLayer)
                     }
                 }
@@ -199,7 +200,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // initialize preview background
         if let view = previewView, let root = view.layer {
-            root.backgroundColor = CGColorGetConstantColor(kCGColorBlack)
+            root.backgroundColor = CGColorCreateGenericGray(0.2, 1.0)
+            //CGColorGetConstantColor(kCGColorBlack)
         }
         
         if let view = annotableView, let root = view.layer {
@@ -432,7 +434,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             else {
                 list.selectItemAtIndex(0)
             }
-            list.synchronizeTitleAndSelectedItem() // TODO: fix
+            list.synchronizeTitleAndSelectedItem()
         }
         
         // serial ports
@@ -459,7 +461,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             else {
                 list.selectItemAtIndex(0)
             }
-            list.synchronizeTitleAndSelectedItem() // TODO: fix
+            list.synchronizeTitleAndSelectedItem()
         }
         
         self.deviceUniqueIDs = newDeviceUniqueIDs

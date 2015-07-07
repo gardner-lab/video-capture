@@ -763,7 +763,7 @@
                                     <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gKo-yq-jzH" customClass="AnnotableViewer" customModule="VideoCapture" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="440" height="440"/>
                                     </customView>
-                                    <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ra3-tA-3Ku" customClass="AnnotableViewer" customModule="VideoCapture" customModuleProvider="target">
+                                    <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ra3-tA-3Ku">
                                         <rect key="frame" x="0.0" y="0.0" width="440" height="440"/>
                                     </customView>
                                 </subviews>
