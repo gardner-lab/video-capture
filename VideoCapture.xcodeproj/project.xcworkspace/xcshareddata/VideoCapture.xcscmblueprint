@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "2077E147E936B25490562EAA66B8FC2EB7725ED9",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "2077E147E936B25490562EAA66B8FC2EB7725ED9" : 0,
+    "5A811E91F5DFF59170683E14D2C5755F19DE18CB" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "AA227545-B891-49F0-8478-4C6028E70B32",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "2077E147E936B25490562EAA66B8FC2EB7725ED9" : "VideoCaptureMac\/",
+    "5A811E91F5DFF59170683E14D2C5755F19DE18CB" : "VideoCaptureMac\/Frameworks\/ORSSerialPort\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "VideoCapture",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 203,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "VideoCapture.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/nathanntg\/video-capture.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "2077E147E936B25490562EAA66B8FC2EB7725ED9"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/armadsen\/ORSSerialPort.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5A811E91F5DFF59170683E14D2C5755F19DE18CB"
+    }
+  ]
+}
