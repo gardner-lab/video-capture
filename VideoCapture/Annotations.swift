@@ -150,7 +150,7 @@ struct AnnotationCircle: Annotation {
                 if r < sqrt((a * a) + (b * b)) {
                     continue
                 }
-                ret.append(imageOriginX + x, imageOriginY + y)
+                ret.append((imageOriginX + x, imageOriginY + y))
             }
         }
         return ret
@@ -283,7 +283,7 @@ struct AnnotationEllipse: Annotation {
                 if 1 < ((a * a) + (b * b)) {
                     continue
                 }
-                ret.append(imageOriginX + x, imageOriginY + y)
+                ret.append((imageOriginX + x, imageOriginY + y))
             }
         }
         return ret

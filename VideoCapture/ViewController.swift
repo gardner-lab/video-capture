@@ -1475,7 +1475,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                     // debugging
 //                    rep.setColor(annot.color, atX: x, y: y)
                     
-                    extractArray.append(pixel: maxX * y + x, annotation: i)
+                    extractArray.append((pixel: maxX * y + x, annotation: i))
                 }
             }
             
