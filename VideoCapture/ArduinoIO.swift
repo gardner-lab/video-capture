@@ -84,7 +84,7 @@ enum ArduinoIODevice {
 }
 
 
-protocol ArduinoIODelegate {
+protocol ArduinoIODelegate: class {
     //func arduinoStateChangedFrom(oldState: ArduinoIOState, newState: ArduinoIOState)
     
     func arduinoError(message: String, isPermanent: Bool)
@@ -96,7 +96,7 @@ protocol ArduinoIODelegate {
 /// in the MATLAB implementation. Currently, the class only supports the "adio.pde" sketch (although some of the groundwork has been laid for broader support).
 class ArduinoIO: NSObject, ORSSerialPortDelegate {
     // delegate
-    var delegate: ArduinoIODelegate?
+    weak var delegate: ArduinoIODelegate?
     
     // serial port
     private(set) var serial: ORSSerialPort? {

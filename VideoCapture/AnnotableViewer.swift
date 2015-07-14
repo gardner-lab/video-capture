@@ -9,7 +9,7 @@ import Cocoa
 // counter for IDs for annotations
 var nextId = 1
 
-protocol AnnotableViewerDelegate {
+protocol AnnotableViewerDelegate: class {
     func didChangeAnnotations(newAnnotations: [Annotation])
 }
 
@@ -31,7 +31,7 @@ enum AnnotableTool {
 }
 
 class AnnotableViewer: NSView {
-    var delegate: AnnotableViewerDelegate?
+    weak var delegate: AnnotableViewerDelegate?
     
     @IBOutlet var view: NSView?
     @IBOutlet var segmentedSelector: NSSegmentedControl?

@@ -350,6 +350,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // get all AV devices
         let devices = AVCaptureDevice.devices()
         
+        DLog("\(devices)")
+        
         // find video devices
         let devices_video = devices.filter({
             d -> Bool in
@@ -1259,9 +1261,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         else {
-            // update document
-            copyToDocument()
-            
             if nil != avInputVideo {
                 // should be defined
                 assert(nil != avSession)
@@ -1270,6 +1269,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // remove video
                 avSession!.removeInput(avInputVideo!)
                 avInputVideo = nil
+                
+                // update document
+                copyToDocument()
             }
         }
     }
@@ -1308,9 +1310,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         else {
-            // update document
-            copyToDocument()
-            
             if nil != avInputAudio {
                 // should be defined
                 assert(nil != self.avSession)
@@ -1318,6 +1317,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // remove audio
                 avSession!.removeInput(avInputAudio!)
                 avInputAudio = nil
+                
+                // update document
+                copyToDocument()
             }
         }
     }
@@ -1358,13 +1360,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             copyToDocument()
         }
         else {
-            // update document
-            copyToDocument()
-            
             // has open port?
             if nil != ioArduino {
                 // remove open port
                 ioArduino = nil
+                
+                // update document
+                copyToDocument()
             }
         }
     }
