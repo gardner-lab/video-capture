@@ -20,6 +20,7 @@
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
+		D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A4C7411B59966E0030B756 /* VideoControl.swift */; };
 		D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */; };
 		D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCE1B4C28200006ED7D /* Icon.icns */; };
 		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
@@ -76,6 +77,7 @@
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		D8A4C7411B59966E0030B756 /* VideoControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoControl.swift; sourceTree = "<group>"; };
 		D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AnnotableViewer.xib; sourceTree = "<group>"; };
 		D8C20BCE1B4C28200006ED7D /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
 		D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
+				D8A4C7411B59966E0030B756 /* VideoControl.swift */,
 				D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
 				D8C20BCE1B4C28200006ED7D /* Icon.icns */,
@@ -310,6 +313,7 @@
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
+				D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,

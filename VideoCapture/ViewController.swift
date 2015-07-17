@@ -128,6 +128,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
     }
+    var avFileControl: VideoControl?
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
     var dirOut: NSURL?
@@ -349,8 +350,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func updateDeviceLists() {
         // get all AV devices
         let devices = AVCaptureDevice.devices()
-        
-        DLog("\(devices)")
         
         // find video devices
         let devices_video = devices.filter({
@@ -706,13 +705,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         
+        // create file control
+        if nil == avFileControl {
+            avFileControl = VideoControl(parent: self)
+        }
+        
         let movieOut = AVCaptureMovieFileOutput()
-        self.avFileOut = movieOut
+        movieOut.delegate = avFileControl
         if !session.canAddOutput(movieOut) {
             DLog("Unable to add movie file output.")
             return false
         }
         session.addOutput(movieOut)
+        self.avFileOut = movieOut
         
         return true
     }
@@ -773,7 +778,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // start writer
-        self.avFileOut!.startRecordingToOutputFileURL(file, recordingDelegate:self)
+        avFileControl?.shouldStart(file)
         
         return true
     }
@@ -975,8 +980,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // stop writing
         if let fileOut = avFileOut {
             if fileOut.recording {
-                fileOut.stopRecording()
-                return
+                avFileControl?.shouldStop()
+                //return
             }
         }
         
