@@ -70,7 +70,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // session information
     var avSession: AVCaptureSession?
-    var avInputVideo: AVCaptureInput? {
+    var avInputVideo: AVCaptureDeviceInput? {
         willSet {
             // has arduino?
             if let arduino = ioArduino {
@@ -93,7 +93,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
     }
-    var avInputAudio: AVCaptureInput? {
+    var avInputAudio: AVCaptureDeviceInput? {
         didSet {
             refreshInterface()
             
@@ -282,13 +282,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             doc.name = textName?.stringValue ?? ""
             doc.ledBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0 )
-            if let inputVideo = avInputVideo, let inputVideoDevice = inputVideo as? AVCaptureDeviceInput {
+            if let inputVideoDevice = avInputVideo {
                 doc.devVideo = inputVideoDevice.device.uniqueID
             }
             else {
                 doc.devVideo = ""
             }
-            if let inputAudio = avInputAudio, let inputAudioDevice = inputAudio as? AVCaptureDeviceInput {
+            if let inputAudioDevice = avInputAudio {
                 doc.devAudio = inputAudioDevice.device.uniqueID
             }
             else {
@@ -372,7 +372,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // video sources
         if let list = self.listVideoSources {
             let selectedUniqueID: String
-            if let inputVideo = avInputVideo, let inputVideoDevice = inputVideo as? AVCaptureDeviceInput {
+            if let inputVideoDevice = avInputVideo {
                 selectedUniqueID = inputVideoDevice.device.uniqueID
             }
             else {
@@ -406,7 +406,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // audio sources
         if let list = self.listAudioSources {
             let selectedUniqueID: String
-            if let inputAudio = avInputAudio, let inputAudioDevice = inputAudio as? AVCaptureDeviceInput {
+            if let inputAudioDevice = avInputAudio {
                 selectedUniqueID = inputAudioDevice.device.uniqueID
             }
             else {
@@ -1219,7 +1219,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // should be defined
                 assert(nil != avSession)
                 
-                if let inputVideoDevice = avInputVideo! as? AVCaptureDeviceInput {
+                if let inputVideoDevice = avInputVideo {
                     if inputVideoDevice.device.uniqueID == deviceUniqueID {
                         DLog("Same device.")
                         return
@@ -1285,7 +1285,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // should be defined
                 assert(nil != avSession)
                 
-                if let inputAudioDevice = avInputAudio! as? AVCaptureDeviceInput {
+                if let inputAudioDevice = avInputAudio {
                     if inputAudioDevice.device.uniqueID == deviceUniqueID {
                         DLog("Same device.")
                         return
