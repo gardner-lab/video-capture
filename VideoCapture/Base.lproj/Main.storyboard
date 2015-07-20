@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="8121.20" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="8152.3" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8121.20"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8152.3"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
@@ -693,13 +693,13 @@
                                 </connections>
                             </popUpButton>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-hv-t7c">
-                                <rect key="frame" x="20" y="92" width="220" height="189"/>
+                                <rect key="frame" x="20" y="114" width="220" height="177"/>
                                 <clipView key="contentView" id="CK7-pG-0jI">
-                                    <rect key="frame" x="1" y="17" width="218" height="171"/>
+                                    <rect key="frame" x="1" y="17" width="218" height="159"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="vm2-5k-HNv" id="ur6-Ur-zr2">
-                                            <rect key="frame" x="0.0" y="0.0" width="218" height="19"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="218" height="159"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -763,18 +763,14 @@
                                     <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gKo-yq-jzH" customClass="AnnotableViewer" customModule="VideoCapture" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="440" height="440"/>
                                     </customView>
-                                    <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ra3-tA-3Ku">
+                                    <customView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ra3-tA-3Ku">
                                         <rect key="frame" x="0.0" y="0.0" width="440" height="440"/>
                                     </customView>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstItem="Ra3-tA-3Ku" firstAttribute="top" secondItem="7Bp-BT-xUt" secondAttribute="top" id="CWj-Sl-fuU"/>
                                     <constraint firstAttribute="width" secondItem="7Bp-BT-xUt" secondAttribute="height" multiplier="1:1" id="JCY-GK-XbI"/>
                                     <constraint firstAttribute="trailing" secondItem="gKo-yq-jzH" secondAttribute="trailing" id="MKx-Kf-Kal"/>
                                     <constraint firstItem="gKo-yq-jzH" firstAttribute="top" secondItem="7Bp-BT-xUt" secondAttribute="top" id="R4Q-gE-ISR"/>
-                                    <constraint firstItem="Ra3-tA-3Ku" firstAttribute="leading" secondItem="7Bp-BT-xUt" secondAttribute="leading" id="Vqf-RP-I4z"/>
-                                    <constraint firstAttribute="trailing" secondItem="Ra3-tA-3Ku" secondAttribute="trailing" id="bPg-9V-fFB"/>
-                                    <constraint firstAttribute="bottom" secondItem="Ra3-tA-3Ku" secondAttribute="bottom" id="drz-yR-9si"/>
                                     <constraint firstItem="gKo-yq-jzH" firstAttribute="leading" secondItem="7Bp-BT-xUt" secondAttribute="leading" id="hC6-Il-guo"/>
                                     <constraint firstAttribute="bottom" secondItem="gKo-yq-jzH" secondAttribute="bottom" id="iAC-Jd-12v"/>
                                 </constraints>
@@ -840,6 +836,25 @@
                                     <action selector="toggleCapturing:" target="XfG-lQ-9wD" id="vXY-cs-HIC"/>
                                 </connections>
                             </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Af7-RF-GaS">
+                                <rect key="frame" x="18" y="85" width="76" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Whitenoise:" id="Lyo-TL-sVS">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <tokenField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ccM-wR-9Uo">
+                                <rect key="frame" x="100" y="82" width="140" height="22"/>
+                                <tokenFieldCell key="cell" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" drawsBackground="YES" allowsEditingTextAttributes="YES" id="d2t-1Q-ne7">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </tokenFieldCell>
+                                <connections>
+                                    <outlet property="delegate" destination="XfG-lQ-9wD" id="k6e-T6-0yc"/>
+                                </connections>
+                            </tokenField>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="7Bp-BT-xUt" secondAttribute="trailing" constant="20" id="0hc-gU-EeO"/>
@@ -855,22 +870,27 @@
                             <constraint firstItem="Jlq-2j-1cC" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="MTH-gU-IXu"/>
                             <constraint firstItem="Zow-fl-5WS" firstAttribute="top" secondItem="aZh-fI-0zG" secondAttribute="bottom" constant="10" id="Qep-yb-C5Y"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="Jlq-2j-1cC" secondAttribute="trailing" constant="20" id="Rc0-za-0B8"/>
-                            <constraint firstItem="aZh-fI-0zG" firstAttribute="top" secondItem="fEc-hv-t7c" secondAttribute="bottom" constant="20" id="RmO-DT-3gf"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="ZyL-3c-Q7T" secondAttribute="trailing" constant="20" id="URY-t3-rdQ"/>
+                            <constraint firstItem="ccM-wR-9Uo" firstAttribute="top" secondItem="fEc-hv-t7c" secondAttribute="bottom" constant="10" id="WLF-me-eQX"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="top" secondItem="neZ-Dt-SJB" secondAttribute="bottom" constant="10" id="WXQ-cE-wlw"/>
-                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="ZyL-3c-Q7T" secondAttribute="bottom" constant="20" id="Wmn-7B-NlS"/>
+                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="ZyL-3c-Q7T" secondAttribute="bottom" constant="10" id="Wmn-7B-NlS"/>
+                            <constraint firstItem="ccM-wR-9Uo" firstAttribute="leading" secondItem="Af7-RF-GaS" secondAttribute="trailing" constant="8" id="acn-wf-1EZ"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="aZh-fI-0zG" secondAttribute="trailing" constant="20" id="c94-yX-meR"/>
                             <constraint firstItem="0Ej-hu-93S" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="dmR-zt-YJq"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="eQ1-kd-EaF"/>
+                            <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="ccM-wR-9Uo" secondAttribute="trailing" constant="20" id="ewd-br-3Qs"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="fEc-hv-t7c" secondAttribute="trailing" constant="20" id="fiS-Jk-0Wj"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="neZ-Dt-SJB" secondAttribute="trailing" constant="20" id="isV-tD-unp"/>
                             <constraint firstItem="Jlq-2j-1cC" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="lZK-jU-3PB"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="EdX-Vc-JjP" secondAttribute="trailing" constant="20" id="mJ2-sC-qAe"/>
+                            <constraint firstItem="aZh-fI-0zG" firstAttribute="top" secondItem="ccM-wR-9Uo" secondAttribute="bottom" constant="10" id="mhR-hD-M28"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="Zow-fl-5WS" secondAttribute="trailing" constant="20" id="rS7-VB-3Vm"/>
                             <constraint firstAttribute="bottom" secondItem="7Bp-BT-xUt" secondAttribute="bottom" constant="20" id="rpj-TG-G53"/>
                             <constraint firstItem="neZ-Dt-SJB" firstAttribute="top" secondItem="EdX-Vc-JjP" secondAttribute="bottom" constant="10" id="t6J-06-MDu"/>
                             <constraint firstItem="EdX-Vc-JjP" firstAttribute="top" secondItem="Jlq-2j-1cC" secondAttribute="bottom" constant="10" id="ufh-cE-7Vn"/>
                             <constraint firstItem="ZyL-3c-Q7T" firstAttribute="top" secondItem="0Ej-hu-93S" secondAttribute="bottom" id="uii-kN-3QL"/>
+                            <constraint firstItem="ccM-wR-9Uo" firstAttribute="centerY" secondItem="Af7-RF-GaS" secondAttribute="centerY" id="xoU-iI-IqL"/>
+                            <constraint firstItem="Af7-RF-GaS" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="yUK-Ad-QS6"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="zhM-Ug-aHj"/>
                         </constraints>
                     </view>
@@ -885,6 +905,7 @@
                         <outlet property="sliderLedBrightness" destination="ZyL-3c-Q7T" id="car-HI-Px1"/>
                         <outlet property="tableAnnotations" destination="ur6-Ur-zr2" id="6El-c3-2PO"/>
                         <outlet property="textName" destination="Jlq-2j-1cC" id="dND-yx-q06"/>
+                        <outlet property="tokenFeedback" destination="ccM-wR-9Uo" id="Egc-ea-bj4"/>
                         <outlet property="view" destination="m2S-Jp-Qdl" id="bl6-jL-P0I"/>
                     </connections>
                 </viewController>

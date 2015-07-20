@@ -31,7 +31,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -40,6 +40,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     @IBOutlet var textName: NSTextField?
+    @IBOutlet var tokenFeedback: NSTokenField?
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var listSerialPorts: NSPopUpButton?
@@ -1812,5 +1813,73 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             resetArduino()
         }
     }
+    
+    // MARK: - Token Field
+    
+    // Each element in the array should be an NSString or an array of NSStrings.
+    // substring is the partial string that is being completed.  tokenIndex is the index of the token being completed.
+    // selectedIndex allows you to return by reference an index specifying which of the completions should be selected initially.
+    // The default behavior is not to have any completions.
+    func tokenField(tokenField: NSTokenField, completionsForSubstring substring: String, indexOfToken tokenIndex: Int, indexOfSelectedItem selectedIndex: UnsafeMutablePointer<Int>) -> [AnyObject]? {
+        // prep work
+        let l = substring.characters.count
+        let lower = substring.lowercaseString
+        
+        // return array
+        var ret: [AnyObject] = []
+        if let annotView = annotableView {
+            for annot in annotView.annotations {
+                let name = annot.name, nl = name.characters.count
+                
+                // too short
+                if nl < l {
+                    continue
+                }
+                
+                // matching 
+                if lower == name[Range(start: name.startIndex, end: advance(name.startIndex, l))].lowercaseString {
+                    ret.append(name)
+                }
+            }
+        }
+        return ret
+    }
+    
+//    // return an array of represented objects you want to add.
+//    // If you want to reject the add, return an empty array.
+//    // returning nil will cause an error.
+//    func tokenField(tokenField: NSTokenField, shouldAddObjects tokens: [AnyObject], atIndex index: Int) -> [AnyObject] {
+//        return tokens
+//    }
+//    
+//    // If you return nil or don't implement these delegate methods, we will assume
+//    // editing string = display string = represented object
+//    func tokenField(tokenField: NSTokenField, displayStringForRepresentedObject representedObject: AnyObject) -> String? {
+//        return nil
+//    }
+//    
+//    func tokenField(tokenField: NSTokenField, editingStringForRepresentedObject representedObject: AnyObject) -> String? {
+//        return nil
+//    }
+//    
+//    func tokenField(tokenField: NSTokenField, representedObjectForEditingString editingString: String) -> AnyObject {
+//        return nil
+//    }
+//    
+//    // We put the string on the pasteboard before calling this delegate method.
+//    // By default, we write the NSStringPboardType as well as an array of NSStrings.
+//    func tokenField(tokenField: NSTokenField, writeRepresentedObjects objects: [AnyObject], toPasteboard pboard: NSPasteboard) -> Bool
+//    
+//    // Return an array of represented objects to add to the token field.
+//    func tokenField(tokenField: NSTokenField, readFromPasteboard pboard: NSPasteboard) -> [AnyObject]?
+//    
+//    // By default the tokens have no menu.
+//    //func tokenField(tokenField: NSTokenField, menuForRepresentedObject representedObject: AnyObject) -> NSMenu?
+//    //func tokenField(tokenField: NSTokenField, hasMenuForRepresentedObject representedObject: AnyObject) -> Bool
+//    
+//    // This method allows you to change the style for individual tokens as well as have mixed text and tokens.
+//    func tokenField(tokenField: NSTokenField, styleForRepresentedObject representedObject: AnyObject) -> NSTokenStyle {
+//        
+//    }
 }
 
