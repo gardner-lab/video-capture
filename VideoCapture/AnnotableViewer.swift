@@ -84,7 +84,6 @@ class AnnotableViewer: NSView {
         
         let className = self.className, nibName = className.componentsSeparatedByString(".").last!
         if NSBundle.mainBundle().loadNibNamed(nibName, owner: self, topLevelObjects: nil) {
-            DLog("\(frame)")
             if let v = view {
                 v.frame = frame
                 addSubview(v)
