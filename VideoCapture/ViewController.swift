@@ -981,8 +981,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let fileOut = avFileOut {
             if fileOut.recording {
                 avFileControl?.shouldStop()
-                //return
             }
+        }
+        
+        // close CSV file
+        if let dataFileOut = dataOut {
+            dataFileOut.closeFile()
+            dataOut = nil
         }
         
         // switch interface mode
@@ -1470,7 +1475,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let maxX = Int(dimensions.width), maxY = Int(dimensions.height)
         
         extractArray.removeAll()
-        if let view = self.annotableView {
+        if let view = annotableView {
             for (i, annot) in view.annotations.enumerate() {
                 
                 // generate image coordinates
@@ -1487,7 +1492,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             // string for describing output (stored to shape)
-            if nil != self.dataOut {
+            if nil != dataOut {
                 var regionString = "Region"
                 regionString.reserveCapacity(64)
                 for annot in view.annotations {
@@ -1497,7 +1502,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                 // write data
                 if let data = regionString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true) {
-                    self.dataOut?.writeData(data)
+                    dataOut?.writeData(data)
                 }
             }
         }
@@ -1624,7 +1629,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // string
-        if nil != self.dataOut {
+        if nil != dataOut {
             // get timestamp
             let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer), timestampAsSeconds = CMTimeGetSeconds(timestamp)
             
@@ -1638,7 +1643,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // write data
             if let data = sampleString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true) {
-                self.dataOut?.writeData(data)
+                dataOut?.writeData(data)
             }
         }
     }
