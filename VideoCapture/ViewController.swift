@@ -647,13 +647,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // raw data
         let videoData = AVCaptureVideoDataOutput()
-        self.avVideoData = videoData
+        avVideoData = videoData
         videoData.videoSettings = nil // nil: native format
         videoData.alwaysDiscardsLateVideoFrames = true
         
         // create serial dispatch queue
         let videoDispatchQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL)
-        self.avVideoDispatchQueue = videoDispatchQueue
+        avVideoDispatchQueue = videoDispatchQueue
         videoData.setSampleBufferDelegate(self, queue: videoDispatchQueue)
         
         if !session.canAddOutput(videoData) {
@@ -899,9 +899,35 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // store data output stream
-        dataOut = fileHandle
+        if let queue = avVideoDispatchQueue {
+            // prevent race condition with output buffer, since it uses same queue
+            dispatch_async(queue) {
+                self.dataOut = fileHandle
+            }
+        }
+        else {
+            dataOut = fileHandle
+        }
         
         return true
+    }
+    
+    private func closeDataFile() {
+        guard let fileHandle = dataOut else {
+            return
+        }
+        
+        if let queue = avVideoDispatchQueue {
+            // prevent race condition with output buffer
+            dispatch_async(queue) {
+                self.dataOut = nil
+                fileHandle.closeFile()
+            }
+        }
+        else {
+            self.dataOut = nil
+            fileHandle.closeFile()
+        }
     }
     
     private func setupBeforeCapture() -> Bool {
@@ -985,9 +1011,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // close CSV file
-        if let dataFileOut = dataOut {
-            dataFileOut.closeFile()
-            dataOut = nil
+        if nil != dataOut {
+            closeDataFile()
         }
         
         // switch interface mode
