@@ -242,7 +242,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             sliderLedBrightness?.integerValue = Int(doc.ledBrightness)
             
             var tagVideo = -1, tagAudio = -1, tagSerial = -1
-            for (key, val) in deviceUniqueIDs.generate() {
+            for (key, val) in deviceUniqueIDs {
                 switch val {
                 case doc.devVideo: tagVideo = key
                 case doc.devAudio: tagAudio = key
