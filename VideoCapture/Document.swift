@@ -73,7 +73,6 @@ class Document : NSDocument {
             var ret = a.toDictionary()
             for (name, type) in self.annotationTypes {
                 if String(a.dynamicType) == String(type) {
-                    DLog("test \(name)")
                     ret["Type"] = name
                 }
             }
@@ -91,8 +90,6 @@ class Document : NSDocument {
     }
     
     override func readFromData(data: NSData, ofType typeName: String) throws {
-        DLog("read \(typeName)")
-        
         // only handle one type
         guard "edu.gardner.video-session" == typeName else {
             throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil) // unimpErr
