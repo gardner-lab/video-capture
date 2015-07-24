@@ -1852,20 +1852,45 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
 //        return tokens
 //    }
 //    
-//    // If you return nil or don't implement these delegate methods, we will assume
-//    // editing string = display string = represented object
-//    func tokenField(tokenField: NSTokenField, displayStringForRepresentedObject representedObject: AnyObject) -> String? {
-//        return nil
-//    }
-//    
-//    func tokenField(tokenField: NSTokenField, editingStringForRepresentedObject representedObject: AnyObject) -> String? {
-//        return nil
-//    }
-//    
-//    func tokenField(tokenField: NSTokenField, representedObjectForEditingString editingString: String) -> AnyObject {
-//        return nil
-//    }
-//    
+    // If you return nil or don't implement these delegate methods, we will assume
+    // editing string = display string = represented object
+    func tokenField(tokenField: NSTokenField, displayStringForRepresentedObject representedObject: AnyObject) -> String? {
+        if let at = representedObject as? AnnotationToken {
+            if let annotView = annotableView {
+                for annot in annotView.annotations {
+                    if annot.id == at.id {
+                        return annot.name
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    func tokenField(tokenField: NSTokenField, editingStringForRepresentedObject representedObject: AnyObject) -> String? {
+        if let at = representedObject as? AnnotationToken {
+            if let annotView = annotableView {
+                for annot in annotView.annotations {
+                    if annot.id == at.id {
+                        return annot.name
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    func tokenField(tokenField: NSTokenField, representedObjectForEditingString editingString: String) -> AnyObject {
+        if let annotView = annotableView {
+            for annot in annotView.annotations {
+                if annot.name == editingString {
+                    return AnnotationToken(id: annot.id)
+                }
+            }
+        }
+        return editingString
+    }
+//
 //    // We put the string on the pasteboard before calling this delegate method.
 //    // By default, we write the NSStringPboardType as well as an array of NSStrings.
 //    func tokenField(tokenField: NSTokenField, writeRepresentedObjects objects: [AnyObject], toPasteboard pboard: NSPasteboard) -> Bool
@@ -1877,9 +1902,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
 //    //func tokenField(tokenField: NSTokenField, menuForRepresentedObject representedObject: AnyObject) -> NSMenu?
 //    //func tokenField(tokenField: NSTokenField, hasMenuForRepresentedObject representedObject: AnyObject) -> Bool
 //    
-//    // This method allows you to change the style for individual tokens as well as have mixed text and tokens.
-//    func tokenField(tokenField: NSTokenField, styleForRepresentedObject representedObject: AnyObject) -> NSTokenStyle {
-//        
-//    }
+    // This method allows you to change the style for individual tokens as well as have mixed text and tokens.
+    func tokenField(tokenField: NSTokenField, styleForRepresentedObject representedObject: AnyObject) -> NSTokenStyle {
+        if let _ = representedObject as? AnnotationToken {
+            return NSTokenStyle.Rounded
+        }
+        return NSTokenStyle.None
+    }
+}
+
+private class AnnotationToken: NSObject {
+    let id: Int
+    
+    init(id: Int) {
+        self.id = id
+    }
 }
 
