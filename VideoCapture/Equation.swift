@@ -56,61 +56,152 @@ enum EquationOperator: CustomStringConvertible {
         }
     }
     
-    func getPrecedence() -> Int {
+    
+    /// Somewhat counter-intuitive: The higher the precedence, the later the grouping.
+    var precedence: Int {
+        get {
+            switch self {
+            case .BooleanAnd, .BooleanOr:
+                return 10
+            case .CompareEqual, .CompareGreaterThan, .CompareGreaterThanOrEqual, .CompareLessThan, .CompareLessThanOrEqual:
+                return 20
+            case .ArithmeticAdd, .ArithmeticSubtract:
+                return 30
+            case .ArithmeticMultiply, .ArithmeticDivide:
+                return 40
+            }
+        }
+    }
+    
+    var leftAssociative: Bool {
+        get {
+            switch self {
+            case .ArithmeticAdd, .ArithmeticSubtract, .ArithmeticMultiply, .ArithmeticDivide:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
+    func evaluate(left: Double, _ right: Double) -> Double {
         switch self {
-        case .BooleanAnd, .BooleanOr:
-            return 10
-        case .CompareEqual, .CompareGreaterThan, .CompareGreaterThanOrEqual, .CompareLessThan, .CompareLessThanOrEqual:
-            return 20
-        case .ArithmeticMultiply, .ArithmeticDivide:
-            return 30
-        case .ArithmeticAdd, .ArithmeticSubtract:
-            return 40
+        case .ArithmeticAdd: return left + right
+        case .ArithmeticDivide:
+            if right != 0 {
+                return left / right
+            }
+            return Double.infinity
+        case .ArithmeticMultiply: return left * right
+        case .ArithmeticSubtract: return left - right
+        case .BooleanAnd: return left > 0.0 && right > 0.0 ? 1.0 : -1.0
+        case .BooleanOr: return left > 0.0 || right > 0.0 ? 1.0 : -1.0
+        case .CompareEqual: return left == right ? 1.0 : -1.0
+        case .CompareGreaterThan: return left > right ? 1.0 : -1.0
+        case .CompareGreaterThanOrEqual: return left >= right ? 1.0 : -1.0
+        case .CompareLessThan: return left < right ? 1.0 : -1.0
+        case .CompareLessThanOrEqual: return left <= right ? 1.0 : -1.0
         }
     }
 }
 
-enum EquationElement: CustomStringConvertible {
-    indirect case OperatorTriplet(lhe: EquationElement, op: EquationOperator, rhe: EquationElement)
-    case Numeric(val: Double)
-    case Placeholder(name: String)
+protocol EquationElement: CustomStringConvertible {
+    func evaluate(placeholders: [String: Double]) -> Double
+}
+
+class EquationOperatorTriplet: EquationElement {
+    let lhe: EquationElement
+    let op: EquationOperator
+    let rhe: EquationElement
     
-    init(lh: EquationElement, op: EquationOperator, rh: EquationElement) {
-        self = .OperatorTriplet(lhe: lh, op: op, rhe: rh)
-    }
-    
-    init(numeric: Double) {
-        self = .Numeric(val: numeric)
-    }
-    
-    init(placeholder: String) {
-        self = .Placeholder(name: placeholder)
-    }
-    
-    func toString(placeholders: [String: String]) -> String {
-        switch self {
-        case .OperatorTriplet(let lhe, let op, let rhe):
-            return lhe.toString(placeholders) + op.description + rhe.toString(placeholders)
-        case .Numeric(let val):
-            return String(val)
-        case .Placeholder(let nm):
-            if let niceName = placeholders[nm] {
-                return niceName
-            }
-            return nm
-        }
+    init(lhe: EquationElement, op: EquationOperator, rhe: EquationElement) {
+        self.lhe = lhe
+        self.op = op
+        self.rhe = rhe
     }
     
     var description: String {
         get {
-            switch self {
-            case .OperatorTriplet(let lhe, let op, let rhe):
-                return lhe.description + " " + op.description + " " + rhe.description
-            case .Numeric(let val):
-                return String(val)
-            case .Placeholder(let nm):
-                return nm
-            }
+            return "(\(lhe.description) \(op.description) \(rhe.description))"
         }
     }
+    
+    func evaluate(placeholders: [String: Double]) -> Double {
+        // TODO: potentially add lazy evaluation
+        let left = lhe.evaluate(placeholders)
+        let right = rhe.evaluate(placeholders)
+        return op.evaluate(left, right)
+    }
 }
+
+class EquationNumber: EquationElement {
+    let value: Double
+    
+    init(value: Double) {
+        self.value = value
+    }
+    
+    var description: String {
+        get {
+            return String(value)
+        }
+    }
+    
+    func evaluate(placeholders: [String: Double]) -> Double {
+        return value
+    }
+}
+
+class EquationPlaceholder: EquationElement {
+    let name: String
+    
+    init(name: String) {
+        self.name = name
+    }
+    
+    var description: String {
+        get {
+            return name
+        }
+    }
+    
+    func evaluate(placeholders: [String: Double]) -> Double {
+        if let v = placeholders[name] {
+            return v
+        }
+        return 0.0
+    }
+}
+
+//enum EquationElement: CustomStringConvertible {
+//    indirect case OperatorTriplet(lhe: EquationElement, op: EquationOperator, rhe: EquationElement)
+//    case Numeric(val: Double)
+//    case Placeholder(name: String)
+//
+//    func toString(placeholders: [String: String]) -> String {
+//        switch self {
+//        case .OperatorTriplet(let lhe, let op, let rhe):
+//            return lhe.toString(placeholders) + op.description + rhe.toString(placeholders)
+//        case .Numeric(let val):
+//            return String(val)
+//        case .Placeholder(let nm):
+//            if let niceName = placeholders[nm] {
+//                return niceName
+//            }
+//            return nm
+//        }
+//    }
+//    
+//    var description: String {
+//        get {
+//            switch self {
+//            case .OperatorTriplet(let lhe, let op, let rhe):
+//                return lhe.description + " " + op.description + " " + rhe.description
+//            case .Numeric(let val):
+//                return String(val)
+//            case .Placeholder(let nm):
+//                return nm
+//            }
+//        }
+//    }
+//}

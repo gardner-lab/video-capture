@@ -118,12 +118,24 @@ private enum EquationToken: CustomStringConvertible {
     }
 }
 
-enum EquationError : ErrorType {
+enum EquationError : ErrorType, CustomStringConvertible {
     case EmptyEquation()
     case MissingToken()
     case InvalidToken(token: String)
     case UnexpectedToken(token: String)
     case NoOperator(phrase: String)
+    
+    var description: String {
+        get {
+            switch self {
+            case .EmptyEquation: return "The equation is empty or has an empty parenthetical."
+            case .MissingToken: return "The equation is malformed. There is a missing placeholder or number."
+            case .InvalidToken(let t): return "The equation contains an invalid token: \(t)."
+            case .UnexpectedToken(let t): return "The token \(t) appears out of place in the equation."
+            case .NoOperator(let p): return "There is no operator in the equation: \(p)."
+            }
+        }
+    }
 }
 
 private func extractComponents(s: String) -> [EquationToken] {
@@ -216,9 +228,9 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
             guard let v = Double(s) else {
                 throw EquationError.InvalidToken(token: s)
             }
-            return EquationElement.Numeric(val: v)
+            return EquationNumber(value: v)
         case .Placeholder(let s):
-            return EquationElement.Placeholder(name: s)
+            return EquationPlaceholder(name: s)
         default:
             throw EquationError.UnexpectedToken(token: tokens[0].description)
         }
@@ -244,18 +256,22 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
             }
         case .Operator(let op_string) where in_paren == 0:
             if let op = EquationOperator(fromString: op_string) {
-                let p = op.getPrecedence()
-                if p < precedence {
+                let p = op.precedence
+                if p < precedence || (p == precedence && op.leftAssociative) {
                     precedence = p
                     splt = i
                     oper = op
                 }
             }
-            // should not happen, already filtered for valid
-            throw EquationError.InvalidToken(token: op_string)
+            else {
+                // should not happen, already filtered for valid
+                throw EquationError.InvalidToken(token: op_string)
+            }
         default: break
         }
     }
+    
+    DLog("\(splt), \(oper?.description)")
     
     // new initial
     if oper == nil {
@@ -272,18 +288,7 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
     let elLeft = try equationParseTokens(tokensLeft, depth: depth + 1)
     let elRight = try equationParseTokens(tokensRight, depth: depth + 1)
     
-    return EquationElement.OperatorTriplet(lhe: elLeft, op: oper!, rhe: elRight)
-}
-
-func test() {
-    do {
-        let parsed = try equationParse("(5+3*ROI123)/ROI0>=0")
-        DLog("\(parsed)")
-    }
-    catch {
-        DLog("\(error)")
-        return
-    }
+    return EquationOperatorTriplet(lhe: elLeft, op: oper!, rhe: elRight)
 }
 
 //
