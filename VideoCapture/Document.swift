@@ -22,7 +22,7 @@ class Document : NSDocument {
     var devSerial: String = ""
     
     // feedback trigger
-    var feedbackTrigger: String = ""
+    var feedbackTrigger = [String]()
     
     // output directory
     var outputDirectory: String = ""
@@ -128,9 +128,10 @@ class Document : NSDocument {
         devVideo = dict["DeviceVideo"] as? String ?? ""
         devAudio = dict["DeviceAudio"] as? String ?? ""
         devSerial = dict["DeviceSerial"] as? String ?? ""
-        feedbackTrigger = dict["FeedbackTrigger"] as? String ?? ""
+        feedbackTrigger = dict["FeedbackTrigger"] as? [String] ?? [String]()
         outputDirectory = dict["OutputDirectory"] as? String ?? ""
         ledBrightness = UInt8(dict["LEDBrightness"] as? Int ?? 0)
+        
 
         listAnnotations = []
         if let a = dict["Annotations"], let annots = a as? [[String: AnyObject]] {

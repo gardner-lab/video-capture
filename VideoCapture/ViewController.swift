@@ -260,6 +260,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             if 0 <= tagVideo {
                 listVideoSources?.selectItemWithTag(tagVideo)
+                selectVideoSource(listVideoSources)
             }
             else {
                 listVideoSources?.selectItemAtIndex(0)
@@ -267,6 +268,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             if 0 <= tagAudio {
                 listAudioSources?.selectItemWithTag(tagAudio)
+                selectAudioSource(listAudioSources)
             }
             else {
                 listAudioSources?.selectItemAtIndex(0)
@@ -274,13 +276,30 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             if 0 <= tagSerial {
                 listSerialPorts?.selectItemWithTag(tagSerial)
+                selectSerialPort(listSerialPorts)
             }
             else {
                 listSerialPorts?.selectItemAtIndex(0)
             }
             
             annotableView?.annotations = doc.listAnnotations
-            tableAnnotations?.reloadData()
+            didChangeAnnotations(doc.listAnnotations)
+            
+            tokenFeedback?.objectValue = doc.feedbackTrigger.map {
+                (str: String) -> AnyObject
+                in
+                let re = Regex(pattern: "^ROI[0-9]+$")
+                if re.match(str) {
+                    let s = advance(str.startIndex, 3), e = str.endIndex
+                    if let id = Int(str[s..<e]) {
+                        return TokenROI(id: id)
+                    }
+                }
+                return str
+            }
+            equationEdited(tokenFeedback)
+            
+            DLog("\(doc.feedbackTrigger)")
         }
     }
     
@@ -309,6 +328,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 doc.devSerial = ""
             }
             doc.listAnnotations = annotableView?.annotations ?? []
+            
+            // store token feedback
+            if let tf = tokenFeedback, let tokens = tf.objectValue as? [AnyObject] {
+                doc.feedbackTrigger = tokens.map {
+                    (o: AnyObject) -> String
+                    in
+                    if let t = o as? TokenROI {
+                        return "ROI\(t.id)"
+                    }
+                    return o as? String ?? ""
+                }
+            }
+            
             doc.updateChangeCount(.ChangeDone)
         }
     }
@@ -898,6 +930,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         headers += "Name"
         for annot in annotView.annotations {
             headers += ",\(annot.name)"
+        }
+        if nil != extractEquation {
+            headers += ",\(extractEquation!.description)"
         }
         headers += "\n"
         
@@ -1659,28 +1694,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
+        // sync
+        objc_sync_enter(self)
+        defer {
+            objc_sync_exit(self)
+        }
+        
         // update values
         extractValues = zip(annotSum, annotCnt).map {
             sum, cnt in return cnt > 0 ? sum / Float(cnt) : 0.0
-        }
-        
-        // string
-        if nil != dataOut {
-            // get timestamp
-            let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer), timestampAsSeconds = CMTimeGetSeconds(timestamp)
-            
-            // build sample string
-            var sampleString = "\(timestampAsSeconds)"
-            sampleString.reserveCapacity(64)
-            for val in extractValues {
-                sampleString += ",\(val)"
-            }
-            sampleString += "\n"
-            
-            // write data
-            if let data = sampleString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true) {
-                dataOut?.writeData(data)
-            }
         }
         
         // equation
@@ -1703,6 +1725,28 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
             }
         }
+        
+        // string
+        if nil != dataOut {
+            // get timestamp
+            let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer), timestampAsSeconds = CMTimeGetSeconds(timestamp)
+            
+            // build sample string
+            var sampleString = "\(timestampAsSeconds)"
+            sampleString.reserveCapacity(64)
+            for val in extractValues {
+                sampleString += ",\(val)"
+            }
+            if nil != extractEquation {
+                sampleString += ",\(extractEquationOn)"
+            }
+            sampleString += "\n"
+            
+            // write data
+            if let data = sampleString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true) {
+                dataOut?.writeData(data)
+            }
+        }
     }
     
     func captureOutput(captureOutput: AVCaptureOutput!, didDropSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
@@ -1710,8 +1754,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func timerUpdateValues(timer: NSTimer!) {
-        if let tv = self.tableAnnotations {
+        objc_sync_enter(self)
+        defer {
+            objc_sync_exit(self)
+        }
+        if let tv = tableAnnotations {
             tv.reloadDataForRowIndexes(NSIndexSet(indexesInRange: NSRange(location: 0, length: extractValues.count)), columnIndexes: NSIndexSet(index: 2))
+        }
+        if nil != extractEquation {
+            if extractEquationOn {
+                tokenFeedback?.backgroundColor = NSColor.greenColor()
+            }
+            else {
+                tokenFeedback?.backgroundColor = NSColor.textBackgroundColor()
+            }
         }
     }
     
@@ -1968,7 +2024,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return NSTokenStyle.None
     }
     
-    @IBAction func equationEdited(sender: AnyObject) {
+    @IBAction func equationEdited(sender: AnyObject?) {
         guard let tf = sender as? NSTokenField else {
             return
         }
@@ -1998,7 +2054,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             catch {
                 extractEquation = nil
                 DLog("EQUATION error: \(error)")
-                tf.backgroundColor = NSColor(red: 242.0, green: 222.0, blue: 222.0, alpha: 1.0)
+                tf.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
             }
         }
         
