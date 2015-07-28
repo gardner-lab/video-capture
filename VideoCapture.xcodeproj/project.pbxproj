@@ -28,6 +28,7 @@
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
 		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
 		D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E4A1B4593ED0052F4C7 /* Document.swift */; };
+		D8F8E6791B66B429004493D5 /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F8E6781B66B429004493D5 /* Regex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +86,7 @@
 		D8E48E0A1B458E250052F4C7 /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		D8E48E0D1B45904E0052F4C7 /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		D8E48E4A1B4593ED0052F4C7 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		D8F8E6781B66B429004493D5 /* Regex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +146,7 @@
 				D8E48E0D1B45904E0052F4C7 /* Common.swift */,
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
+				D8F8E6781B66B429004493D5 /* Regex.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
 				D8A4C7411B59966E0030B756 /* VideoControl.swift */,
 				D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */,
@@ -318,6 +321,7 @@
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
 				D87DB6C31B45958B00131082 /* Annotations.swift in Sources */,
+				D8F8E6791B66B429004493D5 /* Regex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
