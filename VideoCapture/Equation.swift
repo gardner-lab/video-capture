@@ -84,14 +84,14 @@ enum EquationOperator: CustomStringConvertible {
         }
     }
     
-    func evaluate(left: Double, _ right: Double) -> Double {
+    func evaluate(left: Float, _ right: Float) -> Float {
         switch self {
         case .ArithmeticAdd: return left + right
         case .ArithmeticDivide:
             if right != 0 {
                 return left / right
             }
-            return Double.infinity
+            return Float.infinity
         case .ArithmeticMultiply: return left * right
         case .ArithmeticSubtract: return left - right
         case .BooleanAnd: return left > 0.0 && right > 0.0 ? 1.0 : -1.0
@@ -106,7 +106,7 @@ enum EquationOperator: CustomStringConvertible {
 }
 
 protocol EquationElement: CustomStringConvertible {
-    func evaluate(placeholders: [String: Double]) -> Double
+    func evaluate(placeholders: [String: Float]) -> Float
 }
 
 class EquationOperatorTriplet: EquationElement {
@@ -126,7 +126,7 @@ class EquationOperatorTriplet: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Double]) -> Double {
+    func evaluate(placeholders: [String: Float]) -> Float {
         // TODO: potentially add lazy evaluation
         let left = lhe.evaluate(placeholders)
         let right = rhe.evaluate(placeholders)
@@ -135,9 +135,9 @@ class EquationOperatorTriplet: EquationElement {
 }
 
 class EquationNumber: EquationElement {
-    let value: Double
+    let value: Float
     
-    init(value: Double) {
+    init(value: Float) {
         self.value = value
     }
     
@@ -147,7 +147,7 @@ class EquationNumber: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Double]) -> Double {
+    func evaluate(placeholders: [String: Float]) -> Float {
         return value
     }
 }
@@ -165,7 +165,7 @@ class EquationPlaceholder: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Double]) -> Double {
+    func evaluate(placeholders: [String: Float]) -> Float {
         if let v = placeholders[name] {
             return v
         }

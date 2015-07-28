@@ -713,7 +713,7 @@
                                                     </tableHeaderCell>
                                                     <customCell key="dataCell" alignment="left" id="dE7-I4-EDX" customClass="ColorSwatchCell" customModule="VideoCapture" customModuleProvider="target"/>
                                                 </tableColumn>
-                                                <tableColumn identifier="name" width="93.36713340877921" minWidth="40" maxWidth="1000" id="WDx-0q-zOz">
+                                                <tableColumn identifier="name" width="92.86713340877921" minWidth="40" maxWidth="1000" id="WDx-0q-zOz">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Name">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -740,6 +740,10 @@
                                                     <tableColumnResizingMask key="resizingMask" userResizable="YES"/>
                                                 </tableColumn>
                                             </tableColumns>
+                                            <connections>
+                                                <outlet property="dataSource" destination="XfG-lQ-9wD" id="nvb-EK-JfZ"/>
+                                                <outlet property="delegate" destination="XfG-lQ-9wD" id="GhI-CG-PjO"/>
+                                            </connections>
                                         </tableView>
                                     </subviews>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -848,14 +852,18 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="M5E-ks-Vxv">
+                            <tokenField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="M5E-ks-Vxv">
                                 <rect key="frame" x="102" y="82" width="138" height="22"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="w0J-zb-Cnk">
+                                <tokenFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="left" drawsBackground="YES" allowsEditingTextAttributes="YES" id="d2t-1Q-ne7">
                                     <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
+                                </tokenFieldCell>
+                                <connections>
+                                    <action selector="equationEdited:" target="XfG-lQ-9wD" id="cPk-yf-aVc"/>
+                                    <outlet property="delegate" destination="XfG-lQ-9wD" id="8AU-hC-TnS"/>
+                                </connections>
+                            </tokenField>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="7Bp-BT-xUt" secondAttribute="trailing" constant="20" id="0hc-gU-EeO"/>
@@ -905,8 +913,8 @@
                         <outlet property="previewView" destination="Ra3-tA-3Ku" id="rwb-hL-cOB"/>
                         <outlet property="sliderLedBrightness" destination="ZyL-3c-Q7T" id="car-HI-Px1"/>
                         <outlet property="tableAnnotations" destination="ur6-Ur-zr2" id="6El-c3-2PO"/>
-                        <outlet property="textFeedback" destination="M5E-ks-Vxv" id="reE-aZ-9FW"/>
                         <outlet property="textName" destination="Jlq-2j-1cC" id="dND-yx-q06"/>
+                        <outlet property="tokenFeedback" destination="M5E-ks-Vxv" id="bnY-TC-fBe"/>
                         <outlet property="view" destination="m2S-Jp-Qdl" id="bl6-jL-P0I"/>
                     </connections>
                 </viewController>

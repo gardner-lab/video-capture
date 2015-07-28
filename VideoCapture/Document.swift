@@ -21,6 +21,9 @@ class Document : NSDocument {
     var devAudio: String = ""
     var devSerial: String = ""
     
+    // feedback trigger
+    var feedbackTrigger: String = ""
+    
     // output directory
     var outputDirectory: String = ""
     
@@ -66,6 +69,7 @@ class Document : NSDocument {
         dict["DeviceVideo"] = devVideo
         dict["DeviceAudio"] = devAudio
         dict["DeviceSerial"] = devSerial
+        dict["FeedbackTrigger"] = feedbackTrigger
         dict["OuputDirectory"] = outputDirectory
         dict["LEDBrightness"] = Int(ledBrightness)
         dict["Annotations"] = listAnnotations.map {
@@ -124,6 +128,7 @@ class Document : NSDocument {
         devVideo = dict["DeviceVideo"] as? String ?? ""
         devAudio = dict["DeviceAudio"] as? String ?? ""
         devSerial = dict["DeviceSerial"] as? String ?? ""
+        feedbackTrigger = dict["FeedbackTrigger"] as? String ?? ""
         outputDirectory = dict["OutputDirectory"] as? String ?? ""
         ledBrightness = UInt8(dict["LEDBrightness"] as? Int ?? 0)
 

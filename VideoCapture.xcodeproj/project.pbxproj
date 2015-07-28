@@ -12,6 +12,8 @@
 		D8013F9C1B4037870053F452 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D8013F9B1B4037870053F452 /* Images.xcassets */; };
 		D8013F9F1B4037870053F452 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8013F9D1B4037870053F452 /* Main.storyboard */; };
 		D8013FAB1B4037870053F452 /* VideoCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */; };
+		D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9311B67DA3F000954DF /* EquationParser.swift */; };
+		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
@@ -71,6 +73,8 @@
 		D8013FA41B4037870053F452 /* VideoCaptureTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoCaptureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8013FA91B4037870053F452 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCaptureTests.swift; sourceTree = "<group>"; };
+		D801C9311B67DA3F000954DF /* EquationParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquationParser.swift; sourceTree = "<group>"; };
+		D801C9341B67DA62000954DF /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
@@ -144,6 +148,8 @@
 				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
 				D8E48E0D1B45904E0052F4C7 /* Common.swift */,
+				D801C9341B67DA62000954DF /* Equation.swift */,
+				D801C9311B67DA3F000954DF /* EquationParser.swift */,
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8F8E6781B66B429004493D5 /* Regex.swift */,
@@ -311,6 +317,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D801C9361B67E19A000954DF /* Equation.swift in Sources */,
+				D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */,
 				D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */,
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,

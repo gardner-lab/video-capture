@@ -95,7 +95,7 @@ private enum EquationToken: CustomStringConvertible {
         case .Whitespace: return true
         case .ParenthesisClose, .ParenthesisOpen: return true
         case .Number(let s):
-            if let _ = Double(s) {
+            if let _ = Float(s) {
                 return true
             }
             return false
@@ -119,11 +119,13 @@ private enum EquationToken: CustomStringConvertible {
 }
 
 enum EquationError : ErrorType, CustomStringConvertible {
-    case EmptyEquation()
-    case MissingToken()
+    case EmptyEquation
+    case MissingToken
     case InvalidToken(token: String)
     case UnexpectedToken(token: String)
     case NoOperator(phrase: String)
+    case MismatchedParentheses
+    case TooDeep
     
     var description: String {
         get {
@@ -133,6 +135,8 @@ enum EquationError : ErrorType, CustomStringConvertible {
             case .InvalidToken(let t): return "The equation contains an invalid token: \(t)."
             case .UnexpectedToken(let t): return "The token \(t) appears out of place in the equation."
             case .NoOperator(let p): return "There is no operator in the equation: \(p)."
+            case .MismatchedParentheses: return "The parentheses in the equation are not balanced."
+            case .TooDeep: return "The equation is too complex (maximum parsing depth of 50)."
             }
         }
     }
@@ -200,7 +204,7 @@ func equationParse(s: String) throws -> EquationElement {
     
     // empty
     if tokens.isEmpty {
-        throw EquationError.EmptyEquation()
+        throw EquationError.EmptyEquation
     }
     
     // invalid token encountered
@@ -218,14 +222,19 @@ func equationParse(s: String) throws -> EquationElement {
 private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> EquationElement {
     // should always be a token
     if tokens.isEmpty {
-        throw EquationError.MissingToken()
+        throw EquationError.MissingToken
+    }
+    
+    // too deep
+    if depth > 50 {
+        throw EquationError.TooDeep
     }
     
     // single token, easy
     if tokens.count == 1 {
         switch tokens[0] {
         case .Number(let s):
-            guard let v = Double(s) else {
+            guard let v = Float(s) else {
                 throw EquationError.InvalidToken(token: s)
             }
             return EquationNumber(value: v)
@@ -252,7 +261,7 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
             ++in_paren
         case .ParenthesisClose:
             if --in_paren < 0 {
-                throw EquationError.UnexpectedToken(token: ")")
+                throw EquationError.MismatchedParentheses
             }
         case .Operator(let op_string) where in_paren == 0:
             if let op = EquationOperator(fromString: op_string) {
@@ -271,7 +280,10 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
         }
     }
     
-    DLog("\(splt), \(oper?.description)")
+    // unclose parenthesis
+    if 0 < in_paren {
+        throw EquationError.MismatchedParentheses
+    }
     
     // new initial
     if oper == nil {

@@ -11,6 +11,8 @@ import CoreGraphics
 import CoreImage
 import ORSSerial
 
+let kPasteboardROI = "edu.gardner.roi"
+
 /// The video capture mode determines interface item behavior.
 enum VideoCaptureMode {
     case Configure
@@ -31,7 +33,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -40,7 +42,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     @IBOutlet var textName: NSTextField?
-    @IBOutlet var textFeedback: NSTextField?
+    @IBOutlet var tokenFeedback: NSTokenField?
     @IBOutlet var listVideoSources: NSPopUpButton?
     @IBOutlet var listAudioSources: NSPopUpButton?
     @IBOutlet var listSerialPorts: NSPopUpButton?
@@ -48,19 +50,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBOutlet var buttonCapture: NSButton?
     @IBOutlet var buttonMonitor: NSButton?
     @IBOutlet var previewView: NSView?
+    @IBOutlet var tableAnnotations: NSTableView?
     @IBOutlet var annotableView: AnnotableViewer? {
         didSet {
             oldValue?.delegate = nil
             annotableView?.delegate = self
             annotableView?.wantsLayer = true
-        }
-    }
-    @IBOutlet var tableAnnotations: NSTableView? {
-        didSet {
-            oldValue?.setDelegate(nil)
-            oldValue?.setDataSource(nil)
-            tableAnnotations?.setDelegate(self)
-            tableAnnotations?.setDataSource(self)
         }
     }
     
@@ -160,6 +155,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var extractValues: [Float] = []
     var extractBounds = CGSize(width: 0.0, height: 0.0)
     var extractArray: [(pixel: Int, annotation: Int)] = []
+    var extractNames: [String] = []
+    var extractEquation: EquationElement? = nil
+    var extractEquationOn: Bool = false
     
     // timer to redraw interface (saves time)
     var timerRedraw: NSTimer?
@@ -207,6 +205,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let view = annotableView, let root = view.layer {
             view.wantsLayer = true
             root.zPosition = 1.0
+        }
+        
+        // initialize drag from table
+        if let tv = tableAnnotations {
+            tv.registerForDraggedTypes([kPasteboardROI])
+        }
+        if let tf = tokenFeedback {
+            tf.registerForDraggedTypes([NSPasteboardTypeString, kPasteboardROI])
         }
         
         // refresh interface
@@ -311,7 +317,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // editability
         let editable = mode.isEditable()
         textName?.enabled = editable
-        textFeedback?.enabled = editable
+        tokenFeedback?.enabled = editable
         listVideoSources?.enabled = editable
         listAudioSources?.enabled = editable
         listSerialPorts?.enabled = editable
@@ -1502,8 +1508,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let maxX = Int(dimensions.width), maxY = Int(dimensions.height)
         
         extractArray.removeAll()
+        extractNames.removeAll()
         if let view = annotableView {
             for (i, annot) in view.annotations.enumerate() {
+                // append names (used by placeholders in equations)
+                extractNames.append("ROI\(annot.id)")
                 
                 // generate image coordinates
                 for (x, y) in annot.generateImageCoordinates(videoFrame) {
@@ -1673,6 +1682,27 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 dataOut?.writeData(data)
             }
         }
+        
+        // equation
+        if nil != extractEquation {
+            var ph = [String: Float]()
+            for (i, v) in extractValues.enumerate() {
+                ph[extractNames[i]] = v
+            }
+            
+            let nv = (extractEquation!.evaluate(ph) > 0.0)
+            if extractEquationOn != nv && (nv == false || mode.isCapturing()) {
+                extractEquationOn = nv
+                if let arduino = self.ioArduino {
+                    do {
+                        try arduino.writeTo(appPreferences.pinDigitalWhiteNoise, digitalValue: nv)
+                    }
+                    catch {
+                        DLog("WHITENOISE error: \(error)")
+                    }
+                }
+            }
+        }
     }
     
     func captureOutput(captureOutput: AVCaptureOutput!, didDropSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
@@ -1697,7 +1727,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // update document
         copyToDocument()
+        
+//        let attach = NSTextAttachment(fileWrapper: nil)
+//        let cell = AnnotationCell()
+//        attach.attachmentCell = cell
+//        
+//        let tfas = NSMutableAttributedString(attributedString: textFeedback!.attributedStringValue)
+//        DLog("\(tfas)")
+//        tfas.appendAttributedString(NSAttributedString(attachment: attach))
+//        textFeedback?.attributedStringValue = tfas
+//        //textFeedback?.cell?.insertValue(NSAttributedString(attachment: attach), atIndex: 0, inPropertyWithKey: )
     }
+    
+    // MARK: - table data source and delegate
     
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
         guard let annotView = self.annotableView else {
@@ -1745,6 +1787,31 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
+    func tableView(tableView: NSTableView, writeRowsWithIndexes rowIndexes: NSIndexSet, toPasteboard pboard: NSPasteboard) -> Bool {
+        guard rowIndexes.count == 1 else {
+            return false
+        }
+        guard let annotView = annotableView else {
+            return false
+        }
+        
+        // get row
+        let row = rowIndexes.firstIndex
+        if row < annotView.annotations.count {
+            // assemble data (just dictionary with ID)
+            let dict: [String: AnyObject] = ["id": annotView.annotations[row].id]
+            let data = NSArchiver.archivedDataWithRootObject(dict)
+            pboard.declareTypes([kPasteboardROI, NSPasteboardTypeString], owner: nil)
+            pboard.setData(data, forType: kPasteboardROI)
+            pboard.setString(annotView.annotations[row].name, forType: NSPasteboardTypeString)
+            return true
+        }
+        
+        return false
+    }
+    
+    // MARK: - arduino delegate and controls
+    
     // monitoring
     func avDeviceWasConnected(notification: NSNotification) {
         updateDeviceLists()
@@ -1787,6 +1854,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         listAudioSources?.selectItemAtIndex(0)
     }
     
+    func arduinoError(message: String, isPermanent: Bool) {
+        DLog("Arduino Error: \(message)")
+        
+        // permanent error
+        if isPermanent {
+            resetArduino()
+        }
+    }
+    
+    // MARK: - interface options
+    
     @IBAction func setLedBrightness(sender: AnyObject?) {
         if let s = sender, let slider = s as? NSSlider, let arduino = self.ioArduino {
             copyToDocument()
@@ -1806,16 +1884,135 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         //}
     }
     
-    func arduinoError(message: String, isPermanent: Bool) {
-        DLog("Arduino Error: \(message)")
-        
-        // permanent error
-        if isPermanent {
-            resetArduino()
+    // MARK: - Token Field
+    
+    
+    // return an array of represented objects you want to add.
+    // If you want to reject the add, return an empty array.
+    // returning nil will cause an error.
+    func tokenField(tokenField: NSTokenField, shouldAddObjects tokens: [AnyObject], atIndex index: Int) -> [AnyObject] {
+        return tokens.filter {
+            (o: AnyObject) -> Bool
+            in
+            if o is String {
+                return true
+            }
+            if let roi = o as? TokenROI {
+                if let annotView = self.annotableView {
+                    for annot in annotView.annotations {
+                        if annot.id == roi.id {
+                            return true
+                        }
+                    }
+                }
+            }
+            return false
         }
     }
     
-    // MARK: - Token Field
+    // If you return nil or don't implement these delegate methods, we will assume
+    // editing string = display string = represented object
+    func tokenField(tokenField: NSTokenField, displayStringForRepresentedObject representedObject: AnyObject) -> String? {
+        if let o = representedObject as? TokenROI {
+            if let annotView = annotableView {
+                for annot in annotView.annotations {
+                    if annot.id == o.id {
+                        return annot.name
+                    }
+                }
+            }
+            return "Unknown Annotation"
+        }
+        if let s = representedObject as? String {
+            return s
+        }
+        return nil
+    }
     
+    func tokenField(tokenField: NSTokenField, editingStringForRepresentedObject representedObject: AnyObject) -> String? {
+        if let o = representedObject as? TokenROI {
+            return "ROI\(o.id)"
+        }
+        if let s = representedObject as? String {
+            return s
+        }
+        return nil
+    }
+    
+    func tokenField(tokenField: NSTokenField, representedObjectForEditingString editingString: String) -> AnyObject {
+        let re = Regex(pattern: "^ROI[0-9]+$")
+        if re.match(editingString) {
+            let s = advance(editingString.startIndex, 3), e = editingString.endIndex
+            if let id = Int(editingString[s..<e]) {
+                return TokenROI(id: id)
+            }
+        }
+        return editingString
+    }
+    
+    // Return an array of represented objects to add to the token field.
+    func tokenField(tokenField: NSTokenField, readFromPasteboard pboard: NSPasteboard) -> [AnyObject]? {
+        var ret = [AnyObject]()
+        if let data = pboard.dataForType(kPasteboardROI), let un = NSUnarchiver.unarchiveObjectWithData(data) where un is NSDictionary {
+            if let v = un["id"], let id = v as? Int {
+                ret.append(TokenROI(id: id))
+            }
+        }
+        return ret
+    }
+    
+    func tokenField(tokenField: NSTokenField, styleForRepresentedObject representedObject: AnyObject) -> NSTokenStyle {
+        if representedObject is TokenROI {
+            return NSTokenStyle.Default
+        }
+        return NSTokenStyle.None
+    }
+    
+    @IBAction func equationEdited(sender: AnyObject) {
+        guard let tf = sender as? NSTokenField else {
+            return
+        }
+        
+        // get array of tokens
+        let tokens = tf.objectValue as! [AnyObject]
+        let str = "".join(tokens.map({
+            (o: AnyObject) -> String
+            in
+            if let t = o as? TokenROI {
+                return "ROI\(t.id)"
+            }
+            return o as? String ?? ""
+        }))
+        
+        // reset background color
+        tf.backgroundColor = NSColor.textBackgroundColor()
+        
+        // empty? disable equation
+        if str.isEmpty {
+            extractEquation = nil
+        }
+        else {
+            do {
+                extractEquation = try equationParse(str)
+            }
+            catch {
+                extractEquation = nil
+                DLog("EQUATION error: \(error)")
+                tf.backgroundColor = NSColor(red: 242.0, green: 222.0, blue: 222.0, alpha: 1.0)
+            }
+        }
+        
+        // update document
+        copyToDocument()
+    }
 }
 
+class TokenROI: NSObject
+{
+    let id: Int
+    
+    init(id: Int) {
+        self.id = id
+        super.init()
+    }
+}
