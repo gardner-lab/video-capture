@@ -22,7 +22,7 @@ private enum EquationToken: CustomStringConvertible {
         case "(": self = .ParenthesisOpen
         case ")": self = .ParenthesisClose
         case "R": self = .Placeholder(s: String(c))
-        case "-", ".", "0"..."9": self = .Number(s: String(c))
+        case ".", "0"..."9": self = .Number(s: String(c)) // TODO: unable to parse negative numbers, conflicts with operator identification
         case " ", "\t","\r", "\n": self = .Whitespace
         default: self = .Operator(s: String(c))
         }
