@@ -354,6 +354,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         listAudioSources?.enabled = editable
         listSerialPorts?.enabled = editable
         sliderLedBrightness?.enabled = editable && nil != ioArduino
+        annotableView?.enabled = editable
         // annotation names
         if let tv = tableAnnotations {
             let col = tv.columnWithIdentifier("name")
@@ -1577,6 +1578,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
             }
         }
+        extractValues = [Float](count: extractNames.count, repeatedValue: 0.0)
 
         // debugging
 //        let prop = [String : AnyObject]()
@@ -1713,9 +1715,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             let nv = (extractEquation!.evaluate(ph) > 0.0)
-            if extractEquationOn != nv && (nv == false || mode.isCapturing()) {
+            if extractEquationOn != nv {
                 extractEquationOn = nv
-                if let arduino = self.ioArduino {
+                if let arduino = self.ioArduino where (nv == false || !mode.isEditable()) {
+                    // update whitenoise poin
                     do {
                         try arduino.writeTo(appPreferences.pinDigitalWhiteNoise, digitalValue: nv)
                     }
