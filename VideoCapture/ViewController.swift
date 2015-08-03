@@ -2052,7 +2052,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         else {
             do {
-                extractEquation = try equationParse(str)
+                let eq = try equationParse(str)
+                extractEquation = eq.simplify()
+                DLog("\(extractEquation!.description)")
             }
             catch {
                 extractEquation = nil

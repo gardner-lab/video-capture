@@ -17,12 +17,26 @@ private enum EquationToken: CustomStringConvertible {
     case Placeholder(s: String)
     case Operator(s: String)
     
-    init?(fromCharacter c: Character) {
+    init?(fromCharacter c: Character, after lastToken: EquationToken?) {
         switch c {
         case "(": self = .ParenthesisOpen
         case ")": self = .ParenthesisClose
         case "R": self = .Placeholder(s: String(c))
-        case ".", "0"..."9": self = .Number(s: String(c)) // TODO: unable to parse negative numbers, conflicts with operator identification
+        case ".", "0"..."9": self = .Number(s: String(c))
+        case "-":
+            // only ambigious symbol, can be operator or can be number
+            // yes, yes, a lexxer would be better. but this works
+            if let token = lastToken {
+                switch token {
+                case .Number(_), .Placeholder(_), .ParenthesisClose: self = .Operator(s: String(c))
+                case .Operator(_), .ParenthesisOpen: self = .Number(s: String(c))
+                case .Whitespace: self = .Number(s: String(c)) // should never be called, since whitespace is ignored
+                }
+            }
+            else {
+                // no prior token, must be part of number
+                self = .Number(s: String(c))
+            }
         case " ", "\t","\r", "\n": self = .Whitespace
         default: self = .Operator(s: String(c))
         }
@@ -80,7 +94,7 @@ private enum EquationToken: CustomStringConvertible {
             }
             
             // other current
-            if let _ = EquationToken(fromCharacter: c) {
+            if let _ = EquationToken(fromCharacter: c, after: self) {
                 return false
             }
             
@@ -151,14 +165,25 @@ private func extractComponents(s: String) -> [EquationToken] {
     // get current token
     var ret: [EquationToken] = []
     var cur: EquationToken? = nil
+    var last: EquationToken? = nil
     for c in s.characters {
         if nil == cur {
-            cur = EquationToken(fromCharacter: c)
+            // start new token
+            cur = EquationToken(fromCharacter: c, after: last)
         }
         else {
+            // match as part of current token
             if !cur!.matchCharacter(c) {
+                // current token is over, append it to the output list
                 ret.append(cur!)
-                cur = EquationToken(fromCharacter: c)
+                
+                // not ignored? use as last
+                if !cur!.isIgnored() {
+                    last = cur
+                }
+                
+                // start new token
+                cur = EquationToken(fromCharacter: c, after: last)
             }
         }
     }

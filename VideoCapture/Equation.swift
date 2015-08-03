@@ -107,6 +107,7 @@ enum EquationOperator: CustomStringConvertible {
 
 protocol EquationElement: CustomStringConvertible {
     func evaluate(placeholders: [String: Float]) -> Float
+    func simplify() -> EquationElement
 }
 
 class EquationOperatorTriplet: EquationElement {
@@ -132,6 +133,15 @@ class EquationOperatorTriplet: EquationElement {
         let right = rhe.evaluate(placeholders)
         return op.evaluate(left, right)
     }
+    
+    func simplify() -> EquationElement {
+        let newLhe = lhe.simplify(), newRhe = rhe.simplify()
+        if newLhe is EquationNumber && newRhe is EquationNumber {
+            let ph = [String: Float]()
+            return EquationNumber(value: op.evaluate(newLhe.evaluate(ph), newRhe.evaluate(ph)))
+        }
+        return EquationOperatorTriplet(lhe: newLhe, op: op, rhe: newRhe)
+    }
 }
 
 class EquationNumber: EquationElement {
@@ -149,6 +159,10 @@ class EquationNumber: EquationElement {
     
     func evaluate(placeholders: [String: Float]) -> Float {
         return value
+    }
+    
+    func simplify() -> EquationElement {
+        return self
     }
 }
 
@@ -170,6 +184,10 @@ class EquationPlaceholder: EquationElement {
             return v
         }
         return 0.0
+    }
+    
+    func simplify() -> EquationElement {
+        return self
     }
 }
 
