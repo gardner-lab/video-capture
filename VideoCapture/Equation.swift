@@ -84,7 +84,32 @@ enum EquationOperator: CustomStringConvertible {
         }
     }
     
-    func evaluate(left: Float, _ right: Float) -> Float {
+    func evaluate(lh: EquationElement, _ rh: EquationElement, placeholders: [String: Float]) -> Float {
+        // lazy evaluation
+        switch self {
+        case .BooleanAnd:
+            if 0.0 >= lh.evaluate(placeholders) {
+                return -1.0
+            }
+            if 0.0 >= rh.evaluate(placeholders) {
+                return -1.0
+            }
+            return 1.0
+        case .BooleanOr:
+            if 0.0 < lh.evaluate(placeholders) {
+                return 1.0
+            }
+            if 0.0 < rh.evaluate(placeholders) {
+                return 1.0
+            }
+            return -1.0
+        default: break
+        }
+        
+        // standard evaluation
+        let left = lh.evaluate(placeholders)
+        let right = rh.evaluate(placeholders)
+        
         switch self {
         case .ArithmeticAdd: return left + right
         case .ArithmeticDivide:
@@ -94,13 +119,12 @@ enum EquationOperator: CustomStringConvertible {
             return Float.infinity
         case .ArithmeticMultiply: return left * right
         case .ArithmeticSubtract: return left - right
-        case .BooleanAnd: return left > 0.0 && right > 0.0 ? 1.0 : -1.0
-        case .BooleanOr: return left > 0.0 || right > 0.0 ? 1.0 : -1.0
         case .CompareEqual: return left == right ? 1.0 : -1.0
         case .CompareGreaterThan: return left > right ? 1.0 : -1.0
         case .CompareGreaterThanOrEqual: return left >= right ? 1.0 : -1.0
         case .CompareLessThan: return left < right ? 1.0 : -1.0
         case .CompareLessThanOrEqual: return left <= right ? 1.0 : -1.0
+        case .BooleanAnd, .BooleanOr: return -1.0 // should never be reached
         }
     }
 }
@@ -128,17 +152,14 @@ class EquationOperatorTriplet: EquationElement {
     }
     
     func evaluate(placeholders: [String: Float]) -> Float {
-        // TODO: potentially add lazy evaluation
-        let left = lhe.evaluate(placeholders)
-        let right = rhe.evaluate(placeholders)
-        return op.evaluate(left, right)
+        return op.evaluate(lhe, rhe, placeholders: placeholders)
     }
     
     func simplify() -> EquationElement {
         let newLhe = lhe.simplify(), newRhe = rhe.simplify()
         if newLhe is EquationNumber && newRhe is EquationNumber {
             let ph = [String: Float]()
-            return EquationNumber(value: op.evaluate(newLhe.evaluate(ph), newRhe.evaluate(ph)))
+            return EquationNumber(value: op.evaluate(newLhe, newRhe, placeholders: ph))
         }
         return EquationOperatorTriplet(lhe: newLhe, op: op, rhe: newRhe)
     }
