@@ -9,6 +9,7 @@ import AVFoundation
 import CoreFoundation
 import CoreGraphics
 import CoreImage
+import QuartzCore
 import ORSSerial
 
 let kPasteboardROI = "edu.gardner.roi"
@@ -112,12 +113,22 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                 // add it
                 if let containingView = self.previewView {
+                    // initial size
                     newPreviewLayer.frame = containingView.bounds
                 
                     // add to view hierarchy
                     if let root = containingView.layer {
                         root.backgroundColor = CGColorCreateGenericGray(0.2, 1.0)
-                        //CGColorGetConstantColor(kCGColorBlack)
+                        if nil == root.layoutManager {
+                            root.layoutManager = CAConstraintLayoutManager()
+                        }
+                        
+                        // add constraints
+                        newPreviewLayer.addConstraint(CAConstraint(attribute: CAConstraintAttribute.MinX, relativeTo: "superlayer", attribute: CAConstraintAttribute.MaxX, scale: 0.0, offset: 0.0))
+                        newPreviewLayer.addConstraint(CAConstraint(attribute: CAConstraintAttribute.MinY, relativeTo: "superlayer", attribute: CAConstraintAttribute.MaxY, scale: 0.0, offset: 0.0))
+                        newPreviewLayer.addConstraint(CAConstraint(attribute: CAConstraintAttribute.Width, relativeTo: "superlayer", attribute: CAConstraintAttribute.Width))
+                        newPreviewLayer.addConstraint(CAConstraint(attribute: CAConstraintAttribute.Height, relativeTo: "superlayer", attribute: CAConstraintAttribute.Height))
+                        
                         root.addSublayer(newPreviewLayer)
                     }
                 }
