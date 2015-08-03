@@ -57,7 +57,8 @@ enum EquationOperator: CustomStringConvertible {
     }
     
     
-    /// Somewhat counter-intuitive: The higher the precedence, the later the grouping.
+    /// Somewhat counter-intuitive: The higher the precedence, the later the grouping. For example, `3*4+2` becomes `(3*4)+2`
+    /// since multiplication has a lower precedence then addition (the addition is used to split the equation first).
     var precedence: Int {
         get {
             switch self {
@@ -73,6 +74,9 @@ enum EquationOperator: CustomStringConvertible {
         }
     }
     
+    /// If `leftAssociative == true`, then the right-most operator will be used to split the equation first. For example, `1+2+3`
+    /// becomes `(1+2)+3`. For non-left associative operators, like boolean AND, then the left-most operator will be used to split
+    /// the equation first. For example, `A&&B&&C` becomes `A&&(B&&C)`.
     var leftAssociative: Bool {
         get {
             switch self {
@@ -211,36 +215,3 @@ class EquationPlaceholder: EquationElement {
         return self
     }
 }
-
-//enum EquationElement: CustomStringConvertible {
-//    indirect case OperatorTriplet(lhe: EquationElement, op: EquationOperator, rhe: EquationElement)
-//    case Numeric(val: Double)
-//    case Placeholder(name: String)
-//
-//    func toString(placeholders: [String: String]) -> String {
-//        switch self {
-//        case .OperatorTriplet(let lhe, let op, let rhe):
-//            return lhe.toString(placeholders) + op.description + rhe.toString(placeholders)
-//        case .Numeric(let val):
-//            return String(val)
-//        case .Placeholder(let nm):
-//            if let niceName = placeholders[nm] {
-//                return niceName
-//            }
-//            return nm
-//        }
-//    }
-//    
-//    var description: String {
-//        get {
-//            switch self {
-//            case .OperatorTriplet(let lhe, let op, let rhe):
-//                return lhe.description + " " + op.description + " " + rhe.description
-//            case .Numeric(let val):
-//                return String(val)
-//            case .Placeholder(let nm):
-//                return nm
-//            }
-//        }
-//    }
-//}
