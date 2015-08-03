@@ -15,6 +15,10 @@
 		D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9311B67DA3F000954DF /* EquationParser.swift */; };
 		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
+		D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF0351B6FE05300B59532 /* CrashReporter.framework */; };
+		D83CF03B1B6FE15900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
+		D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
+		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
 		D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -59,6 +63,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */,
+				D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +82,9 @@
 		D801C9311B67DA3F000954DF /* EquationParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquationParser.swift; sourceTree = "<group>"; };
 		D801C9341B67DA62000954DF /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		D83CF0351B6FE05300B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = /Users/nathan/Dropbox/Development/VideoCaptureMac/CrashReporter.framework; sourceTree = "<absolute>"; };
+		D83CF03A1B6FE15900B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = Frameworks/CrashReporter.framework; sourceTree = "<group>"; };
+		D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoCapture-Bridging-Header.h"; sourceTree = "<group>"; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
 		D87DB6C21B45958B00131082 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
@@ -100,12 +108,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */,
+				D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */,
 				D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */,
 				D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */,
 				D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */,
 				D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */,
 				D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */,
 				D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */,
+				D83CF03B1B6FE15900B59532 /* CrashReporter.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,11 +134,13 @@
 			isa = PBXGroup;
 			children = (
 				D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */,
+				D83CF03A1B6FE15900B59532 /* CrashReporter.framework */,
 				D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */,
 				D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */,
 				D8875E881B40776100270CE0 /* CoreFoundation.framework */,
 				D8875E861B40770700270CE0 /* CoreImage.framework */,
 				D827A5F61B40395900C6F4B6 /* AVFoundation.framework */,
+				D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */,
 				D8013F941B4037870053F452 /* VideoCapture */,
 				D8013FA71B4037870053F452 /* VideoCaptureTests */,
 				D8013F931B4037870053F452 /* Products */,
@@ -455,6 +468,12 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
@@ -462,6 +481,7 @@
 				PRODUCT_MODULE_NAME = VideoCapture;
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -472,6 +492,12 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_SWIFT_FLAGS = "";
@@ -479,6 +505,7 @@
 				PRODUCT_MODULE_NAME = VideoCapture;
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;

@@ -8,11 +8,40 @@ import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
-
-
+    private func handleCrashReport() {
+        let crashReporter = PLCrashReporter.sharedReporter()
+        let crashData: NSData
+        
+        // load crash data
+        do {
+            crashData = try crashReporter.loadPendingCrashReportDataAndReturnError()
+        }
+        catch {
+            DLog("CRASH: Unable to load crash log \(error)")
+            crashReporter.purgePendingCrashReport()
+            return
+        }
+        
+        // TODO: send crash data
+        
+        crashReporter.purgePendingCrashReport()
+    }
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        // Insert code here to initialize your application
+        let crashReporter = PLCrashReporter.sharedReporter()
+        
+        // has pending report?
+        if crashReporter.hasPendingCrashReport() {
+            self.handleCrashReport()
+        }
+        
+        // enable crash reporting
+        do {
+            try crashReporter.enableCrashReporterAndReturnError()
+        }
+        catch {
+            DLog("CRASH: Unable to enable crash reporting \(error)")
+        }
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
