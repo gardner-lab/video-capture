@@ -1433,7 +1433,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             do {
                 try ioArduino = ArduinoIO(path: devicePath)
                 try ioArduino!.setPinMode(appPreferences.pinDigitalCamera, to: ArduinoIOPin.Output) // pin 4: digital camera relay
-                try ioArduino!.setPinMode(appPreferences.pinDigitalWhiteNoise, to: ArduinoIOPin.Output) // pin 9: digital white noise stimulation
+                try ioArduino!.setPinMode(appPreferences.pinDigitalFeedback, to: ArduinoIOPin.Output) // pin 9: digital feedback
                 try ioArduino!.setPinMode(appPreferences.pinAnalogLED, to: ArduinoIOPin.Output) // pin 13: analog brightness
                 //try ioArduino!.setPinMode(appPreferences.pinAnalogTrigger, to: ArduinoIOPin.Input) // pin: 0 analog trigger
                 
@@ -1729,12 +1729,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if extractEquationOn != nv {
                 extractEquationOn = nv
                 if let arduino = self.ioArduino where (nv == false || !mode.isEditable()) {
-                    // update whitenoise poin
+                    // update feedback pin
                     do {
-                        try arduino.writeTo(appPreferences.pinDigitalWhiteNoise, digitalValue: nv)
+                        try arduino.writeTo(appPreferences.pinDigitalFeedback, digitalValue: nv)
                     }
                     catch {
-                        DLog("WHITENOISE error: \(error)")
+                        DLog("FEEDBACK error: \(error)")
                     }
                 }
             }

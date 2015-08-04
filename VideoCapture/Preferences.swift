@@ -11,7 +11,7 @@ struct Preferences {
     // pin preferences
     let pinAnalogTrigger = 0
     let pinDigitalCamera = 4
-    let pinDigitalWhiteNoise = 9
+    let pinDigitalFeedback = 9
     let pinAnalogLED = 13
     
     // how often to poll trigger
