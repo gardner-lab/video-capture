@@ -762,6 +762,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             avFileControl = VideoControl(parent: self)
         }
         
+        // create nice capture
         let movieOut = AVCaptureMovieFileOutput()
         movieOut.delegate = avFileControl
         if !session.canAddOutput(movieOut) {
@@ -829,6 +830,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
+        // remove conflicting file
+        do {
+            try NSFileManager.defaultManager().removeItemAtURL(file)
+        }
+        catch {}
+        
         // start writer
         avFileControl?.shouldStart(file)
         
@@ -879,6 +886,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
+        // remove conflicting file
+        do {
+            try NSFileManager.defaultManager().removeItemAtURL(file)
+        }
+        catch {}
+        
         // start writer
         if let audioOut = avFileOut! as? AVCaptureAudioFileOutput {
             audioOut.startRecordingToOutputFileURL(file, outputFileType: AVFileTypeAppleM4A, recordingDelegate: self)
@@ -902,6 +915,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         guard let path = dataFile.path else {
             return false
         }
+        
+        // remove conflicting file
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(path)
+        }
+        catch {}
         
         // create file
         guard NSFileManager.defaultManager().createFileAtPath(path, contents: nil, attributes: nil) else {
