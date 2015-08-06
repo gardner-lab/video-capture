@@ -1765,6 +1765,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     func captureOutput(captureOutput: AVCaptureOutput!, didDropSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
         DLog("DROPPED FRAME!")
+        
+        // string
+        if nil != dataOut {
+            // get timestamp
+            let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer), timestampAsSeconds = CMTimeGetSeconds(timestamp)
+            
+            // build sample string
+            let sampleString = "\(timestampAsSeconds),dropped\n"
+            
+            // write data
+            if let data = sampleString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true) {
+                dataOut?.writeData(data)
+            }
+        }
     }
     
     func timerUpdateValues(timer: NSTimer!) {
