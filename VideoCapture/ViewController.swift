@@ -674,7 +674,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func startSession() {
         if nil == self.avSession {
             // create capture session
-            let session = AVCaptureSession.new()
+            let session = AVCaptureSession()
             self.avSession = session
             session.sessionPreset = AVCaptureSessionPresetHigh
             
