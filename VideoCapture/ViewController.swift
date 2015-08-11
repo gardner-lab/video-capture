@@ -770,6 +770,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         session.addOutput(movieOut)
+        
+        // output settings
+        switch appPreferences.videoFormat {
+        case .Raw:
+            // configure video connection with empty dictionary
+            if let con = movieOut.connectionWithMediaType(AVMediaTypeVideo) {
+                let settings = NSDictionary() as! [NSObject: AnyObject]
+                movieOut.setOutputSettings(settings, forConnection: con)
+            }
+        case .H264:
+            break // default, no configuration required
+        }
+        
+        
         self.avFileOut = movieOut
         
         return true
@@ -1973,7 +1987,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             copyToDocument()
             do {
                 DLog("ARDUINO brightness \(slider.integerValue)")
-                try arduino.writeTo(13, analogValue: UInt8(slider.integerValue))
+                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(slider.integerValue))
             }
             catch {
                 DLog("ARDUINO brightness: failed! \(error)")

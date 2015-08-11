@@ -6,6 +6,11 @@
 
 import Foundation
 
+enum PreferenceVideoFormat {
+    case Raw
+    case H264
+}
+
 /// Potentially customizable application preferences.
 struct Preferences {
     // pin preferences
@@ -17,4 +22,7 @@ struct Preferences {
     // how often to poll trigger
     let triggerPollTime = 0.05
     let triggerValue: UInt16 = 500
+    
+    // output format
+    let videoFormat = PreferenceVideoFormat.H264
 }
