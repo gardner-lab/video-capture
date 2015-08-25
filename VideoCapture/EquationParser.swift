@@ -312,9 +312,7 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
     
     // new initial
     if oper == nil {
-        throw EquationError.NoOperator(phrase: "".join(tokens.map {
-            $0.description
-            }))
+        throw EquationError.NoOperator(phrase: tokens.map({ $0.description }).joinWithSeparator(""))
     }
     
     // split tokens

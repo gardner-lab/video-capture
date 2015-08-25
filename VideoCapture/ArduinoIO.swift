@@ -123,7 +123,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     private var motors = [UInt8](count: 4, repeatedValue: UInt8(0))
     private var steppers = [UInt8](count: 2, repeatedValue: UInt8(0))
     
-    lazy private var cbEndOfRequest: ORSSerialRequestResponseEvaluator = { (d: NSData?) -> ObjCBool in
+    lazy private var cbEndOfRequest: ORSSerialRequestResponseEvaluator = { (d: NSData?) -> Bool in
         guard let data = d else {
             return false
         }

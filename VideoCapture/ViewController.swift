@@ -301,7 +301,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 in
                 let re = Regex(pattern: "^ROI[0-9]+$")
                 if re.match(str) {
-                    let s = advance(str.startIndex, 3), e = str.endIndex
+                    let s = str.startIndex.advancedBy(3), e = str.endIndex
                     if let id = Int(str[s..<e]) {
                         return TokenROI(id: id)
                     }
@@ -2059,7 +2059,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func tokenField(tokenField: NSTokenField, representedObjectForEditingString editingString: String) -> AnyObject {
         let re = Regex(pattern: "^ROI[0-9]+$")
         if re.match(editingString) {
-            let s = advance(editingString.startIndex, 3), e = editingString.endIndex
+            let s = editingString.startIndex.advancedBy(3), e = editingString.endIndex
             if let id = Int(editingString[s..<e]) {
                 return TokenROI(id: id)
             }
@@ -2092,14 +2092,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // get array of tokens
         let tokens = tf.objectValue as! [AnyObject]
-        let str = "".join(tokens.map({
+        let str = tokens.map({
             (o: AnyObject) -> String
             in
             if let t = o as? TokenROI {
                 return "ROI\(t.id)"
             }
             return o as? String ?? ""
-        }))
+        }).joinWithSeparator("")
         
         // reset background color
         tf.backgroundColor = NSColor.textBackgroundColor()
