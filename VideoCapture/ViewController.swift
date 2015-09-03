@@ -34,7 +34,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -138,10 +138,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avFileControl: VideoControl?
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
+    var avAudioData: AVCaptureAudioDataOutput?
     var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
     var avVideoDispatchQueue: dispatch_queue_t?
+    var avAudioDispatchQueue: dispatch_queue_t?
     
     // should be unused
     override var representedObject: AnyObject? {
@@ -237,6 +239,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // end any session
         stopVideoData()
         stopVideoFile()
+        stopAudioData()
         stopAudioFile()
         stopSession()
         
@@ -748,6 +751,56 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
+    private func startAudioData() -> Bool {
+        // already created
+        guard nil == avAudioData else {
+            return true
+        }
+        guard let session = avSession else {
+            return false
+        }
+        
+        // raw data
+        let audioData = AVCaptureAudioDataOutput()
+        avAudioData = audioData
+        
+        // create serial dispatch queue
+        let audioDispatchQueue = dispatch_queue_create("AudioDataOutputQueue", DISPATCH_QUEUE_SERIAL)
+        avAudioDispatchQueue = audioDispatchQueue
+        audioData.setSampleBufferDelegate(self, queue: audioDispatchQueue)
+        
+        if !session.canAddOutput(audioData) {
+            DLog("Unable to add audio data output.")
+            return false
+        }
+        
+        session.addOutput(audioData)
+        
+        return true
+    }
+    
+    private func stopAudioData() {
+        // stop data output
+        if nil != avAudioData {
+            if let session = avSession {
+                session.removeOutput(avAudioData!)
+            }
+            avAudioData = nil
+        }
+        
+        // release dispatch queue
+        if nil != avAudioDispatchQueue {
+            avAudioDispatchQueue = nil
+        }
+        
+        // free up buffer
+        if 0 < bufferSize {
+            free(buffer)
+            buffer = nil
+            bufferSize = 0
+        }
+    }
+    
     private func startVideoFile() -> Bool {
         // already created
         guard nil == avFileOut else {
@@ -836,6 +889,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return false
             }
         }
+        if nil == avAudioData && nil != avInputAudio {
+            if !startAudioData() {
+                return false
+            }
+        }
         
         // writer
         if nil == avFileOut {
@@ -861,6 +919,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // no inputs
             stopVideoData()
             stopVideoFile()
+            stopAudioData()
             stopAudioFile()
         }
         else if nil == avInputVideo {
@@ -871,6 +930,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             startAudioFile()
+            startAudioData()
         }
         else {
             // has audio out?
@@ -882,17 +942,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 startSession()
                 avSession?.beginConfiguration()
                 startVideoData()
+                startAudioData()
                 startVideoFile()
                 avSession?.commitConfiguration()
             }
             else {
                 startVideoData()
+                startAudioData()
                 startVideoFile()
             }
         }
     }
     
     func createAudioOutputs(file: NSURL) -> Bool {
+        // create raw data stream
+        if nil == avAudioData {
+            if !startAudioData() {
+                return false
+            }
+        }
+        
         // writer
         if nil == avFileOut {
             if !startAudioFile() {
@@ -1024,11 +1093,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if !startVideoData() {
                 return false
             }
+            if !startAudioData() {
+                return false
+            }
             if !startVideoFile() {
                 return false
             }
         }
         else {
+            if !startAudioData() {
+                return false
+            }
             if !startAudioFile() {
                 return false
             }
