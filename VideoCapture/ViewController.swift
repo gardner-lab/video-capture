@@ -34,7 +34,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -144,6 +144,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     var avVideoDispatchQueue: dispatch_queue_t?
     var avAudioDispatchQueue: dispatch_queue_t?
+    
+    var songDetector: SongDetector?
     
     // should be unused
     override var representedObject: AnyObject? {
@@ -759,15 +761,22 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         guard let session = avSession else {
             return false
         }
+        guard let audioInput = avInputAudio else {
+            return false
+        }
         
         // raw data
         let audioData = AVCaptureAudioDataOutput()
         avAudioData = audioData
         
+        // create song detector
+        let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(audioInput.device.activeFormat.formatDescription)
+        songDetector = SongDetector(samplingRate: audioDescription[0].mSampleRate)
+        
         // create serial dispatch queue
         let audioDispatchQueue = dispatch_queue_create("AudioDataOutputQueue", DISPATCH_QUEUE_SERIAL)
         avAudioDispatchQueue = audioDispatchQueue
-        audioData.setSampleBufferDelegate(self, queue: audioDispatchQueue)
+        audioData.setSampleBufferDelegate(songDetector, queue: audioDispatchQueue)
         
         if !session.canAddOutput(audioData) {
             DLog("Unable to add audio data output.")
@@ -789,16 +798,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // release dispatch queue
-        if nil != avAudioDispatchQueue {
-            avAudioDispatchQueue = nil
-        }
+        avAudioDispatchQueue = nil
         
-        // free up buffer
-        if 0 < bufferSize {
-            free(buffer)
-            buffer = nil
-            bufferSize = 0
-        }
+        // release song detector
+        songDetector = nil
     }
     
     private func startVideoFile() -> Bool {

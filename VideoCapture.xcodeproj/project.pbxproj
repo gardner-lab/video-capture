@@ -26,6 +26,11 @@
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
+		D892B4971B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4901B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift */; settings = {ASSET_TAGS = (); }; };
+		D892B4981B9E53B2001DFCFE /* DebounceBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */; settings = {ASSET_TAGS = (); }; };
+		D892B4991B9E53B2001DFCFE /* ExponentialMovingAverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */; settings = {ASSET_TAGS = (); }; };
+		D892B49A1B9E53B2001DFCFE /* SongDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4931B9E53B2001DFCFE /* SongDetector.swift */; settings = {ASSET_TAGS = (); }; };
+		D892B49B1B9E53B2001DFCFE /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = D892B4951B9E53B2001DFCFE /* TPCircularBuffer.c */; settings = {ASSET_TAGS = (); }; };
 		D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A4C7411B59966E0030B756 /* VideoControl.swift */; };
 		D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */; };
 		D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */; };
@@ -91,6 +96,12 @@
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		D892B4901B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircularShortTimeFourierTransform.swift; sourceTree = "<group>"; };
+		D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DebounceBoolean.swift; sourceTree = "<group>"; };
+		D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExponentialMovingAverage.swift; sourceTree = "<group>"; };
+		D892B4931B9E53B2001DFCFE /* SongDetector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SongDetector.swift; sourceTree = "<group>"; };
+		D892B4951B9E53B2001DFCFE /* TPCircularBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TPCircularBuffer.c; sourceTree = "<group>"; };
+		D892B4961B9E53B2001DFCFE /* TPCircularBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TPCircularBuffer.h; sourceTree = "<group>"; };
 		D8A4C7411B59966E0030B756 /* VideoControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoControl.swift; sourceTree = "<group>"; };
 		D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AnnotableViewer.xib; sourceTree = "<group>"; };
@@ -159,6 +170,7 @@
 		D8013F941B4037870053F452 /* VideoCapture */ = {
 			isa = PBXGroup;
 			children = (
+				D892B48F1B9E53B2001DFCFE /* SongDetection */,
 				D8566EC91B419A30006A57BF /* AnnotableViewer.swift */,
 				D87DB6C21B45958B00131082 /* Annotations.swift */,
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
@@ -204,6 +216,27 @@
 				D8013FA91B4037870053F452 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D892B48F1B9E53B2001DFCFE /* SongDetection */ = {
+			isa = PBXGroup;
+			children = (
+				D892B4941B9E53B2001DFCFE /* TPCircularBuffer */,
+				D892B4901B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift */,
+				D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */,
+				D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */,
+				D892B4931B9E53B2001DFCFE /* SongDetector.swift */,
+			);
+			path = SongDetection;
+			sourceTree = "<group>";
+		};
+		D892B4941B9E53B2001DFCFE /* TPCircularBuffer */ = {
+			isa = PBXGroup;
+			children = (
+				D892B4951B9E53B2001DFCFE /* TPCircularBuffer.c */,
+				D892B4961B9E53B2001DFCFE /* TPCircularBuffer.h */,
+			);
+			path = TPCircularBuffer;
 			sourceTree = "<group>";
 		};
 		D8C386B91B441AD600DE70EA /* Products */ = {
@@ -337,13 +370,18 @@
 				D801C9361B67E19A000954DF /* Equation.swift in Sources */,
 				D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */,
 				D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */,
+				D892B49A1B9E53B2001DFCFE /* SongDetector.swift in Sources */,
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
+				D892B4981B9E53B2001DFCFE /* DebounceBoolean.swift in Sources */,
+				D892B49B1B9E53B2001DFCFE /* TPCircularBuffer.c in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
 				D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
+				D892B4991B9E53B2001DFCFE /* ExponentialMovingAverage.swift in Sources */,
+				D892B4971B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
 				D87DB6C31B45958B00131082 /* Annotations.swift in Sources */,
 				D8F8E6791B66B429004493D5 /* Regex.swift in Sources */,

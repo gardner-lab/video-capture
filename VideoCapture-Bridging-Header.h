@@ -10,5 +10,6 @@
 #define VideoCapture_Bridging_Header_h
 
 #import "CrashReporter.h"
+#import "TPCircularBuffer.h"
 
 #endif /* VideoCapture_Bridging_Header_h */
