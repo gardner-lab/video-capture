@@ -993,9 +993,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // no annotations
-        guard annotView.annotations.count > 0 else {
-            return false
-        }
+        // TODO: decide about guard
+        //guard annotView.annotations.count > 0 else {
+        //    return false
+        //}
         
         // get file path
         guard let path = dataFile.path else {
@@ -1045,6 +1046,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         headers += "Date,\(formatter.stringFromDate(date))\n"
         
         headers += "Name"
+        if nil != songDetector {
+            headers += ",Ratio,SongDb,Detected"
+        }
         for annot in annotView.annotations {
             headers += ",\(annot.name)"
         }
@@ -1859,6 +1863,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // build sample string
             var sampleString = "\(timestampAsSeconds)"
             sampleString.reserveCapacity(64)
+            if let sd = songDetector {
+                sampleString += ",\(sd.lastRatio),\(sd.lastDecibelSong),\(sd.lastDetected)"
+            }
             for val in extractValues {
                 sampleString += ",\(val)"
             }
