@@ -176,7 +176,7 @@ class CircularShortTimeFourierTransform
         // mark circular buffer as consumed at END of excution
         defer {
             // mark as consumed
-            TPCircularBufferConsume(&buffer, Int32(length - overlap))
+            TPCircularBufferConsume(&buffer, Int32((length - overlap) * sizeof(Float)))
         }
         
         // get half length

@@ -17,7 +17,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     let shortTimeFourierTransform: CircularShortTimeFourierTransform
     let samplingRate: Double
     
-    var bandSong: [(Double, Double)] = [(2400, 6700)] {
+    var bandSong: [(Double, Double)] = [(2500, 6700)] {
         didSet {
             self.rangeSong = bandSong.flatMap {
                 return self.shortTimeFourierTransform.frequencyIndexRangeFrom($0.0, to: $0.1, forSampleRate: self.samplingRate)
@@ -260,31 +260,40 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     
     func processNewValues() {
         // for each sample
-        while let power = shortTimeFourierTransform.extractPower() {
-            var powerSong: Double = 0.0, countSong: Int = 0
-            var powerNonSong: Double = 0.0, countNonSong: Int = 0
-            var ret: Float = 0.0
-            
-            for (start, end) in rangeSong {
-                let len = end - start
-                vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
-                powerSong += Double(ret)
-                countSong += len
-            }
-            
-            for (start, end) in rangeNonSong {
-                let len = end - start
-                vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
-                powerNonSong += Double(ret)
-                countNonSong += len
-            }
-            
-            let curPowerSong = smoothSong.ingest(powerSong / Double(countSong))
-            let curPowerNonSong = smoothNonSong.ingest(powerNonSong / Double(countNonSong))
-            let curRatio = curPowerSong / curPowerNonSong
-            let curDbSong = 10.0 * log10(curPowerSong) + kNormalizeDecibels
-            debounceDetection.debounce(curRatio >= thresholdRatio && curDbSong >= thresholdSong)
+        while processNewValue() {}
+    }
+    
+    func processNewValue() -> Bool {
+        guard let power = shortTimeFourierTransform.extractPower() else {
+            return false
         }
+        
+        // extract power
+        var powerSong: Double = 0.0, countSong: Int = 0
+        var powerNonSong: Double = 0.0, countNonSong: Int = 0
+        var ret: Float = 0.0
+        
+        for (start, end) in rangeSong {
+            let len = end - start
+            vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
+            powerSong += Double(ret)
+            countSong += len
+        }
+        
+        for (start, end) in rangeNonSong {
+            let len = end - start
+            vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
+            powerNonSong += Double(ret)
+            countNonSong += len
+        }
+        
+        let curPowerSong = smoothSong.ingest(powerSong / Double(countSong))
+        let curPowerNonSong = smoothNonSong.ingest(powerNonSong / Double(countNonSong))
+        let curRatio = curPowerSong / curPowerNonSong
+        let curDbSong = 10.0 * log10(curPowerSong) + kNormalizeDecibels
+        debounceDetection.debounce(curRatio >= thresholdRatio && curDbSong >= thresholdSong)
+        
+        return true
     }
     
     func isSong() -> Bool {
