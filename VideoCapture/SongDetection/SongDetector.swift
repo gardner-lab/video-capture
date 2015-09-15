@@ -10,7 +10,7 @@ import Foundation
 import Accelerate
 import AVFoundation
 
-let kNormalizeDecibels = 80.0
+let kNormalizeDecibels = 0.0
 
 class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
 {
