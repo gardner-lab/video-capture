@@ -8,6 +8,8 @@ import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private let crashReporter = PLCrashReporter()
+    
     private func processCrashReport(crashReport: PLCrashReport) {
         // get string
         let crashReportText = PLCrashReportTextFormatter.stringValueForCrashReport(crashReport, withTextFormat: PLCrashReportTextFormatiOS)
@@ -74,7 +76,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func handleCrashReport() {
-        let crashReporter = PLCrashReporter.sharedReporter()
         let crashData: NSData
         let crashReport: PLCrashReport
         
@@ -97,7 +98,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func simulateCrashReport() {
-        let crashReporter = PLCrashReporter.sharedReporter()
         let crashData: NSData
         let crashReport: PLCrashReport
         
@@ -116,8 +116,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        let crashReporter = PLCrashReporter.sharedReporter()
-        
         // has pending report?
         if crashReporter.hasPendingCrashReport() {
             handleCrashReport()
@@ -138,7 +136,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(aNotification: NSNotification) {
         // Insert code here to tear down your application
     }
-
-
 }
 
