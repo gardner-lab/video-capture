@@ -16,7 +16,6 @@
 		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
 		D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF0351B6FE05300B59532 /* CrashReporter.framework */; };
-		D83CF03B1B6FE15900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
@@ -116,7 +115,6 @@
 				D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */,
 				D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */,
 				D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */,
-				D83CF03B1B6FE15900B59532 /* CrashReporter.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
