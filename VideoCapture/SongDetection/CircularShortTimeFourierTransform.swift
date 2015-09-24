@@ -163,7 +163,7 @@ class CircularShortTimeFourierTransform
     
     // TODO: write better functions that can help avoid double copying
     
-    func extractPower() -> [Float]? {
+    func extractMagnitude() -> [Float]? {
         //        let UnsafeMutablePointer<Float>: samples
         var availableBytes: Int32 = 0
         let samples: UnsafeMutablePointer<Float> = UnsafeMutablePointer<Float>(TPCircularBufferTail(&buffer, &availableBytes))
@@ -207,13 +207,68 @@ class CircularShortTimeFourierTransform
             
         // convert to magnitudes
         vDSP_zvmags(&complexBufferA, 1, &output, 1, UInt(halfLength))
-        //vDSP_zvabs(&A, 1, &output[iteration * halfLength], 1, UInt(halfLength))
         
         // scaling unit
-        // IF DOING MAGNITUDE, USE 4.0 for denominator
+        // THE LENGTH MAKES THE FFT SYMMETRIC
+        var scale: Float = 4.0 // 4.0 * Float(length)
+        vDSP_vsdiv(&output, 1, &scale, &output, 1, UInt(halfLength))
+        
+        // TODO: add appropriate scaling based on window
+        
+        return output
+    }
+    
+    func extractPower() -> [Float]? {
+        //        let UnsafeMutablePointer<Float>: samples
+        var availableBytes: Int32 = 0
+        let samples: UnsafeMutablePointer<Float> = UnsafeMutablePointer<Float>(TPCircularBufferTail(&buffer, &availableBytes))
+        
+        // not enough available bytes
+        if Int(availableBytes) < (length * sizeof(Float)) {
+            return nil
+        }
+        
+        // mark circular buffer as consumed at END of excution
+        defer {
+            // mark as consumed
+            TPCircularBufferConsume(&buffer, Int32((length - overlap) * sizeof(Float)))
+        }
+        
+        // get half length
+        let halfLength = length / 2
+        
+        // temporary holding (for windowing)
+        let samplesCur = UnsafeMutablePointer<Float>.alloc(length)
+        defer {
+            samplesCur.destroy()
+            samplesCur.dealloc(length)
+        }
+        
+        // prepare output
+        var output = [Float](count: halfLength, repeatedValue: 0.0)
+        
+        // window the samples
+        vDSP_vmul(samples, 1, window, 1, samplesCur, 1, UInt(length))
+        
+        // pack samples into complex values (use stride 2 to fill just reals
+        vDSP_ctoz(UnsafePointer<DSPComplex>(samplesCur), 2, &complexBufferA, 1, UInt(halfLength))
+        
+        // perform FFT
+        // TODO: potentially use vDSP_fftm_zrip
+        vDSP_fft_zript(fftSetup, &complexBufferA, 1, &complexBufferT, fftLength, FFTDirection(FFT_FORWARD))
+        
+        // clear imagp, represents frequency at midpoint of symmetry, due to packing of array
+        complexBufferA.imagp[0] = 0
+        
+        // convert to magnitudes
+        vDSP_zvabs(&complexBufferA, 1, &output, 1, UInt(halfLength))
+        
+        // scaling unit
         // THE SQRT MAKES THE FFT SYMMETRIC
-        var scale: Float = 1.0 / 4.0 // (2.0 * sqrt(Float(length)))
-        vDSP_vsmul(&output, 1, &scale, &output, 1, UInt(halfLength))
+        var scale: Float = 2.0 // 2.0 * sqrt(Float(length))
+        vDSP_vsdiv(&output, 1, &scale, &output, 1, UInt(halfLength))
+        
+        // TODO: add appropriate scaling based on window
         
         return output
     }

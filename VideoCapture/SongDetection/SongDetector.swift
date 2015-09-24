@@ -33,7 +33,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     }
     
     var thresholdRatio = 1.5
-    var thresholdSong = 40.0
+    var thresholdSong = 80.0
     
     private var rangeSong: [(Int, Int)]
     private var rangeNonSong: [(Int, Int)]
@@ -100,6 +100,9 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         smoothSong = ExponentialMovingAverage(tau: tau)
         smoothNonSong = ExponentialMovingAverage(tau: tau)
         debounceDetection = DebounceBoolean(checks: Int(round((debounceMS / 1000.0) / timePerSTFT)))
+        
+        // call super initializer
+        super.init()
     }
     
     func supportsFormat(audioDescription: AudioStreamBasicDescription) -> Bool {
@@ -128,7 +131,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         switch (isFloat, audioDescription.mBitsPerChannel) {
         case (true, _): shortTimeFourierTransform.scaleInputBy = 1.0
         case (false, 32): shortTimeFourierTransform.scaleInputBy = 1.0 / Double(Int32.max)
-        case (false, 16): shortTimeFourierTransform.scaleInputBy = 1.0 / Double(Int16.max)
+        case (false, 16): shortTimeFourierTransform.scaleInputBy = 1.0 // Double(Int8.max)
         case (false, 8): shortTimeFourierTransform.scaleInputBy = 1.0 / Double(Int8.max)
         default: shortTimeFourierTransform.scaleInputBy = 1.0
         }
@@ -264,7 +267,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     }
     
     func processNewValue() -> Bool {
-        guard let power = shortTimeFourierTransform.extractPower() else {
+        guard let magn = shortTimeFourierTransform.extractMagnitude() else {
             return false
         }
         
@@ -275,14 +278,14 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         
         for (start, end) in rangeSong {
             let len = end - start
-            vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
+            vDSP_sve(UnsafePointer<Float>(magn).advancedBy(start), 1, &ret, vDSP_Length(len))
             powerSong += Double(ret)
             countSong += len
         }
         
         for (start, end) in rangeNonSong {
             let len = end - start
-            vDSP_sve(UnsafePointer<Float>(power).advancedBy(start), 1, &ret, vDSP_Length(len))
+            vDSP_sve(UnsafePointer<Float>(magn).advancedBy(start), 1, &ret, vDSP_Length(len))
             powerNonSong += Double(ret)
             countNonSong += len
         }
