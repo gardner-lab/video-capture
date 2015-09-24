@@ -180,8 +180,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // timer to dim LED and turn off camera
     //var timerRevertMode: NSTimer?
     
-    // timer for monitoring
-    var timerMonitor: NSTimer?
     
     // used by manual reading system
     var ciContext: CIContext?
@@ -384,7 +382,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .Configure:
             buttonCapture?.enabled = (nil != avInputVideo || nil != avInputAudio)
             buttonCapture?.title = "Start Capturing"
-            buttonMonitor?.enabled = nil != ioArduino && (nil != avInputVideo || nil != avInputAudio)
+            buttonMonitor?.enabled = (nil != avInputVideo || nil != avInputAudio)
             buttonMonitor?.title = "Start Monitoring"
         case .ManualCapture:
             buttonCapture?.enabled = true
@@ -636,11 +634,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     func promptToStartMonitoring() {
         // can only start from an editable mode
         guard mode.isEditable() else {
-            return
-        }
-        
-        if nil == self.ioArduino {
-            DLog("No arduino selected.")
             return
         }
         
@@ -1203,12 +1196,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         
-        // has arduino
-        if nil == ioArduino {
-            DLog("No arduino selected.")
-            return false
-        }
-        
         // get capture device
         if nil == avInputVideo && nil == avInputAudio {
             DLog("No device selected.")
@@ -1241,9 +1228,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if !setupBeforeCapture() {
             stopDueToPermanentError()
         }
-        
-        // strat timer
-        timerMonitor = NSTimer.scheduledTimerWithTimeInterval(appPreferences.triggerPollTime, target: self, selector: "monitorCheckTrigger:", userInfo: nil, repeats: true)
         
         // turn off led and camera
         do {
@@ -1313,41 +1297,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
     }
     
-    func monitorCheckTrigger(timer: NSTimer!) {
-        guard let arduino = ioArduino else {
-            DLog("POLLING failed")
-            stopMonitoring()
-            return
-        }
-        
-        do {
-            try arduino.readAnalogValueFrom(appPreferences.pinAnalogTrigger, andExecute: {
-                (val: UInt16?) -> Void in
-                guard let value = val else {
-                    DLog("POLLING failed: no value")
-                    self.stopMonitoring()
-                    return
-                }
-                
-                // receive trigger
-                self.monitorReceiveTrigger(value)
-            })
-        }
-        catch {
-            DLog("POLLING failed")
-            stopMonitoring()
-        }
-    }
-    
     func stopMonitoring() {
         guard mode.isMonitoring() else {
             return
-        }
-        
-        // stop timer
-        if nil != timerMonitor {
-            timerMonitor!.invalidate()
-            timerMonitor = nil
         }
         
         // stop capturing

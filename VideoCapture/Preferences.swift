@@ -20,8 +20,6 @@ struct Preferences {
     let pinAnalogLED = 13
     
     // how often to poll trigger
-    let triggerPollTime = 0.05
-    let triggerValue: UInt16 = 500
     
     // output format
     let videoFormat = PreferenceVideoFormat.H264
