@@ -36,6 +36,7 @@
 		D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCE1B4C28200006ED7D /* Icon.icns */; };
 		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
 		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
+		D8CA280B1BB48036000EDAF8 /* SchmittForCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CA280A1BB48036000EDAF8 /* SchmittForCapture.swift */; settings = {ASSET_TAGS = (); }; };
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
 		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
 		D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E4A1B4593ED0052F4C7 /* Document.swift */; };
@@ -56,6 +57,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 9DCA89121A2BB106009285EB;
 			remoteInfo = ORSSerial;
+		};
+		D8CA280E1BB48037000EDAF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9D7472131B6D7767002D8B10;
+			remoteInfo = "ORSSerialPort Tests";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -107,6 +115,7 @@
 		D8C20BCE1B4C28200006ED7D /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
 		D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ORSSerialPort.xcodeproj; path = "Frameworks/ORSSerialPort/Framework Project/ORSSerialPort.xcodeproj"; sourceTree = "<group>"; };
 		D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIO.swift; sourceTree = "<group>"; };
+		D8CA280A1BB48036000EDAF8 /* SchmittForCapture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SchmittForCapture.swift; sourceTree = "<group>"; };
 		D8E48E0A1B458E250052F4C7 /* Preferences.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		D8E48E0D1B45904E0052F4C7 /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		D8E48E4A1B4593ED0052F4C7 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
@@ -224,6 +233,7 @@
 				D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */,
 				D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */,
 				D892B4931B9E53B2001DFCFE /* SongDetector.swift */,
+				D8CA280A1BB48036000EDAF8 /* SchmittForCapture.swift */,
 			);
 			path = SongDetection;
 			sourceTree = "<group>";
@@ -241,6 +251,7 @@
 			isa = PBXGroup;
 			children = (
 				D8C386BD1B441AD600DE70EA /* ORSSerial.framework */,
+				D8CA280F1BB48037000EDAF8 /* ORSSerialPort Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -337,6 +348,13 @@
 			remoteRef = D8C386BC1B441AD600DE70EA /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		D8CA280F1BB48037000EDAF8 /* ORSSerialPort Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "ORSSerialPort Tests.xctest";
+			remoteRef = D8CA280E1BB48037000EDAF8 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -374,6 +392,7 @@
 				D892B49B1B9E53B2001DFCFE /* TPCircularBuffer.c in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
+				D8CA280B1BB48036000EDAF8 /* SchmittForCapture.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
 				D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
