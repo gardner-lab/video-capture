@@ -500,7 +500,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             list.removeAllItems()
             list.addItemWithTitle("Arduino")
-            for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts as! [ORSSerialPort] {
+            for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts {
                 let item = NSMenuItem()
                 item.title = port.name
                 item.tag = newDeviceIndex
