@@ -12,10 +12,18 @@ import AVFoundation
 
 let kNormalizeDecibels = 0.0
 
+protocol SongDetectorDelegate: class
+{
+    func songDetectionDidChangeTo(val: Bool)
+}
+
 class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
 {
     let shortTimeFourierTransform: CircularShortTimeFourierTransform
     let samplingRate: Double
+    
+    // delegate
+    weak var delegate: SongDetectorDelegate?
     
     var bandSong: [(Double, Double)] = [(2500, 6700)] {
         didSet {
@@ -35,12 +43,26 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     var thresholdRatio = 1.5
     var thresholdSong = 80.0
     
+    var iterationsAfterSong = 0 // measured in terms of non-overlapping STFT segments
+    var msAfterSong: Double {
+        get {
+            let timePerSTFT = (Double(shortTimeFourierTransform.length - shortTimeFourierTransform.overlap) / samplingRate)
+            return Double(iterationsAfterSong) * timePerSTFT * 1000.0
+        }
+        set {
+            let timePerSTFT = (Double(shortTimeFourierTransform.length - shortTimeFourierTransform.overlap) / samplingRate)
+            iterationsAfterSong = Int(newValue / 1000.0 / timePerSTFT)
+        }
+    }
+    
     private var rangeSong: [(Int, Int)]
     private var rangeNonSong: [(Int, Int)]
     
     private var smoothSong: ExponentialMovingAverage
     private var smoothNonSong: ExponentialMovingAverage
     private var debounceDetection: DebounceBoolean
+    
+    private var iterationsRemainingAfterSong: Int = 0
     
     var lastRatio: Double {
         get {
@@ -56,7 +78,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     
     var lastDetected: Bool {
         get {
-            return debounceDetection.lastValue
+            return (debounceDetection.lastValue || iterationsRemainingAfterSong > 0)
         }
     }
     
@@ -70,7 +92,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             smoothNonSong = ExponentialMovingAverage(tau: tau, initial: oldNonSong)
         }
     }
-    var debounceMS = 45.0 {
+    var debounceMS = 30.0 {
         didSet {
             let timePerSTFT = (Double(shortTimeFourierTransform.length - shortTimeFourierTransform.overlap) / samplingRate)
             let oldDetection = debounceDetection.lastValue
@@ -78,12 +100,12 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         }
     }
     
-    init(samplingRate: Double, stftLength: Int = 512, stftOverlap: Int = 256) {
+    init(samplingRate: Double, stftLength: Int = 256, stftOverlap: Int = 128) {
         // store sampling rate
         self.samplingRate = samplingRate
         
         // make circular STFT
-        let stft = CircularShortTimeFourierTransform(length: stftLength, overlap: stftOverlap)
+        let stft = CircularShortTimeFourierTransform(length: stftLength, overlap: stftOverlap, buffer: 128000)
         shortTimeFourierTransform = stft
         
         // fill index ranges
@@ -259,6 +281,9 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     
     func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
         processSampleBuffer(sampleBuffer)
+        if nil != delegate {
+            processNewValues()
+        }
     }
     
     func processNewValues() {
@@ -294,7 +319,27 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         let curPowerNonSong = smoothNonSong.ingest(powerNonSong / Double(countNonSong))
         let curRatio = curPowerSong / curPowerNonSong
         let curDbSong = 10.0 * log10(curPowerSong) + kNormalizeDecibels
-        debounceDetection.debounce(curRatio >= thresholdRatio && curDbSong >= thresholdSong)
+        
+        // get old and new value (to detect change)
+        var oldValue = debounceDetection.lastValue
+        var newValue = debounceDetection.debounce(curRatio >= thresholdRatio && curDbSong >= thresholdSong)
+        
+        // implement iterations after song
+        if oldValue && !newValue && iterationsAfterSong > 0 {
+            iterationsRemainingAfterSong = iterationsAfterSong
+            newValue = true
+        }
+        else if !oldValue && !newValue && iterationsRemainingAfterSong > 0 {
+            oldValue = true
+            if 0 < --iterationsRemainingAfterSong {
+                newValue = true
+            }
+        }
+        
+        // send did change
+        if oldValue != newValue {
+            delegate?.songDetectionDidChangeTo(newValue)
+        }
         
         return true
     }

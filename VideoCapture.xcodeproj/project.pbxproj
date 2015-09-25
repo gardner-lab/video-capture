@@ -267,6 +267,7 @@
 				D8013F8F1B4037870053F452 /* Frameworks */,
 				D8013F901B4037870053F452 /* Resources */,
 				D856F6A31B4AEAAB00A75458 /* CopyFiles */,
+				D8D7F6A11BB57F0800BBE4A7 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -377,6 +378,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D8D7F6A11BB57F0800BBE4A7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ln -s Frameworks/CrashReporter.framework/Versions/Current/CrashReporter Frameworks/CrashReporter.framework/CrashReporter";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D8013F8E1B4037870053F452 /* Sources */ = {

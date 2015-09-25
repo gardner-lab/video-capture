@@ -19,7 +19,8 @@ struct Preferences {
     let pinDigitalFeedback = 9
     let pinAnalogLED = 13
     
-    // how often to poll trigger
+    // frames after song to store
+    let secondsAfterSong = 3.0
     
     // output format
     let videoFormat = PreferenceVideoFormat.H264

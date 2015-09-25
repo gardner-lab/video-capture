@@ -34,7 +34,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate, SongDetectorDelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -179,7 +179,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // timer to dim LED and turn off camera
     //var timerRevertMode: NSTimer?
-    
     
     // used by manual reading system
     var ciContext: CIContext?
@@ -382,7 +381,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .Configure:
             buttonCapture?.enabled = (nil != avInputVideo || nil != avInputAudio)
             buttonCapture?.title = "Start Capturing"
-            buttonMonitor?.enabled = (nil != avInputVideo || nil != avInputAudio)
+            buttonMonitor?.enabled = (nil != avInputVideo && nil != avInputAudio) // must have audio: just require both
             buttonMonitor?.title = "Start Monitoring"
         case .ManualCapture:
             buttonCapture?.enabled = true
@@ -765,6 +764,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create song detector
         let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(audioInput.device.activeFormat.formatDescription)
         songDetector = SongDetector(samplingRate: audioDescription[0].mSampleRate)
+        songDetector?.msAfterSong = appPreferences.secondsAfterSong * 1000.0
+        songDetector?.delegate = self
         
         // create serial dispatch queue
         let audioDispatchQueue = dispatch_queue_create("AudioDataOutputQueue", DISPATCH_QUEUE_SERIAL)
@@ -885,11 +886,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return false
             }
         }
-        if nil == avAudioData && nil != avInputAudio {
-            if !startAudioData() {
-                return false
-            }
-        }
         
         // writer
         if nil == avFileOut {
@@ -926,9 +922,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             startAudioFile()
-            startAudioData()
         }
         else {
+            // stop audio data
+            if nil == avInputAudio {
+                stopAudioData()
+            }
+            
             // has audio out?
             if let _ = self.avFileOut as? AVCaptureAudioFileOutput {
                 stopAudioFile()
@@ -938,26 +938,17 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 startSession()
                 avSession?.beginConfiguration()
                 startVideoData()
-                startAudioData()
                 startVideoFile()
                 avSession?.commitConfiguration()
             }
             else {
                 startVideoData()
-                startAudioData()
                 startVideoFile()
             }
         }
     }
     
     func createAudioOutputs(file: NSURL) -> Bool {
-        // create raw data stream
-        if nil == avAudioData {
-            if !startAudioData() {
-                return false
-            }
-        }
-        
         // writer
         if nil == avFileOut {
             if !startAudioFile() {
@@ -1093,17 +1084,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if !startVideoData() {
                 return false
             }
-            if !startAudioData() {
-                return false
-            }
             if !startVideoFile() {
                 return false
             }
         }
         else {
-            if !startAudioData() {
-                return false
-            }
             if !startAudioFile() {
                 return false
             }
@@ -1197,8 +1182,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // get capture device
-        if nil == avInputVideo && nil == avInputAudio {
-            DLog("No device selected.")
+        if nil == avInputAudio {
+            DLog("No audio device selected.")
             return false
         }
         
@@ -1224,6 +1209,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // update mode
         mode = .Monitor
         
+        // start audio data
+        startAudioData()
+        
         // setup
         if !setupBeforeCapture() {
             stopDueToPermanentError()
@@ -1241,18 +1229,39 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    func monitorReceiveTrigger(value: UInt16) {
+    func stopMonitoring() {
+        guard mode.isMonitoring() else {
+            return
+        }
+        
+        // stop audio data
+        stopAudioData()
+        
+        // stop capturing
+        if mode.isCapturing() {
+            // pretend to be manual capture (ensures stop capture tears down capturing apartus)
+            mode = .ManualCapture
+            
+            // send stop capturing message
+            stopCapturing()
+            
+            return
+        }
+        
+        mode = .Configure
+    }
+    
+    func songDetectionDidChangeTo(shouldCapture: Bool) {
         // trigger value
-        let isTriggered = (value > self.appPreferences.triggerValue)
         let isCapturing = self.mode.isCapturing()
         
         // right mode
-        if isTriggered == isCapturing {
+        if shouldCapture == isCapturing {
             return
         }
         
         // has triggered? start capturing
-        if isTriggered {
+        if shouldCapture {
             // turn on LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
@@ -1283,7 +1292,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         else {
             // stop capturing
-            self.stopCapturing()
+            stopCapturing()
             
             // turn off LED and camera
             do {
@@ -1295,25 +1304,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
-    }
-    
-    func stopMonitoring() {
-        guard mode.isMonitoring() else {
-            return
-        }
-        
-        // stop capturing
-        if mode.isCapturing() {
-            // pretend to be manual capture (ensures stop capture tears down capturing apartus)
-            mode = .ManualCapture
-            
-            // send stop capturing message
-            stopCapturing()
-            
-            return
-        }
-        
-        mode = .Configure
     }
     
     func stopSession() {
@@ -1816,7 +1806,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             var sampleString = "\(timestampAsSeconds)"
             sampleString.reserveCapacity(64)
             if let sd = songDetector {
-                sampleString += ",\(sd.lastRatio),\(sd.lastDecibelSong),\(sd.lastDetected)"
+                sampleString += ",\(sd.lastRatio),\(sd.lastDecibelSong)"
             }
             for val in extractValues {
                 sampleString += ",\(val)"
@@ -2039,7 +2029,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     // MARK: - Token Field
-    
     
     // return an array of represented objects you want to add.
     // If you want to reject the add, return an empty array.
