@@ -15,8 +15,6 @@
 		D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9311B67DA3F000954DF /* EquationParser.swift */; };
 		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
-		D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF0351B6FE05300B59532 /* CrashReporter.framework */; };
-		D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
@@ -25,21 +23,22 @@
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
-		D892B4971B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4901B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift */; settings = {ASSET_TAGS = (); }; };
-		D892B4981B9E53B2001DFCFE /* DebounceBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */; settings = {ASSET_TAGS = (); }; };
-		D892B4991B9E53B2001DFCFE /* ExponentialMovingAverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */; settings = {ASSET_TAGS = (); }; };
-		D892B49A1B9E53B2001DFCFE /* SongDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4931B9E53B2001DFCFE /* SongDetector.swift */; settings = {ASSET_TAGS = (); }; };
-		D892B49B1B9E53B2001DFCFE /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = D892B4951B9E53B2001DFCFE /* TPCircularBuffer.c */; settings = {ASSET_TAGS = (); }; };
+		D892B4971B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4901B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift */; };
+		D892B4981B9E53B2001DFCFE /* DebounceBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4911B9E53B2001DFCFE /* DebounceBoolean.swift */; };
+		D892B4991B9E53B2001DFCFE /* ExponentialMovingAverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4921B9E53B2001DFCFE /* ExponentialMovingAverage.swift */; };
+		D892B49A1B9E53B2001DFCFE /* SongDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892B4931B9E53B2001DFCFE /* SongDetector.swift */; };
+		D892B49B1B9E53B2001DFCFE /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = D892B4951B9E53B2001DFCFE /* TPCircularBuffer.c */; };
 		D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A4C7411B59966E0030B756 /* VideoControl.swift */; };
 		D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */; };
 		D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */; };
 		D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCE1B4C28200006ED7D /* Icon.icns */; };
 		D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; };
 		D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */; };
-		D8CA280B1BB48036000EDAF8 /* SchmittForCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CA280A1BB48036000EDAF8 /* SchmittForCapture.swift */; settings = {ASSET_TAGS = (); }; };
+		D8CA280B1BB48036000EDAF8 /* SchmittForCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CA280A1BB48036000EDAF8 /* SchmittForCapture.swift */; };
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
 		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
 		D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E4A1B4593ED0052F4C7 /* Document.swift */; };
+		D8EDDB461BD8593F00EEA708 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D8F8E6791B66B429004493D5 /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F8E6781B66B429004493D5 /* Regex.swift */; };
 /* End PBXBuildFile section */
 
@@ -94,7 +93,6 @@
 		D801C9311B67DA3F000954DF /* EquationParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquationParser.swift; sourceTree = "<group>"; };
 		D801C9341B67DA62000954DF /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		D83CF0351B6FE05300B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = /Users/nathan/Dropbox/Development/VideoCaptureMac/CrashReporter.framework; sourceTree = "<absolute>"; };
 		D83CF03A1B6FE15900B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = Frameworks/CrashReporter.framework; sourceTree = "<group>"; };
 		D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoCapture-Bridging-Header.h"; sourceTree = "<group>"; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
@@ -127,8 +125,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */,
-				D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */,
+				D8EDDB461BD8593F00EEA708 /* CrashReporter.framework in Frameworks */,
 				D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */,
 				D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */,
 				D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */,
@@ -264,10 +261,10 @@
 			buildConfigurationList = D8013FAE1B4037870053F452 /* Build configuration list for PBXNativeTarget "VideoCapture" */;
 			buildPhases = (
 				D8013F8E1B4037870053F452 /* Sources */,
+				D8D7F6A11BB57F0800BBE4A7 /* ShellScript */,
 				D8013F8F1B4037870053F452 /* Frameworks */,
 				D8013F901B4037870053F452 /* Resources */,
 				D856F6A31B4AEAAB00A75458 /* CopyFiles */,
-				D8D7F6A11BB57F0800BBE4A7 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -391,7 +388,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ln -s Frameworks/CrashReporter.framework/Versions/Current/CrashReporter Frameworks/CrashReporter.framework/CrashReporter";
+			shellScript = "cd Frameworks/CrashReporter.framework\nln -f -s Versions/Current/CrashReporter CrashReporter";
 		};
 /* End PBXShellScriptBuildPhase section */
 
