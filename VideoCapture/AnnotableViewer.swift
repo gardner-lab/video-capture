@@ -30,6 +30,14 @@ enum AnnotableTool {
     }
 }
 
+private func getColors() -> [NSColor] {
+    let ret = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
+    let space = NSColorSpace.genericRGBColorSpace()
+    return ret.map {
+        return $0.colorUsingColorSpace(space)!
+    }
+}
+
 class AnnotableViewer: NSView {
     weak var delegate: AnnotableViewerDelegate?
     
@@ -74,7 +82,7 @@ class AnnotableViewer: NSView {
     
     // colors (advance after each draw)
     private var nextColor = 0
-    lazy private var colors: [NSColor] = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
+    lazy private var colors: [NSColor] = getColors()
     
     // last click location
     private var locationDown: CGPoint?
