@@ -363,6 +363,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let editable = mode.isEditable()
         textName?.enabled = editable
         tokenFeedback?.enabled = editable
+        buttonStill.enabled = editable && nil != avInputVideo
         listVideoSources?.enabled = editable
         listAudioSources?.enabled = editable
         listSerialPorts?.enabled = editable
@@ -1574,64 +1575,66 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             let ciImage = CIImage(CVImageBuffer: imageBuffer)
             let cgImage = CIContext().createCGImage(ciImage, fromRect: ciImage.extent)
             
-            // save panel
-            let panel = NSSavePanel()
-            panel.allowsOtherFileTypes = false
-            
-            // get prefix
-            var prefix = "Output"
-            if let field = self.textName {
-                if !field.stringValue.isEmpty {
-                    prefix = field.stringValue
+            dispatch_async(dispatch_get_main_queue()) {
+                // save panel
+                let panel = NSSavePanel()
+                panel.allowsOtherFileTypes = false
+                
+                // get prefix
+                var prefix = "Output"
+                if let field = self.textName {
+                    if !field.stringValue.isEmpty {
+                        prefix = field.stringValue
+                    }
                 }
-            }
-            
-            panel.title = "Save Still Image"
-            panel.allowedFileTypes = ["tiff"]
-            panel.nameFieldStringValue = prefix + ".tiff"
-            panel.canCreateDirectories = true
-            panel.extensionHidden = false
-            
-            // callback for handling response
-            let cb = {
-                (result: Int) -> Void in
-                if NSFileHandlingPanelOKButton == result {
-                    if let url = panel.URL {
-                        // delete existting
-                        let fm = NSFileManager.defaultManager()
-                        if fm.fileExistsAtPath(url.path!) {
-                            do {
-                                try NSFileManager.defaultManager().removeItemAtURL(url)
+                
+                panel.title = "Save Still Image"
+                panel.allowedFileTypes = ["tiff"]
+                panel.nameFieldStringValue = prefix + ".tiff"
+                panel.canCreateDirectories = true
+                panel.extensionHidden = false
+                
+                // callback for handling response
+                let cb = {
+                    (result: Int) -> Void in
+                    if NSFileHandlingPanelOKButton == result {
+                        if let url = panel.URL {
+                            // delete existting
+                            let fm = NSFileManager.defaultManager()
+                            if fm.fileExistsAtPath(url.path!) {
+                                do {
+                                    try NSFileManager.defaultManager().removeItemAtURL(url)
+                                }
+                                catch { }
                             }
-                            catch { }
-                        }
-                        
-                        // setup TIFF properties to enable LZW compression
-                        
-                        // create dictionary
-                        var keyCallbacks = kCFTypeDictionaryKeyCallBacks
-                        var valueCallbacks = kCFTypeDictionaryValueCallBacks
-                        
-                        var compression = NSTIFFCompression.LZW.rawValue
-                        
-                        let saveOpts = CFDictionaryCreateMutable(nil, 0, &keyCallbacks,  &valueCallbacks)
-                        let tiffProps = CFDictionaryCreateMutable(nil, 0, &keyCallbacks, &valueCallbacks)
-                        let key = kCGImagePropertyTIFFCompression
-                        let val = CFNumberCreate(nil, CFNumberType.IntType, &compression)
-                        CFDictionarySetValue(tiffProps, unsafeAddressOf(key), unsafeAddressOf(val))
-                        let key2 = kCGImagePropertyTIFFDictionary
-                        CFDictionarySetValue(saveOpts, unsafeAddressOf(key2), unsafeAddressOf(tiffProps))
-                        
-                        if let destination = CGImageDestinationCreateWithURL(url, "public.tiff", 1, nil) {
-                            CGImageDestinationAddImage(destination, cgImage, saveOpts)
-                            CGImageDestinationFinalize(destination)
+                            
+                            // setup TIFF properties to enable LZW compression
+                            
+                            // create dictionary
+                            var keyCallbacks = kCFTypeDictionaryKeyCallBacks
+                            var valueCallbacks = kCFTypeDictionaryValueCallBacks
+                            
+                            var compression = NSTIFFCompression.LZW.rawValue
+                            
+                            let saveOpts = CFDictionaryCreateMutable(nil, 0, &keyCallbacks,  &valueCallbacks)
+                            let tiffProps = CFDictionaryCreateMutable(nil, 0, &keyCallbacks, &valueCallbacks)
+                            let key = kCGImagePropertyTIFFCompression
+                            let val = CFNumberCreate(nil, CFNumberType.IntType, &compression)
+                            CFDictionarySetValue(tiffProps, unsafeAddressOf(key), unsafeAddressOf(val))
+                            let key2 = kCGImagePropertyTIFFDictionary
+                            CFDictionarySetValue(saveOpts, unsafeAddressOf(key2), unsafeAddressOf(tiffProps))
+                            
+                            if let destination = CGImageDestinationCreateWithURL(url, "public.tiff", 1, nil) {
+                                CGImageDestinationAddImage(destination, cgImage, saveOpts)
+                                CGImageDestinationFinalize(destination)
+                            }
                         }
                     }
                 }
+                
+                // show
+                panel.beginSheetModalForWindow(self.view.window!, completionHandler: cb)
             }
-            
-            // show
-            panel.beginSheetModalForWindow(self.view.window!, completionHandler: cb)
         }
     }
     
