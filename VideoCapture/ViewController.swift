@@ -42,18 +42,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBOutlet var textName: NSTextField?
-    @IBOutlet var tokenFeedback: NSTokenField?
-    @IBOutlet var listVideoSources: NSPopUpButton?
-    @IBOutlet var listAudioSources: NSPopUpButton?
-    @IBOutlet var listSerialPorts: NSPopUpButton?
-    @IBOutlet var sliderLedBrightness: NSSlider?
-    @IBOutlet var buttonCapture: NSButton?
-    @IBOutlet var buttonMonitor: NSButton?
-    @IBOutlet var buttonStill: NSButton?
-    @IBOutlet var previewView: NSView?
-    @IBOutlet var tableAnnotations: NSTableView?
-    @IBOutlet var annotableView: AnnotableViewer? {
+    @IBOutlet weak var textName: NSTextField!
+    @IBOutlet weak var tokenFeedback: NSTokenField!
+    @IBOutlet weak var listVideoSources: NSPopUpButton!
+    @IBOutlet weak var listAudioSources: NSPopUpButton!
+    @IBOutlet weak var listSerialPorts: NSPopUpButton!
+    @IBOutlet weak var sliderLedBrightness: NSSlider!
+    @IBOutlet weak var buttonCapture: NSButton!
+    @IBOutlet weak var buttonMonitor: NSButton!
+    @IBOutlet weak var buttonStill: NSButton!
+    @IBOutlet weak var previewView: NSView!
+    @IBOutlet weak var tableAnnotations: NSTableView!
+    @IBOutlet weak var annotableView: AnnotableViewer! {
         didSet {
             oldValue?.delegate = nil
             annotableView?.delegate = self
@@ -1362,8 +1362,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
 
-    @IBAction func selectVideoSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectVideoSource(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
@@ -1428,8 +1428,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func selectAudioSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectAudioSource(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
@@ -1476,8 +1476,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func selectSerialPort(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectSerialPort(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
             DLog("Device Path: \(devicePath)")
             
             // get existing device
@@ -1523,7 +1523,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
 
-    @IBAction func toggleCapturing(sender: AnyObject?) {
+    @IBAction func toggleCapturing(sender: NSButton!) {
         if mode.isCapturing() {
             // stop processing
             stopCapturing()
@@ -1534,7 +1534,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func toggleMonitoring(send: AnyObject?) {
+    @IBAction func toggleMonitoring(sender: NSButton!) {
         if mode.isMonitoring() {
             // stop monitoring
             stopMonitoring()
@@ -2015,12 +2015,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // MARK: - interface options
     
-    @IBAction func setLedBrightness(sender: AnyObject?) {
-        if let s = sender, let slider = s as? NSSlider, let arduino = self.ioArduino {
+    @IBAction func setLedBrightness(sender: NSSlider!) {
+        if let arduino = self.ioArduino {
             copyToDocument()
             do {
-                DLog("ARDUINO brightness \(slider.integerValue)")
-                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(slider.integerValue))
+                DLog("ARDUINO brightness \(sender.integerValue)")
+                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
             }
             catch {
                 DLog("ARDUINO brightness: failed! \(error)")
@@ -2028,7 +2028,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func setName(sender: AnyObject?) {
+    @IBAction func setName(sender: NSTextField!) {
         //if let s = sender, let field = s as? NSTextField {
         copyToDocument()
         //}
@@ -2118,13 +2118,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return NSTokenStyle.None
     }
     
-    @IBAction func equationEdited(sender: AnyObject?) {
-        guard let tf = sender as? NSTokenField else {
-            return
-        }
-        
+    @IBAction func equationEdited(sender: NSTokenField!) {
         // get array of tokens
-        let tokens = tf.objectValue as! [AnyObject]
+        let tokens = sender.objectValue as! [AnyObject]
         let str = tokens.map({
             (o: AnyObject) -> String
             in
@@ -2135,7 +2131,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }).joinWithSeparator("")
         
         // reset background color
-        tf.backgroundColor = NSColor.textBackgroundColor()
+        sender.backgroundColor = NSColor.textBackgroundColor()
         
         // empty? disable equation
         if str.isEmpty {
@@ -2150,7 +2146,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             catch {
                 extractEquation = nil
                 DLog("EQUATION error: \(error)")
-                tf.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
+                sender.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
             }
         }
         
