@@ -722,6 +722,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create capture session
         let videoStill = AVCaptureStillImageOutput()
         avVideoCaptureStill = videoStill
+        //videoStill.outputSettings = [AVVideoCodecKey: NSNumber(unsignedInt: kCMVideoCodecType_JPEG)]
         videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(unsignedInt: kCVPixelFormatType_32BGRA)]
         
         if !session.canAddOutput(videoStill) {
@@ -1546,7 +1547,92 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     @IBAction func captureStill(sender: NSButton!) {
+        guard let videoStill = avVideoCaptureStill else { return }
+        guard !videoStill.capturingStillImage else { return }
+        guard let conn = videoStill.connectionWithMediaType(AVMediaTypeVideo) else { return }
         
+        sender.enabled = false
+        
+        videoStill.captureStillImageAsynchronouslyFromConnection(conn) {
+            (sampleBuffer: CMSampleBuffer!, error: NSError!) -> Void
+            in
+            
+            defer {
+                sender.enabled = true
+            }
+            
+            // no sample buffer?
+            if sampleBuffer == nil {
+                DLog("ERROR: \(error)")
+                return
+            }
+            
+            // get image buffer
+            guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+                return
+            }
+            let ciImage = CIImage(CVImageBuffer: imageBuffer)
+            let cgImage = CIContext().createCGImage(ciImage, fromRect: ciImage.extent)
+            
+            // save panel
+            let panel = NSSavePanel()
+            panel.allowsOtherFileTypes = false
+            
+            // get prefix
+            var prefix = "Output"
+            if let field = self.textName {
+                if !field.stringValue.isEmpty {
+                    prefix = field.stringValue
+                }
+            }
+            
+            panel.title = "Save Still Image"
+            panel.allowedFileTypes = ["tiff"]
+            panel.nameFieldStringValue = prefix + ".tiff"
+            panel.canCreateDirectories = true
+            panel.extensionHidden = false
+            
+            // callback for handling response
+            let cb = {
+                (result: Int) -> Void in
+                if NSFileHandlingPanelOKButton == result {
+                    if let url = panel.URL {
+                        // delete existting
+                        let fm = NSFileManager.defaultManager()
+                        if fm.fileExistsAtPath(url.path!) {
+                            do {
+                                try NSFileManager.defaultManager().removeItemAtURL(url)
+                            }
+                            catch { }
+                        }
+                        
+                        // setup TIFF properties to enable LZW compression
+                        
+                        // create dictionary
+                        var keyCallbacks = kCFTypeDictionaryKeyCallBacks
+                        var valueCallbacks = kCFTypeDictionaryValueCallBacks
+                        
+                        var compression = NSTIFFCompression.LZW.rawValue
+                        
+                        let saveOpts = CFDictionaryCreateMutable(nil, 0, &keyCallbacks,  &valueCallbacks)
+                        let tiffProps = CFDictionaryCreateMutable(nil, 0, &keyCallbacks, &valueCallbacks)
+                        let key = kCGImagePropertyTIFFCompression
+                        let val = CFNumberCreate(nil, CFNumberType.IntType, &compression)
+                        CFDictionarySetValue(tiffProps, unsafeAddressOf(key), unsafeAddressOf(val))
+                        let key2 = kCGImagePropertyTIFFDictionary
+                        CFDictionarySetValue(saveOpts, unsafeAddressOf(key2), unsafeAddressOf(tiffProps))
+                        
+                        if let destination = CGImageDestinationCreateWithURL(url, "public.tiff", 1, nil) {
+                            CGImageDestinationAddImage(destination, cgImage, saveOpts)
+                            CGImageDestinationFinalize(destination)
+                        }
+                    }
+                }
+            }
+            
+            // show
+            panel.beginSheetModalForWindow(self.view.window!, completionHandler: cb)
+        }
     }
     
     func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError?) {
