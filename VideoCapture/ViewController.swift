@@ -42,17 +42,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBOutlet var textName: NSTextField?
-    @IBOutlet var tokenFeedback: NSTokenField?
-    @IBOutlet var listVideoSources: NSPopUpButton?
-    @IBOutlet var listAudioSources: NSPopUpButton?
-    @IBOutlet var listSerialPorts: NSPopUpButton?
-    @IBOutlet var sliderLedBrightness: NSSlider?
-    @IBOutlet var buttonCapture: NSButton?
-    @IBOutlet var buttonMonitor: NSButton?
-    @IBOutlet var previewView: NSView?
-    @IBOutlet var tableAnnotations: NSTableView?
-    @IBOutlet var annotableView: AnnotableViewer? {
+    @IBOutlet weak var textName: NSTextField!
+    @IBOutlet weak var tokenFeedback: NSTokenField!
+    @IBOutlet weak var listVideoSources: NSPopUpButton!
+    @IBOutlet weak var listAudioSources: NSPopUpButton!
+    @IBOutlet weak var listSerialPorts: NSPopUpButton!
+    @IBOutlet weak var sliderLedBrightness: NSSlider!
+    @IBOutlet weak var buttonCapture: NSButton!
+    @IBOutlet weak var buttonMonitor: NSButton!
+    @IBOutlet weak var buttonStill: NSButton!
+    @IBOutlet weak var previewView: NSView!
+    @IBOutlet weak var tableAnnotations: NSTableView!
+    @IBOutlet weak var annotableView: AnnotableViewer! {
         didSet {
             oldValue?.delegate = nil
             annotableView?.delegate = self
@@ -139,6 +140,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
     var avAudioData: AVCaptureAudioDataOutput?
+    var avVideoCaptureStill: AVCaptureStillImageOutput?
     var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
@@ -363,6 +365,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let editable = mode.isEditable()
         textName?.enabled = editable
         tokenFeedback?.enabled = editable
+        buttonStill.enabled = editable && nil != avInputVideo
         listVideoSources?.enabled = editable
         listAudioSources?.enabled = editable
         listSerialPorts?.enabled = editable
@@ -694,6 +697,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        
         // raw data
         let videoData = AVCaptureVideoDataOutput()
         avVideoData = videoData
@@ -711,6 +717,21 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(videoData)
         
+        // create capture session
+        let videoStill = AVCaptureStillImageOutput()
+        avVideoCaptureStill = videoStill
+        //videoStill.outputSettings = [AVVideoCodecKey: NSNumber(unsignedInt: kCMVideoCodecType_JPEG)]
+        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(unsignedInt: kCVPixelFormatType_32BGRA)]
+        
+        if !session.canAddOutput(videoStill) {
+            DLog("Unable to add video still.")
+            return false
+        }
+        session.addOutput(videoStill)
+        
+        // commit configuration
+        session.commitConfiguration()
+        
         // create timer for redraw
         timerRedraw = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerUpdateValues:", userInfo: nil, repeats: true)
         
@@ -724,13 +745,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             self.timerRedraw = nil
         }
         
+        // begin configuring (can be nested)
+        avSession?.beginConfiguration()
+        
         // stop data output
         if nil != avVideoData {
-            if let session = avSession {
-                session.removeOutput(avVideoData!)
-            }
+            avSession?.removeOutput(avVideoData!)
             avVideoData = nil
         }
+        
+        // stop still output
+        if nil != avVideoCaptureStill {
+            avSession?.removeOutput(avVideoCaptureStill!)
+            avVideoCaptureStill = nil
+        }
+        
+        // commit configuration
+        avSession?.commitConfiguration()
         
         // release dispatch queue
         if nil != avVideoDispatchQueue {
@@ -1357,8 +1388,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
 
-    @IBAction func selectVideoSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectVideoSource(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
@@ -1423,8 +1454,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func selectAudioSource(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectAudioSource(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
             // get existing device
@@ -1471,8 +1502,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func selectSerialPort(sender: AnyObject?) {
-        if let s = sender, let button = s as? NSPopUpButton, let selected = button.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
+    @IBAction func selectSerialPort(sender: NSPopUpButton!) {
+        if let selected = sender.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
             DLog("Device Path: \(devicePath)")
             
             // get existing device
@@ -1518,7 +1549,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
 
-    @IBAction func toggleCapturing(sender: AnyObject?) {
+    @IBAction func toggleCapturing(sender: NSButton!) {
         if mode.isCapturing() {
             // stop processing
             stopCapturing()
@@ -1529,7 +1560,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func toggleMonitoring(send: AnyObject?) {
+    @IBAction func toggleMonitoring(sender: NSButton!) {
         if mode.isMonitoring() {
             // stop monitoring
             stopMonitoring()
@@ -1537,6 +1568,97 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         else {
             // start monitoring
             promptToStartMonitoring()
+        }
+    }
+    
+    @IBAction func captureStill(sender: NSButton!) {
+        guard let videoStill = avVideoCaptureStill else { return }
+        guard !videoStill.capturingStillImage else { return }
+        guard let conn = videoStill.connectionWithMediaType(AVMediaTypeVideo) else { return }
+        
+        sender.enabled = false
+        
+        videoStill.captureStillImageAsynchronouslyFromConnection(conn) {
+            (sampleBuffer: CMSampleBuffer!, error: NSError!) -> Void
+            in
+            
+            defer {
+                sender.enabled = true
+            }
+            
+            // no sample buffer?
+            if sampleBuffer == nil {
+                DLog("ERROR: \(error)")
+                return
+            }
+            
+            // get image buffer
+            guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+                return
+            }
+            let ciImage = CIImage(CVImageBuffer: imageBuffer)
+            let cgImage = CIContext().createCGImage(ciImage, fromRect: ciImage.extent)
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                // save panel
+                let panel = NSSavePanel()
+                panel.allowsOtherFileTypes = false
+                
+                // get prefix
+                var prefix = "Output"
+                if let field = self.textName {
+                    if !field.stringValue.isEmpty {
+                        prefix = field.stringValue
+                    }
+                }
+                
+                panel.title = "Save Still Image"
+                panel.allowedFileTypes = ["tiff"]
+                panel.nameFieldStringValue = prefix + ".tiff"
+                panel.canCreateDirectories = true
+                panel.extensionHidden = false
+                
+                // callback for handling response
+                let cb = {
+                    (result: Int) -> Void in
+                    if NSFileHandlingPanelOKButton == result {
+                        if let url = panel.URL {
+                            // delete existting
+                            let fm = NSFileManager.defaultManager()
+                            if fm.fileExistsAtPath(url.path!) {
+                                do {
+                                    try NSFileManager.defaultManager().removeItemAtURL(url)
+                                }
+                                catch { }
+                            }
+                            
+                            // setup TIFF properties to enable LZW compression
+                            
+                            // create dictionary
+                            var keyCallbacks = kCFTypeDictionaryKeyCallBacks
+                            var valueCallbacks = kCFTypeDictionaryValueCallBacks
+                            
+                            var compression = NSTIFFCompression.LZW.rawValue
+                            
+                            let saveOpts = CFDictionaryCreateMutable(nil, 0, &keyCallbacks,  &valueCallbacks)
+                            let tiffProps = CFDictionaryCreateMutable(nil, 0, &keyCallbacks, &valueCallbacks)
+                            let key = kCGImagePropertyTIFFCompression
+                            let val = CFNumberCreate(nil, CFNumberType.IntType, &compression)
+                            CFDictionarySetValue(tiffProps, unsafeAddressOf(key), unsafeAddressOf(val))
+                            let key2 = kCGImagePropertyTIFFDictionary
+                            CFDictionarySetValue(saveOpts, unsafeAddressOf(key2), unsafeAddressOf(tiffProps))
+                            
+                            if let destination = CGImageDestinationCreateWithURL(url, "public.tiff", 1, nil) {
+                                CGImageDestinationAddImage(destination, cgImage, saveOpts)
+                                CGImageDestinationFinalize(destination)
+                            }
+                        }
+                    }
+                }
+                
+                // show
+                panel.beginSheetModalForWindow(self.view.window!, completionHandler: cb)
+            }
         }
     }
     
@@ -2009,12 +2131,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // MARK: - interface options
     
-    @IBAction func setLedBrightness(sender: AnyObject?) {
-        if let s = sender, let slider = s as? NSSlider, let arduino = self.ioArduino {
+    @IBAction func setLedBrightness(sender: NSSlider!) {
+        if let arduino = self.ioArduino {
             copyToDocument()
             do {
-                DLog("ARDUINO brightness \(slider.integerValue)")
-                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(slider.integerValue))
+                DLog("ARDUINO brightness \(sender.integerValue)")
+                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
             }
             catch {
                 DLog("ARDUINO brightness: failed! \(error)")
@@ -2022,7 +2144,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    @IBAction func setName(sender: AnyObject?) {
+    @IBAction func setName(sender: NSTextField!) {
         //if let s = sender, let field = s as? NSTextField {
         copyToDocument()
         //}
@@ -2111,13 +2233,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return NSTokenStyle.None
     }
     
-    @IBAction func equationEdited(sender: AnyObject?) {
-        guard let tf = sender as? NSTokenField else {
-            return
-        }
-        
+    @IBAction func equationEdited(sender: NSTokenField!) {
         // get array of tokens
-        let tokens = tf.objectValue as! [AnyObject]
+        let tokens = sender.objectValue as! [AnyObject]
         let str = tokens.map({
             (o: AnyObject) -> String
             in
@@ -2128,7 +2246,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }).joinWithSeparator("")
         
         // reset background color
-        tf.backgroundColor = NSColor.textBackgroundColor()
+        sender.backgroundColor = NSColor.textBackgroundColor()
         
         // empty? disable equation
         if str.isEmpty {
@@ -2143,7 +2261,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             catch {
                 extractEquation = nil
                 DLog("EQUATION error: \(error)")
-                tf.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
+                sender.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
             }
         }
         
