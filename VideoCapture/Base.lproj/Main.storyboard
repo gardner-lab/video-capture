@@ -692,14 +692,14 @@
                                     <action selector="selectAudioSource:" target="XfG-lQ-9wD" id="ka4-GD-Vsa"/>
                                 </connections>
                             </popUpButton>
-                            <scrollView misplaced="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-hv-t7c">
-                                <rect key="frame" x="20" y="174" width="220" height="117"/>
+                            <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-hv-t7c">
+                                <rect key="frame" x="20" y="171" width="220" height="121"/>
                                 <clipView key="contentView" id="CK7-pG-0jI">
-                                    <rect key="frame" x="1" y="0.0" width="218" height="116"/>
+                                    <rect key="frame" x="1" y="0.0" width="218" height="120"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="vm2-5k-HNv" id="ur6-Ur-zr2">
-                                            <rect key="frame" x="0.0" y="0.0" width="218" height="93"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="218" height="97"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -783,15 +783,15 @@
                                     <constraint firstAttribute="trailing" secondItem="Ra3-tA-3Ku" secondAttribute="trailing" id="ybZ-UC-qZ7"/>
                                 </constraints>
                             </customView>
-                            <slider verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZyL-3c-Q7T">
-                                <rect key="frame" x="18" y="299" width="224" height="20"/>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ZyL-3c-Q7T">
+                                <rect key="frame" x="18" y="300" width="224" height="20"/>
                                 <sliderCell key="cell" enabled="NO" state="on" alignment="left" maxValue="255" tickMarkPosition="above" sliderType="linear" id="4bf-ya-sZC"/>
                                 <connections>
                                     <action selector="setLedBrightness:" target="XfG-lQ-9wD" id="qik-IX-JHr"/>
                                 </connections>
                             </slider>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Ej-hu-93S">
-                                <rect key="frame" x="18" y="318" width="30" height="17"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0Ej-hu-93S">
+                                <rect key="frame" x="18" y="318" width="29" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="LED" id="yCH-OG-eUU">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -844,8 +844,8 @@
                                     <action selector="toggleCapturing:" target="XfG-lQ-9wD" id="vXY-cs-HIC"/>
                                 </connections>
                             </button>
-                            <tokenField verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M5E-ks-Vxv">
-                                <rect key="frame" x="95" y="115" width="145" height="47"/>
+                            <tokenField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="M5E-ks-Vxv">
+                                <rect key="frame" x="93" y="113" width="147" height="48"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="48" id="EEe-ja-BBQ"/>
                                 </constraints>
