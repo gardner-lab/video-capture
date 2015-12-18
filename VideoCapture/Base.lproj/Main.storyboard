@@ -865,9 +865,12 @@
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                                <connections>
+                                    <action selector="captureStill:" target="XfG-lQ-9wD" id="2ND-q7-fYA"/>
+                                </connections>
                             </button>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Af7-RF-GaS">
-                                <rect key="frame" x="18" y="149" width="69" height="17"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Af7-RF-GaS">
+                                <rect key="frame" x="18" y="144" width="67" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Feedback:" id="Lyo-TL-sVS">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -920,6 +923,7 @@
                         <outlet property="annotableView" destination="gKo-yq-jzH" id="D9l-vp-pZg"/>
                         <outlet property="buttonCapture" destination="aZh-fI-0zG" id="6eo-R4-Yvi"/>
                         <outlet property="buttonMonitor" destination="Zow-fl-5WS" id="Kta-xT-1wb"/>
+                        <outlet property="buttonStill" destination="f3G-RJ-eJw" id="qLk-YW-ue2"/>
                         <outlet property="listAudioSources" destination="neZ-Dt-SJB" id="rFL-7c-Nwf"/>
                         <outlet property="listSerialPorts" destination="gst-KI-PKh" id="083-iY-1Cb"/>
                         <outlet property="listVideoSources" destination="EdX-Vc-JjP" id="0q4-QZ-2bb"/>

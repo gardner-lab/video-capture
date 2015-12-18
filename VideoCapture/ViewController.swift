@@ -50,6 +50,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBOutlet var sliderLedBrightness: NSSlider?
     @IBOutlet var buttonCapture: NSButton?
     @IBOutlet var buttonMonitor: NSButton?
+    @IBOutlet var buttonStill: NSButton?
     @IBOutlet var previewView: NSView?
     @IBOutlet var tableAnnotations: NSTableView?
     @IBOutlet var annotableView: AnnotableViewer? {
@@ -138,6 +139,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avFileControl: VideoControl?
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
+    var avVideoCaptureStill: AVCaptureStillImageOutput?
     var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
@@ -697,6 +699,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        
         // raw data
         let videoData = AVCaptureVideoDataOutput()
         avVideoData = videoData
@@ -714,6 +719,20 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         session.addOutput(videoData)
         
+        // create capture session
+        let videoStill = AVCaptureStillImageOutput()
+        avVideoCaptureStill = videoStill
+        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(unsignedInt: kCVPixelFormatType_32BGRA)]
+        
+        if !session.canAddOutput(videoStill) {
+            DLog("Unable to add video still.")
+            return false
+        }
+        session.addOutput(videoStill)
+        
+        // commit configuration
+        session.commitConfiguration()
+        
         // create timer for redraw
         timerRedraw = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "timerUpdateValues:", userInfo: nil, repeats: true)
         
@@ -727,13 +746,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             self.timerRedraw = nil
         }
         
+        // begin configuring (can be nested)
+        avSession?.beginConfiguration()
+        
         // stop data output
         if nil != avVideoData {
-            if let session = avSession {
-                session.removeOutput(avVideoData!)
-            }
+            avSession?.removeOutput(avVideoData!)
             avVideoData = nil
         }
+        
+        // stop still output
+        if nil != avVideoCaptureStill {
+            avSession?.removeOutput(avVideoCaptureStill!)
+            avVideoCaptureStill = nil
+        }
+        
+        // commit configuration
+        avSession?.commitConfiguration()
         
         // release dispatch queue
         if nil != avVideoDispatchQueue {
@@ -1514,6 +1543,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // start monitoring
             promptToStartMonitoring()
         }
+    }
+    
+    @IBAction func captureStill(sender: NSButton!) {
+        
     }
     
     func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError?) {
