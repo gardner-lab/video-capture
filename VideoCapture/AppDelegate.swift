@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DLog("CRASH: send")
             
             // make request
-            let url = NSURL(string: "http://www.nathanntg.com/gardner/videocapture/crash.php")!
+            let url = NSURL(string: "https://www.nathanntg.com/gardner/videocapture/crash.php")!
             let req = NSMutableURLRequest(URL: url)
             req.HTTPMethod = "POST"
             req.HTTPBody = crashReportText.dataUsingEncoding(NSUTF8StringEncoding)
