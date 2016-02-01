@@ -795,7 +795,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create song detector
         let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(audioInput.device.activeFormat.formatDescription)
         songDetector = SongDetector(samplingRate: audioDescription[0].mSampleRate)
-        songDetector?.msAfterSong = appPreferences.secondsAfterSong * 1000.0
+        songDetector?.secondsAfterSong = appPreferences.secondsAfterSong
         songDetector?.delegate = self
         
         // create serial dispatch queue
@@ -1062,7 +1062,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         headers += "Name"
         if nil != songDetector {
-            headers += ",Ratio,SongDb,Detected"
+            headers += ",SongNonsongRatio,SongBackgroundRatio,Detected"
         }
         for annot in annotView.annotations {
             headers += ",\(annot.name)"
@@ -1928,7 +1928,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             var sampleString = "\(timestampAsSeconds)"
             sampleString.reserveCapacity(64)
             if let sd = songDetector {
-                sampleString += ",\(sd.lastRatio),\(sd.lastDecibelSong)"
+                sampleString += ",\(sd.lastSongNonsongRatio),\(sd.lastSongBackgroundRatio),\(sd.lastDetected ? 1 : 0)"
             }
             for val in extractValues {
                 sampleString += ",\(val)"

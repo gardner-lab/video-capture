@@ -20,7 +20,7 @@ struct Preferences {
     let pinAnalogLED = 13
     
     // frames after song to store
-    let secondsAfterSong = 3.0
+    let secondsAfterSong = 1.5
     
     // output format
     let videoFormat = PreferenceVideoFormat.H264

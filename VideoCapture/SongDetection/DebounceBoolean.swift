@@ -22,6 +22,8 @@ class DebounceBoolean
     }
     
     init(checks: Int, initial: Bool = false) {
+        DLog("Debouce(checks=\(checks))")
+        
         self.checks = checks
         last = initial
     }
