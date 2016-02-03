@@ -1060,7 +1060,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         headers += "Date,\(formatter.stringFromDate(date))\n"
         
-        headers += "Name"
+        headers += "Time"
         if nil != songDetector {
             headers += ",SongNonsongRatio,SongBackgroundRatio,Detected"
         }
@@ -1663,7 +1663,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError?) {
-        var success = true;
+        var success = true
         
         if let e = error where noErr != OSStatus(e.code) {
             if let val = e.userInfo[AVErrorRecordingSuccessfullyFinishedKey] {
