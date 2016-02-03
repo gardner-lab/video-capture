@@ -47,19 +47,25 @@ class AnnotableViewer: NSView {
     // drawn annotations
     internal var annotations: [Annotation] = [] {
         didSet {
-            self.needsDisplay = true
+            flagForDisplay()
         }
     }
     
     // current annotation
     private var annotationInProgress: Annotation? {
         didSet {
-            self.needsDisplay = true
+            // both nil? nothing to do
+            if oldValue == nil && annotationInProgress == nil { return }
+            
+            flagForDisplay()
         }
     }
     
     var enabled: Bool = true {
         didSet {
+            // actually changed?
+            guard oldValue != enabled else { return }
+            
             locationDown = nil
             annotationInProgress = nil
             segmentedSelector?.enabled = enabled
@@ -95,6 +101,17 @@ class AnnotableViewer: NSView {
             if let v = view {
                 v.frame = frame
                 addSubview(v)
+            }
+        }
+    }
+    
+    func flagForDisplay() {
+        if NSThread.isMainThread() {
+            needsDisplay = true
+        }
+        else {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.needsDisplay = true
             }
         }
     }
