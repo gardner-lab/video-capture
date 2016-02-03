@@ -662,6 +662,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         
+        // turn off LED before hand (avoid bleaching)
+        do {
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+        }
+        catch { }
+        
         // show
         if let win = NSApp.keyWindow {
             panel.beginSheetModalForWindow(win, completionHandler: cb)
