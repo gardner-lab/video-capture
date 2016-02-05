@@ -441,7 +441,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             for d in devices_video {
                 let dev: AVCaptureDevice = d as! AVCaptureDevice
                 let item = NSMenuItem()
-                item.title = dev.localizedName
+                if dev.inUseByAnotherApplication {
+                    item.title = dev.localizedName + " (in use)"
+                    item.enabled = false
+                }
+                else {
+                    item.title = dev.localizedName
+                }
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
@@ -475,7 +481,24 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             for d in devices_audio {
                 let dev: AVCaptureDevice = d as! AVCaptureDevice
                 let item = NSMenuItem()
-                item.title = dev.localizedName
+                if dev.inUseByAnotherApplication {
+                    item.title = "\(dev.localizedName) (in use)"
+                    item.enabled = false
+                }
+                else if dev.localizedName == "USB2.0 MIC" {
+                    // try to give it a nicer name
+                    let parts = dev.uniqueID.characters.split { $0 == ":" }.map(String.init)
+                    let c = parts.count
+                    if c > 1 {
+                        item.title = "USB MIC (\(parts[c-2]) \(parts[c-1]))"
+                    }
+                    else {
+                        item.title = "\(dev.localizedName)"
+                    }
+                }
+                else {
+                    item.title = dev.localizedName
+                }
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
