@@ -82,6 +82,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         didSet {
+            // manage list of used devices
+            if let ov = oldValue {
+                AppDelegate.instance.stopUsingDevice(ov.device.uniqueID)
+            }
+            if let nv = avInputVideo {
+                AppDelegate.instance.startUsingDevice(nv.device.uniqueID)
+            }
+            
             // update interface options
             refreshInterface()
             
@@ -93,6 +101,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     var avInputAudio: AVCaptureDeviceInput? {
         didSet {
+            // manage list of used devices
+            if let ov = oldValue {
+                AppDelegate.instance.stopUsingDevice(ov.device.uniqueID)
+            }
+            if let nv = avInputAudio {
+                AppDelegate.instance.startUsingDevice(nv.device.uniqueID)
+            }
+            
+            // update interface options
             refreshInterface()
             
             // changed state
@@ -160,6 +177,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // serial communications
     var ioArduino: ArduinoIO? {
         didSet {
+            // manage list of used devices
+            if let ov = oldValue, let path = ov.serial?.path {
+                AppDelegate.instance.stopUsingDevice(path)
+            }
+            if let nv = ioArduino, let path = nv.serial?.path {
+                AppDelegate.instance.startUsingDevice(path)
+            }
+            
             oldValue?.delegate = nil
             ioArduino?.delegate = self
             
@@ -1366,6 +1391,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(deviceUniqueID) && avInputVideo?.device.uniqueID != deviceUniqueID {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
+            
             // get existing device
             if nil != avInputVideo {
                 // should be defined
@@ -1432,6 +1477,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(deviceUniqueID) && avInputAudio?.device.uniqueID != deviceUniqueID {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
+            
             // get existing device
             if nil != avInputAudio {
                 // should be defined
@@ -1479,6 +1544,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBAction func selectSerialPort(sender: NSPopUpButton!) {
         if let selected = sender.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
             DLog("Device Path: \(devicePath)")
+            
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(devicePath) && ioArduino?.serial?.path != devicePath {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
             
             // get existing device
             if nil != ioArduino {
