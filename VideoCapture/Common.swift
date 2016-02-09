@@ -17,3 +17,9 @@ func distance(a: CGPoint, _ b: CGPoint) -> CGFloat {
     let x = a.x - b.x, y = a.y - b.y
     return sqrt((x * x) + (y * y))
 }
+
+extension Int {
+    func isPowerOfTwo() -> Bool {
+        return (self != 0) && (self & (self - 1)) == 0
+    }
+}

@@ -20,9 +20,18 @@ class ExponentialMovingAverage
         }
     }
     
-    init(tau: Double, initial: Double = 0.0) {
-        k = exp(-2 * M_PI / tau)
+    init(tau: Double, samplingRate: Double, initial: Double = 0.0) {
+        k = exp(-1 / (samplingRate * tau))
         last = initial
+        
+        DLog("ExponentialMovingAverage(tau=\(tau), k=\(k))")
+    }
+    
+    init(tau: Double, timePerSample: Double, initial: Double = 0.0) {
+        k = exp(-timePerSample / tau)
+        last = initial
+        
+        DLog("ExponentialMovingAverage(tau=\(tau), k=\(k))")
     }
     
     func ingest(val: Double) -> Double {

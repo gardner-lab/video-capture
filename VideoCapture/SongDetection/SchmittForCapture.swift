@@ -95,7 +95,7 @@ class SchmittForCapture
         
         if isTrigger {
             state = .High
-            count = framesLow
+            count = framesHigh
             return true
         }
         
