@@ -39,7 +39,7 @@ class SongDetector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     }
     
     var thresholdSongNonsongRatio = 1.4
-    var thresholdSongBackgroundRatio = 1.4
+    var thresholdSongBackgroundRatio = 25.0
     
     var iterationsAfterSong = 0 // measured in terms of non-overlapping STFT segments
     var secondsAfterSong: Double {
