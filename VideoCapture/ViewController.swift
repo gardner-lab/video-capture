@@ -1761,7 +1761,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 alert.runModal()
             }
 
-            
             return
         }
         
@@ -2249,6 +2248,13 @@ extension ViewController: SongDetectorDelegate {
         
         // has triggered? start capturing
         if shouldCapture {
+            // get output directory
+            guard let dir = dirOut else {
+                DLog("Output directory has gone away.")
+                stopMonitoring()
+                return
+            }
+            
             // turn on LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
@@ -2258,12 +2264,6 @@ extension ViewController: SongDetectorDelegate {
             }
             catch {
                 
-            }
-            
-            guard let dir = dirOut else {
-                DLog("Output directory has gone away.")
-                stopMonitoring()
-                return
             }
             
             // format
