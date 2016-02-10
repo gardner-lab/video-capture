@@ -850,6 +850,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(audioInput.device.activeFormat.formatDescription)
         songDetector = SongDetector(samplingRate: audioDescription[0].mSampleRate)
         songDetector?.secondsAfterSong = appPreferences.secondsAfterSong
+        songDetector?.thresholdSongNonsongRatio = appPreferences.thresholdSongNongsongRatio
+        songDetector?.thresholdSongBackgroundRatio = appPreferences.thresholdSongBackgroundRatio
         songDetector?.delegate = self
         
         // create serial dispatch queue

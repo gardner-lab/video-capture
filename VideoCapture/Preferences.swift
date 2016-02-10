@@ -6,22 +6,119 @@
 
 import Foundation
 
-enum PreferenceVideoFormat {
+private let keyPinAnalogTrigger = "PinAnalogTrigger"
+private let keyPinDigitalCamera = "PinDigitalCamera"
+private let keyPinDigitalFeedback = "PinDigitalFeedback"
+private let keyPinAnalogLED = "PinAnalogLED"
+private let keySecondsAfterSong = "SecondsAfterSong"
+private let keyThresholdSongNonsongRatio = "ThresholdSongNonsongRatio"
+private let keyThresholdSongBackgroundRatio = "ThresholdSongBackgroundRatio"
+private let keyVideoFormat = "VideoFormat"
+
+enum PreferenceVideoFormat: CustomStringConvertible {
     case Raw
     case H264
+    
+    init?(fromString s: String) {
+        switch s {
+        case "Raw":
+            self = .Raw
+        case "H264":
+            self = .H264
+        default:
+            return nil
+        }
+    }
+    
+    var description: String {
+        get {
+            switch self {
+            case .H264:
+                return "H264"
+            case .Raw:
+                return "Raw"
+            }
+        }
+    }
 }
 
 /// Potentially customizable application preferences.
 struct Preferences {
     // pin preferences
-    let pinAnalogTrigger = 0
-    let pinDigitalCamera = 4
-    let pinDigitalFeedback = 9
-    let pinAnalogLED = 13
+    var pinAnalogTrigger: Int {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setInteger(pinAnalogTrigger, forKey: keyPinAnalogTrigger)
+        }
+    }
+    var pinDigitalCamera: Int {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setInteger(pinDigitalCamera, forKey: keyPinDigitalCamera)
+        }
+    }
+    var pinDigitalFeedback: Int {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setInteger(pinDigitalFeedback, forKey: keyPinDigitalFeedback)
+        }
+    }
+    var pinAnalogLED: Int {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setInteger(pinAnalogLED, forKey: keyPinAnalogLED)
+        }
+    }
     
     // frames after song to store
-    let secondsAfterSong = 1.5
+    var secondsAfterSong: Double {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setDouble(secondsAfterSong, forKey: keySecondsAfterSong)
+        }
+    }
+    
+    // thresholds
+    var thresholdSongNongsongRatio: Double {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setDouble(thresholdSongNongsongRatio, forKey: keyThresholdSongNonsongRatio)
+        }
+    }
+    var thresholdSongBackgroundRatio: Double {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setDouble(thresholdSongBackgroundRatio, forKey: keyThresholdSongBackgroundRatio)
+        }
+    }
     
     // output format
-    let videoFormat = PreferenceVideoFormat.H264
+    var videoFormat: PreferenceVideoFormat {
+        didSet {
+            NSUserDefaults.standardUserDefaults().setValue(videoFormat.description, forKey: keyVideoFormat)
+        }
+    }
+    
+    init() {
+        // register defaults
+        Preferences.registerDefaults()
+        
+        // get defaults
+        let defaults = NSUserDefaults.standardUserDefaults()
+        
+        pinAnalogTrigger = defaults.integerForKey(keyPinAnalogTrigger)
+        pinDigitalCamera = defaults.integerForKey(keyPinDigitalCamera)
+        pinDigitalFeedback = defaults.integerForKey(keyPinDigitalFeedback)
+        pinAnalogLED = defaults.integerForKey(keyPinAnalogLED)
+        secondsAfterSong = defaults.doubleForKey(keySecondsAfterSong)
+        thresholdSongNongsongRatio = defaults.doubleForKey(keyThresholdSongNonsongRatio)
+        thresholdSongBackgroundRatio = defaults.doubleForKey(keyThresholdSongBackgroundRatio)
+        videoFormat = PreferenceVideoFormat(fromString: defaults.stringForKey(keyVideoFormat) ?? "H264") ?? PreferenceVideoFormat.H264
+    }
+    
+    static func registerDefaults() {
+        NSUserDefaults.standardUserDefaults().registerDefaults([
+            keyPinAnalogTrigger: NSNumber(integer: 0),
+            keyPinDigitalCamera: NSNumber(integer: 4),
+            keyPinDigitalFeedback: NSNumber(integer: 9),
+            keyPinAnalogLED: NSNumber(integer: 13),
+            keySecondsAfterSong: NSNumber(double: 1.5),
+            keyThresholdSongNonsongRatio: NSNumber(double: 1.4),
+            keyThresholdSongBackgroundRatio: NSNumber(double: 25.0),
+            keyVideoFormat: "H264"
+        ])
+    }
 }
