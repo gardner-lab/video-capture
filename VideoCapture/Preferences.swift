@@ -5,6 +5,7 @@
 //  Copyright © 2015
 
 import Foundation
+import Cocoa
 
 private let keyPinAnalogTrigger = "PinAnalogTrigger"
 private let keyPinDigitalCamera = "PinDigitalCamera"
@@ -93,9 +94,6 @@ struct Preferences {
     }
     
     init() {
-        // register defaults
-        Preferences.registerDefaults()
-        
         // get defaults
         let defaults = NSUserDefaults.standardUserDefaults()
         
@@ -109,16 +107,18 @@ struct Preferences {
         videoFormat = PreferenceVideoFormat(fromString: defaults.stringForKey(keyVideoFormat) ?? "H264") ?? PreferenceVideoFormat.H264
     }
     
+    static let defaultPreferences: [String: AnyObject] = [
+        keyPinAnalogTrigger: NSNumber(integer: 0),
+        keyPinDigitalCamera: NSNumber(integer: 4),
+        keyPinDigitalFeedback: NSNumber(integer: 9),
+        keyPinAnalogLED: NSNumber(integer: 13),
+        keySecondsAfterSong: NSNumber(double: 1.5),
+        keyThresholdSongNonsongRatio: NSNumber(double: 1.4),
+        keyThresholdSongBackgroundRatio: NSNumber(double: 25.0),
+        keyVideoFormat: "H264"
+    ]
+    
     static func registerDefaults() {
-        NSUserDefaults.standardUserDefaults().registerDefaults([
-            keyPinAnalogTrigger: NSNumber(integer: 0),
-            keyPinDigitalCamera: NSNumber(integer: 4),
-            keyPinDigitalFeedback: NSNumber(integer: 9),
-            keyPinAnalogLED: NSNumber(integer: 13),
-            keySecondsAfterSong: NSNumber(double: 1.5),
-            keyThresholdSongNonsongRatio: NSNumber(double: 1.4),
-            keyThresholdSongBackgroundRatio: NSNumber(double: 25.0),
-            keyVideoFormat: "H264"
-        ])
+        NSUserDefaults.standardUserDefaults().registerDefaults(defaultPreferences)
     }
 }

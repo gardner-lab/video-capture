@@ -9,10 +9,13 @@
 import Cocoa
 
 class PreferencesViewController: NSViewController {
-
+    @IBOutlet weak var userDefaultsController: NSUserDefaultsController?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do view setup here.
+        
+        // set defaults
+        userDefaultsController?.initialValues = Preferences.defaultPreferences
     }
     
 }
