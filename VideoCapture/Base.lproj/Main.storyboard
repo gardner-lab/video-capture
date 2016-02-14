@@ -680,10 +680,10 @@
             </objects>
             <point key="canvasLocation" x="998" y="405"/>
         </scene>
-        <!--Tab View Controller-->
+        <!--Preferences Tab View Controller-->
         <scene sceneID="E6M-7z-xD6">
             <objects>
-                <tabViewController showSeguePresentationStyle="single" selectedTabViewItemIndex="0" tabStyle="toolbar" id="Gyn-lf-toO" sceneMemberID="viewController">
+                <tabViewController showSeguePresentationStyle="single" selectedTabViewItemIndex="0" tabStyle="toolbar" id="Gyn-lf-toO" customClass="PreferencesTabViewController" customModule="VideoCapture" customModuleProvider="target" sceneMemberID="viewController">
                     <tabViewItems>
                         <tabViewItem identifier="" id="FtU-W0-ZSW"/>
                         <tabViewItem identifier="" id="gvQ-SA-zQI"/>

@@ -14,6 +14,7 @@
 		D8013FAB1B4037870053F452 /* VideoCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */; };
 		D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9311B67DA3F000954DF /* EquationParser.swift */; };
 		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
+		D8057A161C712BF50022E8A3 /* PreferencesTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
 		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
@@ -94,6 +95,7 @@
 		D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCaptureTests.swift; sourceTree = "<group>"; };
 		D801C9311B67DA3F000954DF /* EquationParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquationParser.swift; sourceTree = "<group>"; };
 		D801C9341B67DA62000954DF /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
+		D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesTabViewController.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D83CF03A1B6FE15900B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = Frameworks/CrashReporter.framework; sourceTree = "<group>"; };
 		D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoCapture-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				D801C9311B67DA3F000954DF /* EquationParser.swift */,
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
+				D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */,
 				D8A44EBF1C6B96AC00DD8058 /* PreferencesViewController.swift */,
 				D860DEE11C0A768B0043203F /* Time.swift */,
 				D8F8E6781B66B429004493D5 /* Regex.swift */,
@@ -422,6 +425,7 @@
 				D892B4991B9E53B2001DFCFE /* ExponentialMovingAverage.swift in Sources */,
 				D892B4971B9E53B2001DFCFE /* CircularShortTimeFourierTransform.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
+				D8057A161C712BF50022E8A3 /* PreferencesTabViewController.swift in Sources */,
 				D87DB6C31B45958B00131082 /* Annotations.swift in Sources */,
 				D8F8E6791B66B429004493D5 /* Regex.swift in Sources */,
 			);
