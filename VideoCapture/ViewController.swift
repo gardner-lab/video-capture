@@ -283,8 +283,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     private func copyFromDocument() {
         if let doc = document {
-            DLog("DOCUMENT ->")
-            
             textName?.stringValue = doc.name
             sliderLedBrightness?.integerValue = Int(doc.ledBrightness)
             
@@ -338,15 +336,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return str
             }
             equationEdited(tokenFeedback)
-            
-            DLog("\(doc.feedbackTrigger)")
         }
     }
     
     private func copyToDocument() {
         if let doc = document {
-            DLog("DOCUMENT <-")
-            
             doc.name = textName?.stringValue ?? ""
             doc.ledBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0 )
             if let inputVideoDevice = avInputVideo {
