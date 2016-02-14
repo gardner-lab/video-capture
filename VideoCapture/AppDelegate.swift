@@ -155,6 +155,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         catch {
             DLog("CRASH: Unable to enable crash reporting \(error)")
         }
+        
+        // register preference defaults
+        Preferences.registerDefaults()
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
