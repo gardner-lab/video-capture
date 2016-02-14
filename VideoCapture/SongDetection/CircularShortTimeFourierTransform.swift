@@ -1,0 +1,326 @@
+//
+//  CircularShortTimeFourierTransform.swift
+//  SongDetector
+//
+//  Created by Nathan Perkins on 9/4/15.
+//  Copyright © 2015 Gardner Lab. All rights reserved.
+//
+
+import Foundation
+import Accelerate
+
+enum WindowType
+{
+    case None
+    case Hamming
+    case Hanning
+    case Blackman
+    
+    func createWindow(pointer: UnsafeMutablePointer<Float>, len: Int) {
+        switch self {
+        case None:
+            var one: Float = 1.0
+            vDSP_vfill(&one, pointer, 1, vDSP_Length(len))
+        case Hamming: vDSP_hamm_window(pointer, vDSP_Length(len), 0)
+        case Hanning: vDSP_hann_window(pointer, vDSP_Length(len), 0)
+        case Blackman: vDSP_blkman_window(pointer, vDSP_Length(len), 0)
+        }
+    }
+}
+
+class CircularShortTimeFourierTransform
+{
+    private var buffer: TPCircularBuffer
+    
+    let lengthFft: Int // power of 2
+    let lengthWindow: Int
+    
+    // only one can be non-zero
+    let gap: Int // gaps between samples
+    let overlap: Int // overlap between samples
+    
+    private let fftSize: vDSP_Length
+    private let fftSetup: FFTSetup
+    
+    var windowType = WindowType.Hanning {
+        didSet {
+            resetWindow()
+        }
+    }
+    
+    // store actual window
+    private let window: UnsafeMutablePointer<Float>
+    
+    // store windowed values
+    private let samplesWindowed: UnsafeMutablePointer<Float>
+    
+    // reusable memory
+    private var complexBufferA: DSPSplitComplex
+    private var complexBufferT: DSPSplitComplex
+    
+    init(windowLength lengthWindow: Int = 1024, withOverlap overlap: Int = 0, fftSizeOf theLengthFft: Int? = nil, buffer: Int = 409600) {
+        // length of the fourier transform (must be a power of 2)
+        self.lengthWindow = lengthWindow
+        
+        // if negative overlap, interpret that as a gap
+        if overlap < 0 {
+            self.gap = 0 - overlap
+            self.overlap = 0
+        }
+        else {
+            self.overlap = overlap
+            self.gap = 0
+        }
+        
+        // sanity check
+        if overlap >= lengthWindow {
+            fatalError("Invalid overlap value.")
+        }
+        
+        // calculate fft
+        if let v = theLengthFft {
+            guard v.isPowerOfTwo() else {
+                fatalError("The FFT size must be a power of 2.")
+            }
+            
+            guard lengthWindow <= v else {
+                fatalError("The FFT size must be greater than or equal to the window length.")
+            }
+            
+            lengthFft = v
+            fftSize = vDSP_Length(ceil(log2(CDouble(v))))
+        }
+        else {
+            // automatically calculate
+            fftSize = vDSP_Length(ceil(log2(CDouble(lengthWindow))))
+            lengthFft = 1 << Int(fftSize)
+        }
+        
+        // maybe use lazy instantion?
+        
+        // setup fft
+        fftSetup = vDSP_create_fftsetup(fftSize, FFTRadix(kFFTRadix2))
+        
+        // setup window
+        window = UnsafeMutablePointer<Float>.alloc(lengthWindow)
+        windowType.createWindow(window, len: lengthWindow)
+        
+        // setup windowed samples
+        samplesWindowed = UnsafeMutablePointer<Float>.alloc(lengthFft)
+        vDSP_vclr(samplesWindowed, 1, vDSP_Length(lengthFft))
+        
+        // half length (for buffer allocation)
+        let halfLength = lengthFft / 2
+        
+        // setup complex buffers
+        complexBufferA = DSPSplitComplex(realp: UnsafeMutablePointer<Float>.alloc(halfLength), imagp: UnsafeMutablePointer<Float>.alloc(halfLength))
+        complexBufferT = DSPSplitComplex(realp: nil, imagp: nil)
+        // to get desired alignment..
+        var p: UnsafeMutablePointer<Void> = nil
+        posix_memalign(&p, 0x4, halfLength * sizeof(Float))
+        complexBufferT.realp = UnsafeMutablePointer<Float>(p)
+        p = nil
+        posix_memalign(&p, 0x4, halfLength * sizeof(Float))
+        complexBufferT.imagp = UnsafeMutablePointer<Float>(p)
+        
+        // create the circular buffer
+        self.buffer = TPCircularBuffer()
+        if !TPCircularBufferInit(&self.buffer, Int32(buffer)) {
+            fatalError("Unable to allocate circular buffer.")
+        }
+    }
+    
+    deinit {
+        // half length (for buffer allocation)
+        let halfLength = lengthFft / 2
+        
+        // free the complex buffer
+        complexBufferA.realp.destroy()
+        complexBufferA.realp.dealloc(halfLength)
+        complexBufferA.imagp.destroy()
+        complexBufferA.imagp.dealloc(halfLength)
+        complexBufferT.realp.destroy()
+        complexBufferT.realp.dealloc(halfLength)
+        complexBufferT.imagp.destroy()
+        complexBufferT.imagp.dealloc(halfLength)
+        
+        // free the FFT setup
+        vDSP_destroy_fftsetup(fftSetup)
+        
+        // free the memory used to store the samples
+        samplesWindowed.destroy()
+        samplesWindowed.dealloc(lengthFft)
+        
+        // free the window
+        window.destroy()
+        window.dealloc(lengthWindow)
+        
+        // release the circular buffer
+        TPCircularBufferCleanup(&self.buffer)
+    }
+    
+    func frequenciesForSampleRate(rate: Double) -> [Double] {
+        let halfLength = lengthFft / 2
+        let toSampleRate = rate / Double(lengthFft)
+        return (0..<halfLength).map { Double($0) * toSampleRate }
+    }
+    
+    func frequencyIndexRangeFrom(startFreq: Double, to endFreq: Double, forSampleRate rate: Double) -> (Int, Int)? {
+        // sensible inputs
+        guard startFreq >= 0.0 && endFreq > startFreq else {
+            return nil
+        }
+        
+        // helpful numbers
+        let halfLength = lengthFft / 2
+        let fromFrequency = Double(lengthFft) / rate
+        
+        // calculate start index
+        let startIndex = Int(ceil(fromFrequency * startFreq))
+        if startIndex >= halfLength {
+            return nil
+        }
+        
+        // calculate end index + 1 (ceil instead of floor)
+        let endIndex = Int(ceil(fromFrequency * endFreq))
+        if endIndex < startIndex {
+            return nil
+        }
+        if endIndex > halfLength {
+            return (startIndex, halfLength)
+        }
+        return (startIndex, endIndex)
+    }
+    
+    func timePerSTFT(forSampleRate rate: Double) -> Double {
+        return Double(lengthWindow + gap - overlap) / rate
+    }
+    
+    func resetWindow() {
+        windowType.createWindow(window, len: lengthWindow)
+    }
+    
+    func appendData(data: UnsafeMutablePointer<Float>, withSamples numSamples: Int) {
+        if !TPCircularBufferProduceBytes(&self.buffer, data, Int32(numSamples * sizeof(Float))) {
+            fatalError("Insufficient space on buffer.")
+        }
+    }
+    
+    func appendInterleavedData(data: UnsafeMutablePointer<Float>, withSamples numSamples: Int, fromChannel channel: Int, ofTotalChannels totalChannels: Int) {
+        // get head of circular buffer
+        var space: Int32 = 0
+        let head = TPCircularBufferHead(&self.buffer, &space)
+        if Int(space) < numSamples {
+            fatalError("Insufficient space on buffer.")
+        }
+        
+        // use vDSP to perform copy with stride
+        var zero: Float = 0.0
+        vDSP_vsadd(data + channel, vDSP_Stride(totalChannels), &zero, UnsafeMutablePointer<Float>(head), 1, vDSP_Length(numSamples))
+        
+        // move head forward
+        TPCircularBufferProduce(&self.buffer, Int32(numSamples))
+    }
+    
+    // TODO: write better functions that can help avoid double copying
+    
+    func extractMagnitude() -> [Float]? {
+        // get buffer read point and available bytes
+        var availableBytes: Int32 = 0
+        var samples: UnsafeMutablePointer<Float> = UnsafeMutablePointer<Float>(TPCircularBufferTail(&buffer, &availableBytes))
+        
+        // not enough available bytes
+        if Int(availableBytes) < ((gap + lengthWindow) * sizeof(Float)) {
+            return nil
+        }
+        
+        // skip gap
+        if 0 < gap {
+            samples = samples + gap
+        }
+        
+        // mark circular buffer as consumed at END of excution
+        defer {
+            // mark as consumed
+            TPCircularBufferConsume(&buffer, Int32((gap + lengthWindow - overlap) * sizeof(Float)))
+        }
+        
+        // get half length
+        let halfLength = lengthFft / 2
+        
+        // prepare output
+        var output = [Float](count: halfLength, repeatedValue: 0.0)
+        
+        // window the samples
+        vDSP_vmul(samples, 1, window, 1, samplesWindowed, 1, UInt(lengthWindow))
+        
+        // pack samples into complex values (use stride 2 to fill just reals
+        vDSP_ctoz(UnsafePointer<DSPComplex>(samplesWindowed), 2, &complexBufferA, 1, UInt(halfLength))
+        
+        // perform FFT
+        // TODO: potentially use vDSP_fftm_zrip
+        vDSP_fft_zript(fftSetup, &complexBufferA, 1, &complexBufferT, fftSize, FFTDirection(FFT_FORWARD))
+        
+        // clear imagp, represents frequency at midpoint of symmetry, due to packing of array
+        complexBufferA.imagp[0] = 0
+        
+        // convert to magnitudes
+        vDSP_zvmags(&complexBufferA, 1, &output, 1, UInt(halfLength))
+        
+        // scaling unit
+        var scale: Float = 4.0
+        vDSP_vsdiv(&output, 1, &scale, &output, 1, UInt(halfLength))
+        
+        return output
+    }
+    
+    func extractPower() -> [Float]? {
+        // get buffer read point and available bytes
+        var availableBytes: Int32 = 0
+        var samples: UnsafeMutablePointer<Float> = UnsafeMutablePointer<Float>(TPCircularBufferTail(&buffer, &availableBytes))
+        
+        // not enough available bytes
+        if Int(availableBytes) < ((gap + lengthWindow) * sizeof(Float)) {
+            return nil
+        }
+        
+        // skip gap
+        if 0 < gap {
+            samples = samples + gap
+        }
+        
+        // mark circular buffer as consumed at END of excution
+        defer {
+            // mark as consumed
+            TPCircularBufferConsume(&buffer, Int32((gap + lengthWindow - overlap) * sizeof(Float)))
+        }
+        
+        // get half length
+        let halfLength = lengthFft / 2
+        
+        // prepare output
+        var output = [Float](count: halfLength, repeatedValue: 0.0)
+        
+        // window the samples
+        vDSP_vmul(samples, 1, window, 1, samplesWindowed, 1, UInt(lengthWindow))
+        
+        // pack samples into complex values (use stride 2 to fill just reals
+        vDSP_ctoz(UnsafePointer<DSPComplex>(samplesWindowed), 2, &complexBufferA, 1, UInt(halfLength))
+        
+        // perform FFT
+        // TODO: potentially use vDSP_fftm_zrip
+        vDSP_fft_zript(fftSetup, &complexBufferA, 1, &complexBufferT, fftSize, FFTDirection(FFT_FORWARD))
+        
+        // clear imagp, represents frequency at midpoint of symmetry, due to packing of array
+        complexBufferA.imagp[0] = 0
+        
+        // convert to magnitudes
+        vDSP_zvabs(&complexBufferA, 1, &output, 1, UInt(halfLength))
+        
+        // scaling unit
+        var scale: Float = 2.0
+        vDSP_vsdiv(&output, 1, &scale, &output, 1, UInt(halfLength))
+        
+        return output
+    }
+}

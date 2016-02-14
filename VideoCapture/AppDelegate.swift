@@ -8,7 +8,31 @@ import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
+    // get instance
+    class var instance: AppDelegate {
+        get {
+            return NSApp.delegate as! AppDelegate
+        }
+    }
+    
+    private var usedDevices = [String]()
     private let crashReporter = PLCrashReporter()
+    
+    // MANAGE LIST OF IN USE DEVICES
+
+    func startUsingDevice(deviceID: String) {
+        usedDevices.append(deviceID)
+    }
+    
+    func stopUsingDevice(deviceID: String) {
+        usedDevices = usedDevices.filter { $0 != deviceID }
+    }
+    
+    func isUsingDevice(deviceID: String) -> Bool {
+        return usedDevices.contains(deviceID)
+    }
+    
+    // CRASH REPORTING
     
     private func processCrashReport(crashReport: PLCrashReport) {
         // get string
@@ -131,6 +155,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         catch {
             DLog("CRASH: Unable to enable crash reporting \(error)")
         }
+        
+        // register preference defaults
+        Preferences.registerDefaults()
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {

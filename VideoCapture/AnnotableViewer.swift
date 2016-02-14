@@ -30,6 +30,14 @@ enum AnnotableTool {
     }
 }
 
+private func getColors() -> [NSColor] {
+    let ret = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
+    let space = NSColorSpace.genericRGBColorSpace()
+    return ret.map {
+        return $0.colorUsingColorSpace(space)!
+    }
+}
+
 class AnnotableViewer: NSView {
     weak var delegate: AnnotableViewerDelegate?
     
@@ -39,19 +47,25 @@ class AnnotableViewer: NSView {
     // drawn annotations
     internal var annotations: [Annotation] = [] {
         didSet {
-            self.needsDisplay = true
+            flagForDisplay()
         }
     }
     
     // current annotation
     private var annotationInProgress: Annotation? {
         didSet {
-            self.needsDisplay = true
+            // both nil? nothing to do
+            if oldValue == nil && annotationInProgress == nil { return }
+            
+            flagForDisplay()
         }
     }
     
     var enabled: Bool = true {
         didSet {
+            // actually changed?
+            guard oldValue != enabled else { return }
+            
             locationDown = nil
             annotationInProgress = nil
             segmentedSelector?.enabled = enabled
@@ -74,7 +88,7 @@ class AnnotableViewer: NSView {
     
     // colors (advance after each draw)
     private var nextColor = 0
-    lazy private var colors: [NSColor] = [NSColor.orangeColor(), NSColor.blueColor(), NSColor.greenColor(), NSColor.yellowColor(), NSColor.redColor(), NSColor.grayColor()]
+    lazy private var colors: [NSColor] = getColors()
     
     // last click location
     private var locationDown: CGPoint?
@@ -87,6 +101,17 @@ class AnnotableViewer: NSView {
             if let v = view {
                 v.frame = frame
                 addSubview(v)
+            }
+        }
+    }
+    
+    func flagForDisplay() {
+        if NSThread.isMainThread() {
+            needsDisplay = true
+        }
+        else {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.needsDisplay = true
             }
         }
     }

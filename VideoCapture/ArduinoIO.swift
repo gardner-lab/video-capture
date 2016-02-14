@@ -123,7 +123,8 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     private var motors = [UInt8](count: 4, repeatedValue: UInt8(0))
     private var steppers = [UInt8](count: 2, repeatedValue: UInt8(0))
     
-    lazy private var cbEndOfRequest: ORSSerialRequestResponseEvaluator = { (d: NSData?) -> Bool in
+    lazy private var responseDescription: ORSSerialPacketDescriptor = ORSSerialPacketDescriptor(maximumPacketLength: 16, userInfo: nil, responseEvaluator: {
+        (d: NSData?) -> Bool in
         guard let data = d else {
             return false
         }
@@ -137,7 +138,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             }
         }
         return false
-    }
+    })
     
     // used to hold requests while waiting to open
     private var pendingConnection: [ArduinoIOQueue] = []
@@ -174,7 +175,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         requestInfo[num] = req
         
         // send request
-        let serialReq = ORSSerialRequest(dataToSend: data, userInfo: num as AnyObject, timeoutInterval: kTimeoutDuration, responseEvaluator: cbEndOfRequest)
+        let serialReq = ORSSerialRequest(dataToSend: data, userInfo: num as AnyObject, timeoutInterval: kTimeoutDuration, responseDescriptor: responseDescription)
         send(serialReq)
     }
     

@@ -34,7 +34,7 @@ enum VideoCaptureMode {
     }
 }
 
-class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTokenFieldDelegate, AnnotableViewerDelegate, ArduinoIODelegate {
+class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
     // document mode
     var mode = VideoCaptureMode.Configure {
         didSet {
@@ -82,6 +82,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
         }
         didSet {
+            // manage list of used devices
+            if let ov = oldValue {
+                AppDelegate.instance.stopUsingDevice(ov.device.uniqueID)
+            }
+            if let nv = avInputVideo {
+                AppDelegate.instance.startUsingDevice(nv.device.uniqueID)
+            }
+            
             // update interface options
             refreshInterface()
             
@@ -93,6 +101,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     var avInputAudio: AVCaptureDeviceInput? {
         didSet {
+            // manage list of used devices
+            if let ov = oldValue {
+                AppDelegate.instance.stopUsingDevice(ov.device.uniqueID)
+            }
+            if let nv = avInputAudio {
+                AppDelegate.instance.startUsingDevice(nv.device.uniqueID)
+            }
+            
+            // update interface options
             refreshInterface()
             
             // changed state
@@ -139,11 +156,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var avFileControl: VideoControl?
     var avFileOut: AVCaptureFileOutput?
     var avVideoData: AVCaptureVideoDataOutput?
+    var avAudioData: AVCaptureAudioDataOutput?
     var avVideoCaptureStill: AVCaptureStillImageOutput?
     var dirOut: NSURL?
     var dataOut: NSFileHandle?
     
     var avVideoDispatchQueue: dispatch_queue_t?
+    var avAudioDispatchQueue: dispatch_queue_t?
+    
+    var songDetector: SongDetector?
     
     // should be unused
     override var representedObject: AnyObject? {
@@ -156,6 +177,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // serial communications
     var ioArduino: ArduinoIO? {
         didSet {
+            // manage list of used devices
+            if let ov = oldValue, let path = ov.serial?.path {
+                AppDelegate.instance.stopUsingDevice(path)
+            }
+            if let nv = ioArduino, let path = nv.serial?.path {
+                AppDelegate.instance.startUsingDevice(path)
+            }
+            
             oldValue?.delegate = nil
             ioArduino?.delegate = self
             
@@ -177,9 +206,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     // timer to dim LED and turn off camera
     //var timerRevertMode: NSTimer?
-    
-    // timer for monitoring
-    var timerMonitor: NSTimer?
     
     // used by manual reading system
     var ciContext: CIContext?
@@ -239,6 +265,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // end any session
         stopVideoData()
         stopVideoFile()
+        stopAudioData()
         stopAudioFile()
         stopSession()
         
@@ -256,8 +283,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     private func copyFromDocument() {
         if let doc = document {
-            DLog("DOCUMENT ->")
-            
             textName?.stringValue = doc.name
             sliderLedBrightness?.integerValue = Int(doc.ledBrightness)
             
@@ -311,15 +336,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return str
             }
             equationEdited(tokenFeedback)
-            
-            DLog("\(doc.feedbackTrigger)")
         }
     }
     
     private func copyToDocument() {
         if let doc = document {
-            DLog("DOCUMENT <-")
-            
             doc.name = textName?.stringValue ?? ""
             doc.ledBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0 )
             if let inputVideoDevice = avInputVideo {
@@ -382,7 +403,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .Configure:
             buttonCapture?.enabled = (nil != avInputVideo || nil != avInputAudio)
             buttonCapture?.title = "Start Capturing"
-            buttonMonitor?.enabled = nil != ioArduino && (nil != avInputVideo || nil != avInputAudio)
+            buttonMonitor?.enabled = (nil != avInputVideo && nil != avInputAudio) // must have audio: just require both
             buttonMonitor?.title = "Start Monitoring"
         case .ManualCapture:
             buttonCapture?.enabled = true
@@ -439,7 +460,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             for d in devices_video {
                 let dev: AVCaptureDevice = d as! AVCaptureDevice
                 let item = NSMenuItem()
-                item.title = dev.localizedName
+                if dev.inUseByAnotherApplication {
+                    item.title = dev.localizedName + " (in use)"
+                    item.enabled = false
+                }
+                else {
+                    item.title = dev.localizedName
+                }
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
@@ -473,7 +500,24 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             for d in devices_audio {
                 let dev: AVCaptureDevice = d as! AVCaptureDevice
                 let item = NSMenuItem()
-                item.title = dev.localizedName
+                if dev.inUseByAnotherApplication {
+                    item.title = "\(dev.localizedName) (in use)"
+                    item.enabled = false
+                }
+                else if dev.localizedName == "USB2.0 MIC" {
+                    // try to give it a nicer name
+                    let parts = dev.uniqueID.characters.split { $0 == ":" }.map(String.init)
+                    let c = parts.count
+                    if c > 1 {
+                        item.title = "USB MIC (\(parts[c-2]) \(parts[c-1]))"
+                    }
+                    else {
+                        item.title = "\(dev.localizedName)"
+                    }
+                }
+                else {
+                    item.title = dev.localizedName
+                }
                 item.tag = newDeviceIndex
                 list.menu?.addItem(item)
                 newDeviceUniqueIDs[newDeviceIndex] = dev.uniqueID
@@ -498,7 +542,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             list.removeAllItems()
             list.addItemWithTitle("Arduino")
-            for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts as! [ORSSerialPort] {
+            for port in ORSSerialPortManager.sharedSerialPortManager().availablePorts {
                 let item = NSMenuItem()
                 item.title = port.name
                 item.tag = newDeviceIndex
@@ -637,11 +681,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return
         }
         
-        if nil == self.ioArduino {
-            DLog("No arduino selected.")
-            return
-        }
-        
         let videoDeviceID = self.getVideoDeviceID()
         let audioDeviceID = self.getAudioDeviceID()
         if nil == videoDeviceID && nil == audioDeviceID {
@@ -664,6 +703,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
             }
         }
+        
+        // turn off LED before hand (avoid bleaching)
+        do {
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+        }
+        catch { }
         
         // show
         if let win = NSApp.keyWindow {
@@ -779,6 +824,61 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
+    private func startAudioData() -> Bool {
+        // already created
+        guard nil == avAudioData else {
+            return true
+        }
+        guard let session = avSession else {
+            return false
+        }
+        guard let audioInput = avInputAudio else {
+            return false
+        }
+        
+        // raw data
+        let audioData = AVCaptureAudioDataOutput()
+        avAudioData = audioData
+        
+        // create song detector
+        let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(audioInput.device.activeFormat.formatDescription)
+        songDetector = SongDetector(samplingRate: audioDescription[0].mSampleRate)
+        songDetector?.secondsAfterSong = appPreferences.secondsAfterSong
+        songDetector?.thresholdSongNonsongRatio = appPreferences.thresholdSongNongsongRatio
+        songDetector?.thresholdSongBackgroundRatio = appPreferences.thresholdSongBackgroundRatio
+        songDetector?.delegate = self
+        
+        // create serial dispatch queue
+        let audioDispatchQueue = dispatch_queue_create("AudioDataOutputQueue", DISPATCH_QUEUE_SERIAL)
+        avAudioDispatchQueue = audioDispatchQueue
+        audioData.setSampleBufferDelegate(songDetector, queue: audioDispatchQueue)
+        
+        if !session.canAddOutput(audioData) {
+            DLog("Unable to add audio data output.")
+            return false
+        }
+        
+        session.addOutput(audioData)
+        
+        return true
+    }
+    
+    private func stopAudioData() {
+        // stop data output
+        if nil != avAudioData {
+            if let session = avSession {
+                session.removeOutput(avAudioData!)
+            }
+            avAudioData = nil
+        }
+        
+        // release dispatch queue
+        avAudioDispatchQueue = nil
+        
+        // release song detector
+        songDetector = nil
+    }
+    
     private func startVideoFile() -> Bool {
         // already created
         guard nil == avFileOut else {
@@ -892,6 +992,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // no inputs
             stopVideoData()
             stopVideoFile()
+            stopAudioData()
             stopAudioFile()
         }
         else if nil == avInputVideo {
@@ -904,6 +1005,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             startAudioFile()
         }
         else {
+            // stop audio data
+            if nil == avInputAudio {
+                stopAudioData()
+            }
+            
             // has audio out?
             if let _ = self.avFileOut as? AVCaptureAudioFileOutput {
                 stopAudioFile()
@@ -952,9 +1058,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // no annotations
-        guard annotView.annotations.count > 0 else {
-            return false
-        }
+        // TODO: decide about guard
+        //guard annotView.annotations.count > 0 else {
+        //    return false
+        //}
         
         // get file path
         guard let path = dataFile.path else {
@@ -1003,7 +1110,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         headers += "Date,\(formatter.stringFromDate(date))\n"
         
-        headers += "Name"
+        headers += "Time"
+        if nil != songDetector {
+            headers += ",SongNonsongRatio,SongBackgroundRatio,Detected"
+        }
         for annot in annotView.annotations {
             headers += ",\(annot.name)"
         }
@@ -1152,15 +1262,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         
-        // has arduino
-        if nil == ioArduino {
-            DLog("No arduino selected.")
-            return false
-        }
-        
         // get capture device
-        if nil == avInputVideo && nil == avInputAudio {
-            DLog("No device selected.")
+        if nil == avInputAudio {
+            DLog("No audio device selected.")
             return false
         }
         
@@ -1186,13 +1290,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // update mode
         mode = .Monitor
         
+        // start audio data
+        startAudioData()
+        
         // setup
         if !setupBeforeCapture() {
             stopDueToPermanentError()
         }
-        
-        // strat timer
-        timerMonitor = NSTimer.scheduledTimerWithTimeInterval(appPreferences.triggerPollTime, target: self, selector: "monitorCheckTrigger:", userInfo: nil, repeats: true)
         
         // turn off led and camera
         do {
@@ -1206,98 +1310,13 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return true
     }
     
-    func monitorReceiveTrigger(value: UInt16) {
-        // trigger value
-        let isTriggered = (value > self.appPreferences.triggerValue)
-        let isCapturing = self.mode.isCapturing()
-        
-        // right mode
-        if isTriggered == isCapturing {
-            return
-        }
-        
-        // has triggered? start capturing
-        if isTriggered {
-            // turn on LED and camera
-            do {
-                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
-                if let ledBrightness = sliderLedBrightness?.integerValue {
-                    try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
-                }
-            }
-            catch {
-                
-            }
-            
-            guard let dir = dirOut else {
-                DLog("Output directory has gone away.")
-                stopMonitoring()
-                return
-            }
-            
-            // format
-            let formatter = NSDateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd HH mm ss"
-            
-            // build file name
-            let name = formatter.stringFromDate(NSDate()) + (avInputVideo == nil ? ".m4a" : ".mov")
-            let file = dir.URLByAppendingPathComponent(name)
-            
-            // start capturing
-            startCapturing(file)
-        }
-        else {
-            // stop capturing
-            self.stopCapturing()
-            
-            // turn off LED and camera
-            do {
-                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-            }
-            catch {
-                
-            }
-        }
-        
-    }
-    
-    func monitorCheckTrigger(timer: NSTimer!) {
-        guard let arduino = ioArduino else {
-            DLog("POLLING failed")
-            stopMonitoring()
-            return
-        }
-        
-        do {
-            try arduino.readAnalogValueFrom(appPreferences.pinAnalogTrigger, andExecute: {
-                (val: UInt16?) -> Void in
-                guard let value = val else {
-                    DLog("POLLING failed: no value")
-                    self.stopMonitoring()
-                    return
-                }
-                
-                // receive trigger
-                self.monitorReceiveTrigger(value)
-            })
-        }
-        catch {
-            DLog("POLLING failed")
-            stopMonitoring()
-        }
-    }
-    
     func stopMonitoring() {
         guard mode.isMonitoring() else {
             return
         }
         
-        // stop timer
-        if nil != timerMonitor {
-            timerMonitor!.invalidate()
-            timerMonitor = nil
-        }
+        // stop audio data
+        stopAudioData()
         
         // stop capturing
         if mode.isCapturing() {
@@ -1368,6 +1387,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(deviceUniqueID) && avInputVideo?.device.uniqueID != deviceUniqueID {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
+            
             // get existing device
             if nil != avInputVideo {
                 // should be defined
@@ -1434,6 +1473,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let selected = sender.selectedItem, let deviceUniqueID = deviceUniqueIDs[selected.tag] {
             DLog("Device ID: \(deviceUniqueID)")
             
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(deviceUniqueID) && avInputAudio?.device.uniqueID != deviceUniqueID {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
+            
             // get existing device
             if nil != avInputAudio {
                 // should be defined
@@ -1481,6 +1540,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBAction func selectSerialPort(sender: NSPopUpButton!) {
         if let selected = sender.selectedItem, let devicePath = deviceUniqueIDs[selected.tag] {
             DLog("Device Path: \(devicePath)")
+            
+            // is device used?
+            if AppDelegate.instance.isUsingDevice(devicePath) && ioArduino?.serial?.path != devicePath {
+                // show alert
+                let alert = NSAlert()
+                alert.messageText = "Device already in use"
+                alert.informativeText = "The device you selected is already in use in another window. Running multiple captures from the same device may cause problems."
+                alert.addButtonWithTitle("Ok")
+                if let win = NSApp.keyWindow {
+                    alert.beginSheetModalForWindow(win, completionHandler:nil)
+                }
+                else {
+                    alert.runModal()
+                }
+                
+                // reset selector
+                sender.selectItemAtIndex(0)
+                
+                return
+            }
             
             // get existing device
             if nil != ioArduino {
@@ -1639,7 +1718,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError?) {
-        var success = true;
+        var success = true
         
         if let e = error where noErr != OSStatus(e.code) {
             if let val = e.userInfo[AVErrorRecordingSuccessfullyFinishedKey] {
@@ -1678,7 +1757,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 alert.runModal()
             }
 
-            
             return
         }
         
@@ -1903,6 +1981,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // build sample string
             var sampleString = "\(timestampAsSeconds)"
             sampleString.reserveCapacity(64)
+            if let sd = songDetector {
+                sampleString += ",\(sd.lastSongNonsongRatio),\(sd.lastSongBackgroundRatio),\(sd.lastDetected ? 1 : 0)"
+            }
             for val in extractValues {
                 sampleString += ",\(val)"
             }
@@ -1954,32 +2035,107 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func didChangeAnnotations(newAnnotations: [Annotation]) {
-        // clear extract values
-        extractValues = [Float](count: newAnnotations.count, repeatedValue: 0.0)
+    // MARK: - arduino delegate and controls
+    
+    // monitoring
+    func avDeviceWasConnected(notification: NSNotification) {
+        updateDeviceLists()
+        DLog("AV Devices were connected")
+    }
+    
+    func avDeviceWasDisconnected(notification: NSNotification) {
+        updateDeviceLists()
+        DLog("AV Devices were disconnected")
+    }
+    
+    // serial port
+    func serialPortsWereConnected(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let connectedPorts = userInfo[ORSConnectedSerialPortsKey] as! [ORSSerialPort]
+            DLog("Ports were connected: \(connectedPorts)")
+            updateDeviceLists()
+        }
+    }
+    
+    func serialPortsWereDisconnected(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            let disconnectedPorts: [ORSSerialPort] = userInfo[ORSDisconnectedSerialPortsKey] as! [ORSSerialPort]
+            DLog("Ports were disconnected: \(disconnectedPorts)")
+            updateDeviceLists()
+        }
+    }
+    
+    func resetArduino() {
+        DLog("ARDUINO reset")
         
-        // reset bounds (force reloading list of pixels)
-        extractBounds = CGSize(width: 0.0, height: 0.0)
+        stopDueToPermanentError()
         
-        // force redrawing of table
-        tableAnnotations?.reloadData()
+        // clear arduino
+        ioArduino = nil
+        
+        // reset arduino selection
+        listAudioSources?.selectItemAtIndex(0)
+    }
+    
+    // MARK: - interface options
+    
+    @IBAction func setLedBrightness(sender: NSSlider!) {
+        if let arduino = self.ioArduino {
+            copyToDocument()
+            do {
+                DLog("ARDUINO brightness \(sender.integerValue)")
+                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
+            }
+            catch {
+                DLog("ARDUINO brightness: failed! \(error)")
+            }
+        }
+    }
+    
+    @IBAction func setName(sender: NSTextField!) {
+        //if let s = sender, let field = s as? NSTextField {
+        copyToDocument()
+        //}
+    }
+    
+    @IBAction func equationEdited(sender: NSTokenField!) {
+        // get array of tokens
+        let tokens = sender.objectValue as! [AnyObject]
+        let str = tokens.map({
+            (o: AnyObject) -> String
+            in
+            if let t = o as? TokenROI {
+                return "ROI\(t.id)"
+            }
+            return o as? String ?? ""
+        }).joinWithSeparator("")
+        
+        // reset background color
+        sender.backgroundColor = NSColor.textBackgroundColor()
+        
+        // empty? disable equation
+        if str.isEmpty {
+            extractEquation = nil
+        }
+        else {
+            do {
+                let eq = try equationParse(str)
+                extractEquation = eq.simplify()
+                DLog("\(extractEquation!.description)")
+            }
+            catch {
+                extractEquation = nil
+                DLog("EQUATION error: \(error)")
+                sender.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
+            }
+        }
         
         // update document
         copyToDocument()
-        
-//        let attach = NSTextAttachment(fileWrapper: nil)
-//        let cell = AnnotationCell()
-//        attach.attachmentCell = cell
-//        
-//        let tfas = NSMutableAttributedString(attributedString: textFeedback!.attributedStringValue)
-//        DLog("\(tfas)")
-//        tfas.appendAttributedString(NSAttributedString(attachment: attach))
-//        textFeedback?.attributedStringValue = tfas
-//        //textFeedback?.cell?.insertValue(NSAttributedString(attachment: attach), atIndex: 0, inPropertyWithKey: )
     }
-    
-    // MARK: - table data source and delegate
-    
+}
+
+extension ViewController: NSTableViewDataSource {
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
         guard let annotView = self.annotableView else {
             return 0
@@ -2048,51 +2204,92 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         return false
     }
-    
-    // MARK: - arduino delegate and controls
-    
-    // monitoring
-    func avDeviceWasConnected(notification: NSNotification) {
-        updateDeviceLists()
-        DLog("AV Devices were connected")
+}
+
+extension ViewController: AnnotableViewerDelegate {
+    func didChangeAnnotations(newAnnotations: [Annotation]) {
+        // clear extract values
+        extractValues = [Float](count: newAnnotations.count, repeatedValue: 0.0)
+        
+        // reset bounds (force reloading list of pixels)
+        extractBounds = CGSize(width: 0.0, height: 0.0)
+        
+        // force redrawing of table
+        tableAnnotations?.reloadData()
+        
+        // update document
+        copyToDocument()
+        
+        //        let attach = NSTextAttachment(fileWrapper: nil)
+        //        let cell = AnnotationCell()
+        //        attach.attachmentCell = cell
+        //
+        //        let tfas = NSMutableAttributedString(attributedString: textFeedback!.attributedStringValue)
+        //        DLog("\(tfas)")
+        //        tfas.appendAttributedString(NSAttributedString(attachment: attach))
+        //        textFeedback?.attributedStringValue = tfas
+        //        //textFeedback?.cell?.insertValue(NSAttributedString(attachment: attach), atIndex: 0, inPropertyWithKey: )
     }
-    
-    func avDeviceWasDisconnected(notification: NSNotification) {
-        updateDeviceLists()
-        DLog("AV Devices were disconnected")
-    }
-    
-    // serial port
-    func serialPortsWereConnected(notification: NSNotification) {
-        if let userInfo = notification.userInfo {
-            let connectedPorts = userInfo[ORSConnectedSerialPortsKey] as! [ORSSerialPort]
-            DLog("Ports were connected: \(connectedPorts)")
-            updateDeviceLists()
+}
+
+extension ViewController: SongDetectorDelegate {
+    func songDetectionDidChangeTo(shouldCapture: Bool) {
+        // trigger value
+        let isCapturing = self.mode.isCapturing()
+        
+        // right mode
+        if shouldCapture == isCapturing {
+            return
+        }
+        
+        // has triggered? start capturing
+        if shouldCapture {
+            // get output directory
+            guard let dir = dirOut else {
+                DLog("Output directory has gone away.")
+                stopMonitoring()
+                return
+            }
+            
+            // turn on LED and camera
+            do {
+                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
+                if let ledBrightness = sliderLedBrightness?.integerValue {
+                    try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
+                }
+            }
+            catch {
+                
+            }
+            
+            // format
+            let formatter = NSDateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH mm ss"
+            
+            // build file name
+            let name = formatter.stringFromDate(NSDate()) + (avInputVideo == nil ? ".m4a" : ".mov")
+            let file = dir.URLByAppendingPathComponent(name)
+            
+            // start capturing
+            startCapturing(file)
+        }
+        else {
+            // stop capturing
+            stopCapturing()
+            
+            // turn off LED and camera
+            do {
+                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+            }
+            catch {
+                
+            }
         }
     }
-    
-    func serialPortsWereDisconnected(notification: NSNotification) {
-        if let userInfo = notification.userInfo {
-            let disconnectedPorts: [ORSSerialPort] = userInfo[ORSDisconnectedSerialPortsKey] as! [ORSSerialPort]
-            DLog("Ports were disconnected: \(disconnectedPorts)")
-            updateDeviceLists()
-        }
-    }
-    
-    // arduino protocol
-    
-    func resetArduino() {
-        DLog("ARDUINO reset")
-        
-        stopDueToPermanentError()
-        
-        // clear arduino
-        ioArduino = nil
-        
-        // reset arduino selection
-        listAudioSources?.selectItemAtIndex(0)
-    }
-    
+}
+
+extension ViewController: ArduinoIODelegate {
     func arduinoError(message: String, isPermanent: Bool) {
         DLog("Arduino Error: \(message)")
         
@@ -2101,31 +2298,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             resetArduino()
         }
     }
-    
-    // MARK: - interface options
-    
-    @IBAction func setLedBrightness(sender: NSSlider!) {
-        if let arduino = self.ioArduino {
-            copyToDocument()
-            do {
-                DLog("ARDUINO brightness \(sender.integerValue)")
-                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
-            }
-            catch {
-                DLog("ARDUINO brightness: failed! \(error)")
-            }
-        }
-    }
-    
-    @IBAction func setName(sender: NSTextField!) {
-        //if let s = sender, let field = s as? NSTextField {
-        copyToDocument()
-        //}
-    }
-    
-    // MARK: - Token Field
-    
-    
+}
+
+extension ViewController: NSTokenFieldDelegate {
     // return an array of represented objects you want to add.
     // If you want to reject the add, return an empty array.
     // returning nil will cause an error.
@@ -2205,42 +2380,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return NSTokenStyle.Default
         }
         return NSTokenStyle.None
-    }
-    
-    @IBAction func equationEdited(sender: NSTokenField!) {
-        // get array of tokens
-        let tokens = sender.objectValue as! [AnyObject]
-        let str = tokens.map({
-            (o: AnyObject) -> String
-            in
-            if let t = o as? TokenROI {
-                return "ROI\(t.id)"
-            }
-            return o as? String ?? ""
-        }).joinWithSeparator("")
-        
-        // reset background color
-        sender.backgroundColor = NSColor.textBackgroundColor()
-        
-        // empty? disable equation
-        if str.isEmpty {
-            extractEquation = nil
-        }
-        else {
-            do {
-                let eq = try equationParse(str)
-                extractEquation = eq.simplify()
-                DLog("\(extractEquation!.description)")
-            }
-            catch {
-                extractEquation = nil
-                DLog("EQUATION error: \(error)")
-                sender.backgroundColor = NSColor(red: 242.0 / 255.0, green: 222.0 / 255.0, blue: 222.0 / 255.0, alpha: 1.0)
-            }
-        }
-        
-        // update document
-        copyToDocument()
     }
 }
 
