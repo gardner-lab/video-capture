@@ -6,8 +6,8 @@
 
 import Cocoa
 
-enum AnnotationParseError: ErrorType {
-    case MissingValue
+enum AnnotationParseError: Error {
+    case missingValue
 }
 
 /// Note all points are relative [0. - 1., 0. - 1.] with an upper left origin
@@ -18,28 +18,29 @@ protocol Annotation {
     var color: NSColor { get set }
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor)
-    init(fromDictionary d: [String: AnyObject]) throws
-    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect)
-    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect)
-    func containsPoint(point: NSPoint) -> Bool
-    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)]
-    func generateImageDescription(rect: NSRect) -> String
-    func toDictionary() -> [String: AnyObject]
+    init(fromDictionary d: [String: Any]) throws
+    static func create(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) -> Annotation
+    func drawFilled(_ context: NSGraphicsContext, inRect rect: NSRect)
+    func drawOutline(_ context: NSGraphicsContext, inRect rect: NSRect)
+    func containsPoint(_ point: NSPoint) -> Bool
+    func generateImageCoordinates(_ rect: NSRect) -> [(Int, Int)]
+    func generateImageDescription(_ rect: NSRect) -> String
+    func toDictionary() -> [String: Any]
 }
 
 /// Helepr functions to convert the relative points of the annotations back into LLO pixel coorindates for drawing.
 extension Annotation {
-    private func makeAbsolutePoint(point: NSPoint, inRect rect: NSRect) -> NSPoint {
+    private func makeAbsolutePoint(_ point: NSPoint, inRect rect: NSRect) -> NSPoint {
         let x = (point.x * rect.size.width) + rect.origin.x
         let y = (rect.size.height - (point.y * rect.size.height)) + rect.origin.y
         return NSPoint(x: x, y: y)
     }
     
-    private func makeAbsoluteSize(size: NSSize, inRect rect: NSRect) -> NSSize {
+    fileprivate func makeAbsoluteSize(_ size: NSSize, inRect rect: NSRect) -> NSSize {
         return NSSize(width: size.width * rect.width, height: size.height * rect.height)
     }
     
-    private func makeAbsoluteRect(rect: NSRect, inRect frame: NSRect) -> NSRect {
+    fileprivate func makeAbsoluteRect(_ rect: NSRect, inRect frame: NSRect) -> NSRect {
         let width = rect.size.width * frame.size.width
         let height = rect.size.height * frame.size.height
         let x = (rect.origin.x * frame.size.width) + frame.origin.x
@@ -56,7 +57,8 @@ struct AnnotationCircle: Annotation {
     var color: NSColor
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) {
-        id = ++nextId
+        nextId += 1
+        id = nextId
         center = a
         
         let x = a.x - b.x, y = a.y - b.y
@@ -64,13 +66,18 @@ struct AnnotationCircle: Annotation {
         color = c
     }
     
-    init(fromDictionary d: [String: AnyObject]) throws {
+    static func create(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) -> Annotation {
+        return AnnotationCircle(startPoint: a, endPoint: b, color: c)
+    }
+    
+    init(fromDictionary d: [String: Any]) throws {
         // set id
         if let theVal = d["Id"], let theId = theVal as? Int {
             id = theId
         }
         else {
-            id = ++nextId
+            nextId += 1
+            id = nextId
         }
         
         // name
@@ -83,7 +90,7 @@ struct AnnotationCircle: Annotation {
             center = NSPoint(x: theX, y: theY)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // radius
@@ -91,7 +98,7 @@ struct AnnotationCircle: Annotation {
             radius = theRadius
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // color
@@ -99,22 +106,22 @@ struct AnnotationCircle: Annotation {
             color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
     }
     
-    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawFilled(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
         let drawOrigin = NSPoint(x: center.x - radius, y: center.y - radius)
         let drawSize = NSSize(width: radius * 2, height: radius * 2)
         let drawRect = makeAbsoluteRect(NSRect(origin: drawOrigin, size: drawSize), inRect: rect)
         
-        let path = NSBezierPath(ovalInRect: drawRect)
+        let path = NSBezierPath(ovalIn: drawRect)
         path.fill()
     }
     
-    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawOutline(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.setStroke()
         
         let drawOrigin = NSPoint(x: center.x - radius, y: center.y - radius)
@@ -122,16 +129,16 @@ struct AnnotationCircle: Annotation {
         let drawRect = makeAbsoluteRect(NSRect(origin: drawOrigin, size: drawSize), inRect: rect)
         
         
-        let path = NSBezierPath(ovalInRect: drawRect)
+        let path = NSBezierPath(ovalIn: drawRect)
         path.lineWidth = 4.0
         path.stroke()
     }
     
-    func containsPoint(point: NSPoint) -> Bool {
-        return (distance(point, center) <= radius)
+    func containsPoint(_ point: NSPoint) -> Bool {
+        return (distance(center, point) <= radius)
     }
     
-    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+    func generateImageCoordinates(_ rect: NSRect) -> [(Int, Int)] {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         
@@ -156,7 +163,7 @@ struct AnnotationCircle: Annotation {
         return ret
     }
     
-    func generateImageDescription(rect: NSRect) -> String {
+    func generateImageDescription(_ rect: NSRect) -> String {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         
@@ -166,8 +173,8 @@ struct AnnotationCircle: Annotation {
         return "Circle; center = (\(imageCenterX), \(imageCenterY)); radius = \(imageRadius)"
     }
     
-    func toDictionary() -> [String: AnyObject] {
-        var ret = [String: AnyObject]()
+    func toDictionary() -> [String: Any] {
+        var ret = [String: Any]()
         ret["Id"] = id
         ret["Name"] = name
         ret["ColorRed"] = color.redComponent
@@ -191,7 +198,8 @@ struct AnnotationEllipse: Annotation {
     var color: NSColor
     
     init(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) {
-        id = ++nextId
+        nextId += 1
+        id = nextId
         
         // use points as recntangle points (not that intuitive)
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
@@ -200,13 +208,18 @@ struct AnnotationEllipse: Annotation {
         color = c
     }
     
-    init(fromDictionary d: [String: AnyObject]) throws {
+    static func create(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) -> Annotation {
+        return AnnotationEllipse(startPoint: a, endPoint: b, color: c)
+    }
+    
+    init(fromDictionary d: [String: Any]) throws {
         // set id
         if let theVal = d["Id"], let theId = theVal as? Int {
             id = theId
         }
         else {
-            id = ++nextId
+            nextId += 1
+            id = nextId
         }
         
         // name
@@ -219,7 +232,7 @@ struct AnnotationEllipse: Annotation {
             origin = NSPoint(x: theX, y: theY)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // size
@@ -227,7 +240,7 @@ struct AnnotationEllipse: Annotation {
             size = NSSize(width: theWidth, height: theHeight)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // color
@@ -235,35 +248,35 @@ struct AnnotationEllipse: Annotation {
             color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
     }
     
-    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawFilled(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
-        let path = NSBezierPath(ovalInRect: drawRect)
+        let path = NSBezierPath(ovalIn: drawRect)
         path.fill()
     }
     
-    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawOutline(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.setStroke()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
-        let path = NSBezierPath(ovalInRect: drawRect)
+        let path = NSBezierPath(ovalIn: drawRect)
         path.lineWidth = 4.0
         path.stroke()
     }
     
-    func containsPoint(point: NSPoint) -> Bool {
+    func containsPoint(_ point: NSPoint) -> Bool {
         let hw = size.width / 2, hh = size.height / 2
         let center = NSPoint(x: origin.x + hw, y: origin.y + hh)
         let x = (point.x - center.x) / hw, y = (point.y - center.y) / hh
         return ((x * x) + (y * y)) <= 1 // sqrt( ) not needed
     }
     
-    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+    func generateImageCoordinates(_ rect: NSRect) -> [(Int, Int)] {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         
@@ -289,7 +302,7 @@ struct AnnotationEllipse: Annotation {
         return ret
     }
     
-    func generateImageDescription(rect: NSRect) -> String {
+    func generateImageDescription(_ rect: NSRect) -> String {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         
@@ -300,8 +313,8 @@ struct AnnotationEllipse: Annotation {
         return "Ellipse; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
     }
     
-    func toDictionary() -> [String: AnyObject] {
-        var ret = [String: AnyObject]()
+    func toDictionary() -> [String: Any] {
+        var ret = [String: Any]()
         ret["Id"] = id
         ret["Name"] = name
         ret["ColorRed"] = color.redComponent
@@ -326,19 +339,25 @@ struct AnnotationRectangle: Annotation {
     var color: NSColor
     
     init(startPoint a: CGPoint, endPoint b: CGPoint, color c: NSColor) {
-        id = ++nextId
+        nextId += 1
+        id = nextId
         origin = NSPoint(x: min(a.x, b.x), y: min(a.y, b.y))
         size = NSSize(width: max(a.x, b.x) - origin.x, height: max(a.y, b.y) - origin.y)
         color = c
     }
     
-    init(fromDictionary d: [String: AnyObject]) throws {
+    static func create(startPoint a: NSPoint, endPoint b: NSPoint, color c: NSColor) -> Annotation {
+        return AnnotationRectangle(startPoint: a, endPoint: b, color: c)
+    }
+    
+    init(fromDictionary d: [String: Any]) throws {
         // set id
         if let theVal = d["Id"], let theId = theVal as? Int {
             id = theId
         }
         else {
-            id = ++nextId
+            nextId += 1
+            id = nextId
         }
         
         // name
@@ -351,7 +370,7 @@ struct AnnotationRectangle: Annotation {
             origin = NSPoint(x: theX, y: theY)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // size
@@ -359,7 +378,7 @@ struct AnnotationRectangle: Annotation {
             size = NSSize(width: theWidth, height: theHeight)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
         
         // color
@@ -367,30 +386,30 @@ struct AnnotationRectangle: Annotation {
             color = NSColor(red: theRed, green: theGreen, blue: theBlue, alpha: 1.0)
         }
         else {
-            throw AnnotationParseError.MissingValue
+            throw AnnotationParseError.missingValue
         }
     }
     
-    func drawFilled(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawFilled(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
         NSRectFill(drawRect)
     }
     
-    func drawOutline(context: NSGraphicsContext, inRect rect: NSRect) {
+    func drawOutline(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
         NSFrameRectWithWidth(drawRect, 4.0)
     }
     
-    func containsPoint(point: NSPoint) -> Bool {
+    func containsPoint(_ point: NSPoint) -> Bool {
         let diff = NSPoint(x: point.x - origin.x, y: point.y - origin.y)
         return 0 <= diff.x && 0 <= diff.y && size.width >= diff.x && size.height >= diff.y
     }
     
-    func generateImageCoordinates(rect: NSRect) -> [(Int, Int)] {
+    func generateImageCoordinates(_ rect: NSRect) -> [(Int, Int)] {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         let imageOriginX = Int(origin.x * maxDim - rect.origin.x), imageOriginY = Int(origin.y * maxDim - rect.origin.y)
@@ -405,7 +424,7 @@ struct AnnotationRectangle: Annotation {
         return ret
     }
     
-    func generateImageDescription(rect: NSRect) -> String {
+    func generateImageDescription(_ rect: NSRect) -> String {
         // scale everything according to the maximum dimension
         let maxDim = max(rect.size.width, rect.size.height)
         
@@ -416,8 +435,8 @@ struct AnnotationRectangle: Annotation {
         return "Rectangle; origin = (\(imageOriginX), \(imageOriginY)); size = (\(imageSizeWidth), \(imageSizeHeight))"
     }
     
-    func toDictionary() -> [String: AnyObject] {
-        var ret = [String: AnyObject]()
+    func toDictionary() -> [String: Any] {
+        var ret = [String: Any]()
         ret["Id"] = id
         ret["Name"] = name
         ret["ColorRed"] = color.redComponent

@@ -9,31 +9,31 @@
 import Foundation
 
 enum EquationOperator: CustomStringConvertible {
-    case BooleanAnd
-    case BooleanOr
-    case CompareEqual
-    case CompareGreaterThan
-    case CompareGreaterThanOrEqual
-    case CompareLessThan
-    case CompareLessThanOrEqual
-    case ArithmeticMultiply
-    case ArithmeticDivide
-    case ArithmeticAdd
-    case ArithmeticSubtract
+    case booleanAnd
+    case booleanOr
+    case compareEqual
+    case compareGreaterThan
+    case compareGreaterThanOrEqual
+    case compareLessThan
+    case compareLessThanOrEqual
+    case arithmeticMultiply
+    case arithmeticDivide
+    case arithmeticAdd
+    case arithmeticSubtract
     
     init?(fromString s: String) {
-        switch s.lowercaseString {
-        case "&&": self = .BooleanAnd
-        case "||": self = .BooleanOr
-        case "==", "=": self = .CompareEqual
-        case ">": self = .CompareGreaterThan
-        case "<": self = .CompareLessThan
-        case ">=", "=>", "≥": self = .CompareGreaterThanOrEqual
-        case "<=", "=<", "≤": self = .CompareLessThanOrEqual
-        case "*", "×": self = .ArithmeticMultiply
-        case "/", "÷": self = .ArithmeticDivide
-        case "+": self = .ArithmeticAdd
-        case "-": self = .ArithmeticSubtract
+        switch s.lowercased() {
+        case "&&": self = .booleanAnd
+        case "||": self = .booleanOr
+        case "==", "=": self = .compareEqual
+        case ">": self = .compareGreaterThan
+        case "<": self = .compareLessThan
+        case ">=", "=>", "≥": self = .compareGreaterThanOrEqual
+        case "<=", "=<", "≤": self = .compareLessThanOrEqual
+        case "*", "×": self = .arithmeticMultiply
+        case "/", "÷": self = .arithmeticDivide
+        case "+": self = .arithmeticAdd
+        case "-": self = .arithmeticSubtract
         default: return nil
         }
     }
@@ -41,17 +41,17 @@ enum EquationOperator: CustomStringConvertible {
     var description: String {
         get {
             switch self {
-            case .BooleanAnd: return "&&"
-            case .BooleanOr: return "||"
-            case .CompareEqual: return "="
-            case .CompareGreaterThan: return ">"
-            case .CompareGreaterThanOrEqual: return "≥"
-            case .CompareLessThan: return "<"
-            case .CompareLessThanOrEqual: return "≤"
-            case .ArithmeticMultiply: return "×"
-            case .ArithmeticDivide: return "÷"
-            case .ArithmeticAdd: return "+"
-            case .ArithmeticSubtract: return "-"
+            case .booleanAnd: return "&&"
+            case .booleanOr: return "||"
+            case .compareEqual: return "="
+            case .compareGreaterThan: return ">"
+            case .compareGreaterThanOrEqual: return "≥"
+            case .compareLessThan: return "<"
+            case .compareLessThanOrEqual: return "≤"
+            case .arithmeticMultiply: return "×"
+            case .arithmeticDivide: return "÷"
+            case .arithmeticAdd: return "+"
+            case .arithmeticSubtract: return "-"
             }
         }
     }
@@ -62,13 +62,13 @@ enum EquationOperator: CustomStringConvertible {
     var precedence: Int {
         get {
             switch self {
-            case .BooleanAnd, .BooleanOr:
+            case .booleanAnd, .booleanOr:
                 return 10
-            case .CompareEqual, .CompareGreaterThan, .CompareGreaterThanOrEqual, .CompareLessThan, .CompareLessThanOrEqual:
+            case .compareEqual, .compareGreaterThan, .compareGreaterThanOrEqual, .compareLessThan, .compareLessThanOrEqual:
                 return 20
-            case .ArithmeticAdd, .ArithmeticSubtract:
+            case .arithmeticAdd, .arithmeticSubtract:
                 return 30
-            case .ArithmeticMultiply, .ArithmeticDivide:
+            case .arithmeticMultiply, .arithmeticDivide:
                 return 40
             }
         }
@@ -80,7 +80,7 @@ enum EquationOperator: CustomStringConvertible {
     var leftAssociative: Bool {
         get {
             switch self {
-            case .ArithmeticAdd, .ArithmeticSubtract, .ArithmeticMultiply, .ArithmeticDivide:
+            case .arithmeticAdd, .arithmeticSubtract, .arithmeticMultiply, .arithmeticDivide:
                 return true
             default:
                 return false
@@ -88,10 +88,10 @@ enum EquationOperator: CustomStringConvertible {
         }
     }
     
-    func evaluate(lh: EquationElement, _ rh: EquationElement, placeholders: [String: Float]) -> Float {
+    func evaluate(_ lh: EquationElement, _ rh: EquationElement, placeholders: [String: Float]) -> Float {
         // lazy evaluation
         switch self {
-        case .BooleanAnd:
+        case .booleanAnd:
             if 0.0 >= lh.evaluate(placeholders) {
                 return -1.0
             }
@@ -99,7 +99,7 @@ enum EquationOperator: CustomStringConvertible {
                 return -1.0
             }
             return 1.0
-        case .BooleanOr:
+        case .booleanOr:
             if 0.0 < lh.evaluate(placeholders) {
                 return 1.0
             }
@@ -115,26 +115,26 @@ enum EquationOperator: CustomStringConvertible {
         let right = rh.evaluate(placeholders)
         
         switch self {
-        case .ArithmeticAdd: return left + right
-        case .ArithmeticDivide:
+        case .arithmeticAdd: return left + right
+        case .arithmeticDivide:
             if right != 0 {
                 return left / right
             }
             return Float.infinity
-        case .ArithmeticMultiply: return left * right
-        case .ArithmeticSubtract: return left - right
-        case .CompareEqual: return left == right ? 1.0 : -1.0
-        case .CompareGreaterThan: return left > right ? 1.0 : -1.0
-        case .CompareGreaterThanOrEqual: return left >= right ? 1.0 : -1.0
-        case .CompareLessThan: return left < right ? 1.0 : -1.0
-        case .CompareLessThanOrEqual: return left <= right ? 1.0 : -1.0
-        case .BooleanAnd, .BooleanOr: return -1.0 // should never be reached
+        case .arithmeticMultiply: return left * right
+        case .arithmeticSubtract: return left - right
+        case .compareEqual: return left == right ? 1.0 : -1.0
+        case .compareGreaterThan: return left > right ? 1.0 : -1.0
+        case .compareGreaterThanOrEqual: return left >= right ? 1.0 : -1.0
+        case .compareLessThan: return left < right ? 1.0 : -1.0
+        case .compareLessThanOrEqual: return left <= right ? 1.0 : -1.0
+        case .booleanAnd, .booleanOr: return -1.0 // should never be reached
         }
     }
 }
 
 protocol EquationElement: CustomStringConvertible {
-    func evaluate(placeholders: [String: Float]) -> Float
+    func evaluate(_ placeholders: [String: Float]) -> Float
     func simplify() -> EquationElement
 }
 
@@ -155,7 +155,7 @@ class EquationOperatorTriplet: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Float]) -> Float {
+    func evaluate(_ placeholders: [String: Float]) -> Float {
         return op.evaluate(lhe, rhe, placeholders: placeholders)
     }
     
@@ -182,7 +182,7 @@ class EquationNumber: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Float]) -> Float {
+    func evaluate(_ placeholders: [String: Float]) -> Float {
         return value
     }
     
@@ -204,7 +204,7 @@ class EquationPlaceholder: EquationElement {
         }
     }
     
-    func evaluate(placeholders: [String: Float]) -> Float {
+    func evaluate(_ placeholders: [String: Float]) -> Float {
         if let v = placeholders[name] {
             return v
         }

@@ -11,21 +11,23 @@
 		D8013F9A1B4037870053F452 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8013F991B4037870053F452 /* ViewController.swift */; };
 		D8013F9C1B4037870053F452 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D8013F9B1B4037870053F452 /* Images.xcassets */; };
 		D8013F9F1B4037870053F452 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8013F9D1B4037870053F452 /* Main.storyboard */; };
-		D8013FAB1B4037870053F452 /* VideoCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */; };
 		D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9311B67DA3F000954DF /* EquationParser.swift */; };
 		D801C9361B67E19A000954DF /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D801C9341B67DA62000954DF /* Equation.swift */; };
+		D8057A161C712BF50022E8A3 /* PreferencesTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */; };
+		D81710B91C8160F10023E3D3 /* VideoCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81710B81C8160F10023E3D3 /* VideoCaptureTests.swift */; };
+		D81710C11C8161050023E3D3 /* ArduinoIOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81710C01C8161050023E3D3 /* ArduinoIOTests.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
-		D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF0351B6FE05300B59532 /* CrashReporter.framework */; };
-		D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
 		D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D860DEE21C0A768B0043203F /* Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = D860DEE11C0A768B0043203F /* Time.swift */; };
 		D87DB6C31B45958B00131082 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87DB6C21B45958B00131082 /* Annotations.swift */; };
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
 		D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */; };
-		D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A4C7411B59966E0030B756 /* VideoControl.swift */; };
+		D8A44EC11C6B96AC00DD8058 /* PreferencesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A44EBF1C6B96AC00DD8058 /* PreferencesViewController.swift */; };
+		D8A4C7421B59966E0030B756 /* CaptureControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A4C7411B59966E0030B756 /* CaptureControl.swift */; };
 		D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */; };
 		D8C20BCC1B4C01E50006ED7D /* AnnotableViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */; };
 		D8C20BCF1B4C28200006ED7D /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D8C20BCE1B4C28200006ED7D /* Icon.icns */; };
@@ -34,11 +36,12 @@
 		D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0A1B458E250052F4C7 /* Preferences.swift */; };
 		D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E0D1B45904E0052F4C7 /* Common.swift */; };
 		D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E48E4A1B4593ED0052F4C7 /* Document.swift */; };
+		D8EDDB461BD8593F00EEA708 /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; };
 		D8F8E6791B66B429004493D5 /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F8E6781B66B429004493D5 /* Regex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		D8013FA51B4037870053F452 /* PBXContainerItemProxy */ = {
+		D81710BB1C8160F10023E3D3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D8013F8A1B4037870053F452 /* Project object */;
 			proxyType = 1;
@@ -51,6 +54,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 9DCA89121A2BB106009285EB;
 			remoteInfo = ORSSerial;
+		};
+		D8CA280E1BB48037000EDAF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D8C386B81B441AD600DE70EA /* ORSSerialPort.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9D7472131B6D7767002D8B10;
+			remoteInfo = "ORSSerialPort Tests";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -75,22 +85,25 @@
 		D8013F991B4037870053F452 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		D8013F9B1B4037870053F452 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		D8013F9E1B4037870053F452 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		D8013FA41B4037870053F452 /* VideoCaptureTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoCaptureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D8013FA91B4037870053F452 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCaptureTests.swift; sourceTree = "<group>"; };
 		D801C9311B67DA3F000954DF /* EquationParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquationParser.swift; sourceTree = "<group>"; };
 		D801C9341B67DA62000954DF /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
+		D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesTabViewController.swift; sourceTree = "<group>"; };
+		D81710B61C8160F00023E3D3 /* VideoCaptureTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoCaptureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D81710B81C8160F10023E3D3 /* VideoCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCaptureTests.swift; sourceTree = "<group>"; };
+		D81710BA1C8160F10023E3D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D81710C01C8161050023E3D3 /* ArduinoIOTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIOTests.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		D83CF0351B6FE05300B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = /Users/nathan/Dropbox/Development/VideoCaptureMac/CrashReporter.framework; sourceTree = "<absolute>"; };
 		D83CF03A1B6FE15900B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = Frameworks/CrashReporter.framework; sourceTree = "<group>"; };
 		D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoCapture-Bridging-Header.h"; sourceTree = "<group>"; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
 		D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorSwatchCell.swift; sourceTree = "<group>"; };
+		D860DEE11C0A768B0043203F /* Time.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Time.swift; sourceTree = "<group>"; };
 		D87DB6C21B45958B00131082 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
 		D8875E861B40770700270CE0 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		D8875E881B40776100270CE0 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D8875E8A1B40B94300270CE0 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		D8A4C7411B59966E0030B756 /* VideoControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoControl.swift; sourceTree = "<group>"; };
+		D8A44EBF1C6B96AC00DD8058 /* PreferencesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesViewController.swift; sourceTree = "<group>"; };
+		D8A4C7411B59966E0030B756 /* CaptureControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureControl.swift; sourceTree = "<group>"; };
 		D8B715B61B6FC13F008F76D8 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AnnotableViewer.xib; sourceTree = "<group>"; };
 		D8C20BCE1B4C28200006ED7D /* Icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Icon.icns; sourceTree = "<group>"; };
@@ -107,8 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D83CF0361B6FE05300B59532 /* CrashReporter.framework in Frameworks */,
-				D83CF03C1B6FE18900B59532 /* CrashReporter.framework in Frameworks */,
+				D8EDDB461BD8593F00EEA708 /* CrashReporter.framework in Frameworks */,
 				D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */,
 				D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */,
 				D8875E8B1B40B94300270CE0 /* CoreGraphics.framework in Frameworks */,
@@ -118,7 +130,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8013FA11B4037870053F452 /* Frameworks */ = {
+		D81710B31C8160F00023E3D3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -140,7 +152,7 @@
 				D827A5F61B40395900C6F4B6 /* AVFoundation.framework */,
 				D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */,
 				D8013F941B4037870053F452 /* VideoCapture */,
-				D8013FA71B4037870053F452 /* VideoCaptureTests */,
+				D81710B71C8160F10023E3D3 /* VideoCaptureTests */,
 				D8013F931B4037870053F452 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -149,7 +161,7 @@
 			isa = PBXGroup;
 			children = (
 				D8013F921B4037870053F452 /* Video Capture.app */,
-				D8013FA41B4037870053F452 /* VideoCaptureTests.xctest */,
+				D81710B61C8160F00023E3D3 /* VideoCaptureTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -161,15 +173,18 @@
 				D87DB6C21B45958B00131082 /* Annotations.swift */,
 				D8013F971B4037870053F452 /* AppDelegate.swift */,
 				D8C386BF1B4428B900DE70EA /* ArduinoIO.swift */,
+				D8A4C7411B59966E0030B756 /* CaptureControl.swift */,
 				D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */,
 				D8E48E0D1B45904E0052F4C7 /* Common.swift */,
 				D801C9341B67DA62000954DF /* Equation.swift */,
 				D801C9311B67DA3F000954DF /* EquationParser.swift */,
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
+				D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */,
+				D8A44EBF1C6B96AC00DD8058 /* PreferencesViewController.swift */,
+				D860DEE11C0A768B0043203F /* Time.swift */,
 				D8F8E6781B66B429004493D5 /* Regex.swift */,
 				D8013F991B4037870053F452 /* ViewController.swift */,
-				D8A4C7411B59966E0030B756 /* VideoControl.swift */,
 				D8C20BCB1B4C01E50006ED7D /* AnnotableViewer.xib */,
 				D8013F9D1B4037870053F452 /* Main.storyboard */,
 				D8C20BCE1B4C28200006ED7D /* Icon.icns */,
@@ -187,27 +202,21 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		D8013FA71B4037870053F452 /* VideoCaptureTests */ = {
+		D81710B71C8160F10023E3D3 /* VideoCaptureTests */ = {
 			isa = PBXGroup;
 			children = (
-				D8013FAA1B4037870053F452 /* VideoCaptureTests.swift */,
-				D8013FA81B4037870053F452 /* Supporting Files */,
+				D81710C01C8161050023E3D3 /* ArduinoIOTests.swift */,
+				D81710B81C8160F10023E3D3 /* VideoCaptureTests.swift */,
+				D81710BA1C8160F10023E3D3 /* Info.plist */,
 			);
 			path = VideoCaptureTests;
-			sourceTree = "<group>";
-		};
-		D8013FA81B4037870053F452 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				D8013FA91B4037870053F452 /* Info.plist */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		D8C386B91B441AD600DE70EA /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				D8C386BD1B441AD600DE70EA /* ORSSerial.framework */,
+				D8CA280F1BB48037000EDAF8 /* ORSSerialPort Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -220,6 +229,7 @@
 			buildConfigurationList = D8013FAE1B4037870053F452 /* Build configuration list for PBXNativeTarget "VideoCapture" */;
 			buildPhases = (
 				D8013F8E1B4037870053F452 /* Sources */,
+				D8D7F6A11BB57F0800BBE4A7 /* ShellScript */,
 				D8013F8F1B4037870053F452 /* Frameworks */,
 				D8013F901B4037870053F452 /* Resources */,
 				D856F6A31B4AEAAB00A75458 /* CopyFiles */,
@@ -233,22 +243,22 @@
 			productReference = D8013F921B4037870053F452 /* Video Capture.app */;
 			productType = "com.apple.product-type.application";
 		};
-		D8013FA31B4037870053F452 /* VideoCaptureTests */ = {
+		D81710B51C8160F00023E3D3 /* VideoCaptureTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D8013FB11B4037870053F452 /* Build configuration list for PBXNativeTarget "VideoCaptureTests" */;
+			buildConfigurationList = D81710BD1C8160F10023E3D3 /* Build configuration list for PBXNativeTarget "VideoCaptureTests" */;
 			buildPhases = (
-				D8013FA01B4037870053F452 /* Sources */,
-				D8013FA11B4037870053F452 /* Frameworks */,
-				D8013FA21B4037870053F452 /* Resources */,
+				D81710B21C8160F00023E3D3 /* Sources */,
+				D81710B31C8160F00023E3D3 /* Frameworks */,
+				D81710B41C8160F00023E3D3 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D8013FA61B4037870053F452 /* PBXTargetDependency */,
+				D81710BC1C8160F10023E3D3 /* PBXTargetDependency */,
 			);
 			name = VideoCaptureTests;
 			productName = VideoCaptureTests;
-			productReference = D8013FA41B4037870053F452 /* VideoCaptureTests.xctest */;
+			productReference = D81710B61C8160F00023E3D3 /* VideoCaptureTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -257,16 +267,18 @@
 		D8013F8A1B4037870053F452 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0700;
+				LastSwiftUpdateCheck = 0720;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = GardnerLab;
 				TargetAttributes = {
 					D8013F911B4037870053F452 = {
 						CreatedOnToolsVersion = 6.3.2;
 						DevelopmentTeam = WRZPP65FJN;
+						LastSwiftMigration = 0800;
 					};
-					D8013FA31B4037870053F452 = {
-						CreatedOnToolsVersion = 6.3.2;
+					D81710B51C8160F00023E3D3 = {
+						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
 						TestTargetID = D8013F911B4037870053F452;
 					};
 				};
@@ -291,7 +303,7 @@
 			projectRoot = "";
 			targets = (
 				D8013F911B4037870053F452 /* VideoCapture */,
-				D8013FA31B4037870053F452 /* VideoCaptureTests */,
+				D81710B51C8160F00023E3D3 /* VideoCaptureTests */,
 			);
 		};
 /* End PBXProject section */
@@ -302,6 +314,13 @@
 			fileType = wrapper.framework;
 			path = ORSSerial.framework;
 			remoteRef = D8C386BC1B441AD600DE70EA /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D8CA280F1BB48037000EDAF8 /* ORSSerialPort Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "ORSSerialPort Tests.xctest";
+			remoteRef = D8CA280E1BB48037000EDAF8 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -318,7 +337,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8013FA21B4037870053F452 /* Resources */ = {
+		D81710B41C8160F00023E3D3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -326,6 +345,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D8D7F6A11BB57F0800BBE4A7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd Frameworks/CrashReporter.framework\nln -f -s Versions/Current/CrashReporter CrashReporter";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D8013F8E1B4037870053F452 /* Sources */ = {
@@ -336,33 +371,37 @@
 				D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */,
 				D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */,
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
+				D8A44EC11C6B96AC00DD8058 /* PreferencesViewController.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
 				D8E48E0B1B458E250052F4C7 /* Preferences.swift in Sources */,
 				D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */,
-				D8A4C7421B59966E0030B756 /* VideoControl.swift in Sources */,
+				D8A4C7421B59966E0030B756 /* CaptureControl.swift in Sources */,
+				D860DEE21C0A768B0043203F /* Time.swift in Sources */,
 				D8013F981B4037870053F452 /* AppDelegate.swift in Sources */,
 				D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */,
 				D8E48E0E1B45904E0052F4C7 /* Common.swift in Sources */,
+				D8057A161C712BF50022E8A3 /* PreferencesTabViewController.swift in Sources */,
 				D87DB6C31B45958B00131082 /* Annotations.swift in Sources */,
 				D8F8E6791B66B429004493D5 /* Regex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8013FA01B4037870053F452 /* Sources */ = {
+		D81710B21C8160F00023E3D3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8013FAB1B4037870053F452 /* VideoCaptureTests.swift in Sources */,
+				D81710C11C8161050023E3D3 /* ArduinoIOTests.swift in Sources */,
+				D81710B91C8160F10023E3D3 /* VideoCaptureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D8013FA61B4037870053F452 /* PBXTargetDependency */ = {
+		D81710BC1C8160F10023E3D3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D8013F911B4037870053F452 /* VideoCapture */;
-			targetProxy = D8013FA51B4037870053F452 /* PBXContainerItemProxy */;
+			targetProxy = D81710BB1C8160F10023E3D3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -391,8 +430,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -436,8 +477,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -464,7 +507,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -480,6 +523,7 @@
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -488,7 +532,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -505,44 +549,42 @@
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
-		D8013FB21B4037870053F452 /* Debug */ = {
+		D81710BE1C8160F10023E3D3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCaptureTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.MaxMo.VideoCaptureTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VideoCapture.app/Contents/MacOS/VideoCapture";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Video Capture.app/Contents/MacOS/Video Capture";
 			};
 			name = Debug;
 		};
-		D8013FB31B4037870053F452 /* Release */ = {
+		D81710BF1C8160F10023E3D3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCaptureTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "edu.GardnerLab.$(PRODUCT_NAME:rfc1034identifier)";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.MaxMo.VideoCaptureTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VideoCapture.app/Contents/MacOS/VideoCapture";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Video Capture.app/Contents/MacOS/Video Capture";
 			};
 			name = Release;
 		};
@@ -567,11 +609,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D8013FB11B4037870053F452 /* Build configuration list for PBXNativeTarget "VideoCaptureTests" */ = {
+		D81710BD1C8160F10023E3D3 /* Build configuration list for PBXNativeTarget "VideoCaptureTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D8013FB21B4037870053F452 /* Debug */,
-				D8013FB31B4037870053F452 /* Release */,
+				D81710BE1C8160F10023E3D3 /* Debug */,
+				D81710BF1C8160F10023E3D3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

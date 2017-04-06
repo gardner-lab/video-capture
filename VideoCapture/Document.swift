@@ -41,7 +41,7 @@ class Document : NSDocument {
         // Add your subclass-specific initialization here.
     }
     
-    override func windowControllerDidLoadNib(aController: NSWindowController) {
+    override func windowControllerDidLoadNib(_ aController: NSWindowController) {
         super.windowControllerDidLoadNib(aController)
         // Add any code here that needs to be executed once the windowController has loaded the document's window.
     }
@@ -53,38 +53,38 @@ class Document : NSDocument {
     override func makeWindowControllers() {
         // Returns the Storyboard that contains your Document window.
         let storyboard = NSStoryboard(name: "Main", bundle: nil)
-        let windowController = storyboard.instantiateControllerWithIdentifier("Document Window Controller") as! NSWindowController
+        let windowController = storyboard.instantiateController(withIdentifier: "Document Window Controller") as! NSWindowController
         self.addWindowController(windowController)
     }
     
-    override func dataOfType(typeName: String) throws -> NSData {
+    override func data(ofType typeName: String) throws -> Data {
         // only handle one type
         guard "edu.gardner.video-session" == typeName else {
             throw NSError(domain: NSOSStatusErrorDomain, code: writErr, userInfo: nil) // unimpErr
         }
         
         var dict = [String: AnyObject]()
-        dict["Version"] = 1
-        dict["Name"] = name
-        dict["DeviceVideo"] = devVideo
-        dict["DeviceAudio"] = devAudio
-        dict["DeviceSerial"] = devSerial
-        dict["FeedbackTrigger"] = feedbackTrigger
-        dict["OuputDirectory"] = outputDirectory
-        dict["LEDBrightness"] = Int(ledBrightness)
-        dict["Annotations"] = listAnnotations.map {
-            a -> [String: AnyObject] in
+        dict["Version"] = 1 as AnyObject
+        dict["Name"] = name as AnyObject
+        dict["DeviceVideo"] = devVideo as AnyObject
+        dict["DeviceAudio"] = devAudio as AnyObject
+        dict["DeviceSerial"] = devSerial as AnyObject
+        dict["FeedbackTrigger"] = feedbackTrigger as AnyObject
+        dict["OuputDirectory"] = outputDirectory as AnyObject
+        dict["LEDBrightness"] = Int(ledBrightness) as AnyObject
+        dict["Annotations"] = listAnnotations.map({
+            a -> [String: Any] in
             var ret = a.toDictionary()
             for (name, type) in self.annotationTypes {
-                if String(a.dynamicType) == String(type) {
-                    ret["Type"] = name
+                if String(describing: type(of: a)) == String(describing: type) {
+                    ret["Type"] = name as AnyObject
                 }
             }
             return ret
-        }
+        })  as AnyObject
         
         do {
-            let data = try NSPropertyListSerialization.dataWithPropertyList(dict, format: .BinaryFormat_v1_0, options: 0)
+            let data = try PropertyListSerialization.data(fromPropertyList: dict, format: .binary, options: 0)
             return data
         }
         catch {
@@ -93,16 +93,16 @@ class Document : NSDocument {
         }
     }
     
-    override func readFromData(data: NSData, ofType typeName: String) throws {
+    override func read(from data: Data, ofType typeName: String) throws {
         // only handle one type
         guard "edu.gardner.video-session" == typeName else {
             throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil) // unimpErr
         }
         
         // read dictionary
-        let rawData: AnyObject
+        let rawData: Any
         do {
-            rawData = try NSPropertyListSerialization.propertyListWithData(data, options: NSPropertyListReadOptions.Immutable, format: nil)
+            rawData = try PropertyListSerialization.propertyList(from: data, options: PropertyListSerialization.MutabilityOptions(), format: nil)
         }
         catch {
             DLog("READ ERROR: deserialization \(error)")
@@ -118,7 +118,7 @@ class Document : NSDocument {
         }
         
         // check version flag
-        guard let ver = dict["Version"] where (ver as? Int) == 1 else {
+        guard let ver = dict["Version"] , (ver as? Int) == 1 else {
             DLog("READ ERROR: version check failed")
             
             throw NSError(domain: NSOSStatusErrorDomain, code: readErr, userInfo: nil)

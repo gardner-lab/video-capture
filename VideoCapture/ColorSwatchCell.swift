@@ -8,12 +8,12 @@ import Cocoa
 
 /// A simple cell that displays a color.
 class ColorSwatchCell: NSCell {
-    override func drawWithFrame(cellFrame: NSRect, inView controlView: NSView) {
-        super.drawWithFrame(cellFrame, inView: controlView)
+    override func draw(withFrame cellFrame: NSRect, in controlView: NSView) {
+        super.draw(withFrame: cellFrame, in: controlView)
         
         // Drawing code here.
-        if let obj = self.objectValue where obj is NSColor {
-            obj.set()
+        if let obj = self.objectValue, let color = obj as? NSColor {
+            color.set()
             NSRectFill(cellFrame)
         }
     }

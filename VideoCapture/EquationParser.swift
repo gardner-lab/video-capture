@@ -10,86 +10,86 @@ import Foundation
 
 /// The equation tokens that are used to construct the equation element tree.
 private enum EquationToken: CustomStringConvertible {
-    case Whitespace
-    case ParenthesisOpen
-    case ParenthesisClose
-    case Number(s: String)
-    case Placeholder(s: String)
-    case Operator(s: String)
+    case whitespace
+    case parenthesisOpen
+    case parenthesisClose
+    case number(s: String)
+    case placeholder(s: String)
+    case `operator`(s: String)
     
     init?(fromCharacter c: Character, after lastToken: EquationToken?) {
         switch c {
-        case "(": self = .ParenthesisOpen
-        case ")": self = .ParenthesisClose
-        case "R": self = .Placeholder(s: String(c))
-        case ".", "0"..."9": self = .Number(s: String(c))
+        case "(": self = .parenthesisOpen
+        case ")": self = .parenthesisClose
+        case "R": self = .placeholder(s: String(c))
+        case ".", "0"..."9": self = .number(s: String(c))
         case "-":
             // only ambigious symbol, can be operator or can be number
             // yes, yes, a lexxer would be better. but this works
             if let token = lastToken {
                 switch token {
-                case .Number(_), .Placeholder(_), .ParenthesisClose: self = .Operator(s: String(c))
-                case .Operator(_), .ParenthesisOpen: self = .Number(s: String(c))
-                case .Whitespace: self = .Number(s: String(c)) // should never be called, since whitespace is ignored
+                case .number(_), .placeholder(_), .parenthesisClose: self = .operator(s: String(c))
+                case .operator(_), .parenthesisOpen: self = .number(s: String(c))
+                case .whitespace: self = .number(s: String(c)) // should never be called, since whitespace is ignored
                 }
             }
             else {
                 // no prior token, must be part of number
-                self = .Number(s: String(c))
+                self = .number(s: String(c))
             }
-        case " ", "\t","\r", "\n": self = .Whitespace
-        default: self = .Operator(s: String(c))
+        case " ", "\t","\r", "\n": self = .whitespace
+        default: self = .operator(s: String(c))
         }
     }
     
     var description: String {
         get {
             switch self {
-            case .Whitespace: return " "
-            case .ParenthesisOpen: return "("
-            case .ParenthesisClose: return ")"
-            case .Number(let s): return s
-            case .Placeholder(let s): return s
-            case .Operator(let s): return s
+            case .whitespace: return " "
+            case .parenthesisOpen: return "("
+            case .parenthesisClose: return ")"
+            case .number(let s): return s
+            case .placeholder(let s): return s
+            case .operator(let s): return s
             }
         }
     }
     
-    mutating func matchCharacter(c: Character) -> Bool {
+    mutating func matchCharacter(_ c: Character) -> Bool {
         switch self {
-        case .Whitespace:
+        case .whitespace:
             switch c {
             case " ", "\t", "\r", "\n": return true
             default: return false
             }
-        case .ParenthesisClose, .ParenthesisOpen: return false
-        case .Number(let cur):
+        case .parenthesisClose, .parenthesisOpen: return false
+        case .number(let cur):
             switch c {
             case ".", "0"..."9":
-                self = .Number(s: cur + String(c))
+                self = .number(s: cur + String(c))
                 return true
             default:
                 return false
             }
-        case .Placeholder(let cur):
+        case .placeholder(let cur):
             let new = cur + String(c)
             let re = Regex(pattern: "^R(|O(|I[0-9]*))$")
             if re.match(new) {
-                self = .Placeholder(s: new)
+                self = .placeholder(s: new)
                 return true
             }
             return false
-        case .Operator(let cur):
+        case .operator(let cur):
             // white space
-            let ws = NSCharacterSet.whitespaceCharacterSet()
-            if ws.characterIsMember(String(c).utf16.first!) {
+            let ws = CharacterSet.whitespaces
+            if ws.contains(UnicodeScalar(String(c).utf16.first!)!) {
                 return false
             }
             
             // validate new combination is an operator
             let new = cur + String(c)
             if let _ = EquationOperator(fromString: new) {
-                self = .Operator(s: new)
+                self = .operator(s: new)
                 return true
             }
             
@@ -99,24 +99,24 @@ private enum EquationToken: CustomStringConvertible {
             }
             
             // assume it is part of the operator
-            self = .Operator(s: new)
+            self = .operator(s: new)
             return true
         }
     }
     
     func isValid() -> Bool {
         switch self {
-        case .Whitespace: return true
-        case .ParenthesisClose, .ParenthesisOpen: return true
-        case .Number(let s):
+        case .whitespace: return true
+        case .parenthesisClose, .parenthesisOpen: return true
+        case .number(let s):
             if let _ = Float(s) {
                 return true
             }
             return false
-        case .Placeholder(let s):
+        case .placeholder(let s):
             let re = Regex(pattern: "^ROI[0-9]+$")
             return re.match(s)
-        case .Operator(let s):
+        case .operator(let s):
             if let _ = EquationOperator(fromString: s) {
                 return true
             }
@@ -126,37 +126,37 @@ private enum EquationToken: CustomStringConvertible {
     
     func isIgnored() -> Bool {
         switch self {
-        case .Whitespace: return true
+        case .whitespace: return true
         default: return false
         }
     }
 }
 
-enum EquationError : ErrorType, CustomStringConvertible {
-    case EmptyEquation
-    case MissingToken
-    case InvalidToken(token: String)
-    case UnexpectedToken(token: String)
-    case NoOperator(phrase: String)
-    case MismatchedParentheses
-    case TooDeep
+enum EquationError : Error, CustomStringConvertible {
+    case emptyEquation
+    case missingToken
+    case invalidToken(token: String)
+    case unexpectedToken(token: String)
+    case noOperator(phrase: String)
+    case mismatchedParentheses
+    case tooDeep
     
     var description: String {
         get {
             switch self {
-            case .EmptyEquation: return "The equation is empty or has an empty parenthetical."
-            case .MissingToken: return "The equation is malformed. There is a missing placeholder or number."
-            case .InvalidToken(let t): return "The equation contains an invalid token: \(t)."
-            case .UnexpectedToken(let t): return "The token \(t) appears out of place in the equation."
-            case .NoOperator(let p): return "There is no operator in the equation: \(p)."
-            case .MismatchedParentheses: return "The parentheses in the equation are not balanced."
-            case .TooDeep: return "The equation is too complex (maximum parsing depth of 50)."
+            case .emptyEquation: return "The equation is empty or has an empty parenthetical."
+            case .missingToken: return "The equation is malformed. There is a missing placeholder or number."
+            case .invalidToken(let t): return "The equation contains an invalid token: \(t)."
+            case .unexpectedToken(let t): return "The token \(t) appears out of place in the equation."
+            case .noOperator(let p): return "There is no operator in the equation: \(p)."
+            case .mismatchedParentheses: return "The parentheses in the equation are not balanced."
+            case .tooDeep: return "The equation is too complex (maximum parsing depth of 50)."
             }
         }
     }
 }
 
-private func extractComponents(s: String) -> [EquationToken] {
+private func extractComponents(_ s: String) -> [EquationToken] {
     // empty
     if s.isEmpty {
         return []
@@ -195,24 +195,25 @@ private func extractComponents(s: String) -> [EquationToken] {
 }
 
 /// Returns true if the array of tokens is enclosed in a single set of parentheses. For example, (...) -> True, (...)+(...) -> False
-private func equationEnclosedInParentheses(tokens: [EquationToken]) -> Bool {
+private func equationEnclosedInParentheses(_ tokens: [EquationToken]) -> Bool {
     if tokens.count < 2 {
         return false
     }
     switch tokens[tokens.startIndex] {
-    case .ParenthesisOpen: break
+    case .parenthesisOpen: break
     default: return false
     }
     switch tokens[tokens.endIndex - 1] {
-    case .ParenthesisClose: break
+    case .parenthesisClose: break
     default: return false
     }
     var c = 0
     for i in (tokens.startIndex + 1)..<(tokens.endIndex - 1) {
         switch tokens[i] {
-        case .ParenthesisOpen: ++c
-        case .ParenthesisClose:
-            if --c < 0 {
+        case .parenthesisOpen: c += 1
+        case .parenthesisClose:
+            c -= 1
+            if c < 0 {
                 return false
             }
         default: break
@@ -221,7 +222,7 @@ private func equationEnclosedInParentheses(tokens: [EquationToken]) -> Bool {
     return true
 }
 
-func equationParse(s: String) throws -> EquationElement {
+func equationParse(_ s: String) throws -> EquationElement {
     // get a list of tokens
     let tokens = extractComponents(s).filter {
         !$0.isIgnored()
@@ -229,7 +230,7 @@ func equationParse(s: String) throws -> EquationElement {
     
     // empty
     if tokens.isEmpty {
-        throw EquationError.EmptyEquation
+        throw EquationError.emptyEquation
     }
     
     // invalid token encountered
@@ -237,36 +238,36 @@ func equationParse(s: String) throws -> EquationElement {
         !$0.isValid()
     }
     guard invalid.isEmpty else {
-        throw EquationError.InvalidToken(token: invalid.first!.description)
+        throw EquationError.invalidToken(token: invalid.first!.description)
     }
     
     // find lowest
     return try equationParseTokens(tokens, depth: 0)
 }
 
-private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> EquationElement {
+private func equationParseTokens(_ tokens: [EquationToken], depth: Int) throws -> EquationElement {
     // should always be a token
     if tokens.isEmpty {
-        throw EquationError.MissingToken
+        throw EquationError.missingToken
     }
     
     // too deep
     if depth > 50 {
-        throw EquationError.TooDeep
+        throw EquationError.tooDeep
     }
     
     // single token, easy
     if tokens.count == 1 {
         switch tokens[0] {
-        case .Number(let s):
+        case .number(let s):
             guard let v = Float(s) else {
-                throw EquationError.InvalidToken(token: s)
+                throw EquationError.invalidToken(token: s)
             }
             return EquationNumber(value: v)
-        case .Placeholder(let s):
+        case .placeholder(let s):
             return EquationPlaceholder(name: s)
         default:
-            throw EquationError.UnexpectedToken(token: tokens[0].description)
+            throw EquationError.unexpectedToken(token: tokens[0].description)
         }
     }
 
@@ -280,15 +281,16 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
     var precedence: Int = Int.max
     var oper: EquationOperator?
     var in_paren: Int = 0
-    for (i, t) in tokens.enumerate() {
+    for (i, t) in tokens.enumerated() {
         switch t {
-        case .ParenthesisOpen:
-            ++in_paren
-        case .ParenthesisClose:
-            if --in_paren < 0 {
-                throw EquationError.MismatchedParentheses
+        case .parenthesisOpen:
+            in_paren += 1
+        case .parenthesisClose:
+            in_paren -= 1
+            if in_paren < 0 {
+                throw EquationError.mismatchedParentheses
             }
-        case .Operator(let op_string) where in_paren == 0:
+        case .operator(let op_string) where in_paren == 0:
             if let op = EquationOperator(fromString: op_string) {
                 let p = op.precedence
                 if p < precedence || (p == precedence && op.leftAssociative) {
@@ -299,7 +301,7 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
             }
             else {
                 // should not happen, already filtered for valid
-                throw EquationError.InvalidToken(token: op_string)
+                throw EquationError.invalidToken(token: op_string)
             }
         default: break
         }
@@ -307,17 +309,17 @@ private func equationParseTokens(tokens: [EquationToken], depth: Int) throws -> 
     
     // unclose parenthesis
     if 0 < in_paren {
-        throw EquationError.MismatchedParentheses
+        throw EquationError.mismatchedParentheses
     }
     
     // new initial
     if oper == nil {
-        throw EquationError.NoOperator(phrase: tokens.map({ $0.description }).joinWithSeparator(""))
+        throw EquationError.noOperator(phrase: tokens.map({ $0.description }).joined(separator: ""))
     }
     
     // split tokens
     let tokensLeft = Array(tokens[tokens.startIndex..<splt])
-    let tokensRight = Array(tokens[(splt + 1)..<tokens.endIndex])
+    let tokensRight = Array(tokens[tokens.indices.suffix(from: (splt + 1))])
     
     // parse left and right
     let elLeft = try equationParseTokens(tokensLeft, depth: depth + 1)

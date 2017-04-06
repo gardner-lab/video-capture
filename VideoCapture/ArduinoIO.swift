@@ -8,86 +8,183 @@ import Foundation
 import ORSSerial
 
 let kStartupTime = 2.0
-let kTimeoutDuration: NSTimeInterval = 0.5
+let kTimeoutDuration: TimeInterval = 0.5
 
 /// The state of the arduino and serial port.
 private enum ArduinoIOState {
-    case Closed
-    case Opened
-    case WaitingToOpen // Because of potential startup time, there is an inbetween period of 2 seconds during which requests are queued.
+    case closed
+    case opened
+    case waitingToOpen // Because of potential startup time, there is an inbetween period of 2 seconds during which requests are queued.
     //case WaitingToClose
-    case Error
-    case Uninitialized
+    case error
+    case uninitialized
 }
 
 /// Request information used to handle response.
 private enum ArduinoIORequest {
-    case SketchInitialize
-    case ReadDigital(Int, (Bool?) -> Void)
-    case ReadAnalog(Int, (UInt16?) -> Void)
+    case sketchInitialize
+    case readDigital(Int, (Bool?) -> Void)
+    case readAnalog(Int, (UInt16?) -> Void)
 }
 
 /// Errors associated with input and output.
-enum ArduinoIOError: ErrorType {
-    case UnknownError
-    case UnableToOpenPath
-    case PortNotOpen
-    case InvalidPin
-    case InvalidMode // invalid pin mode
-    case InvalidValue
+enum ArduinoIOError: Error, CustomStringConvertible {
+    case unknownError
+    case unableToOpenPath
+    case portNotOpen
+    case invalidPin(Int)
+    case invalidMode // invalid pin mode
+    case invalidValue
+    
+    var description: String {
+        switch self {
+        case .unknownError: return "Unknown error"
+        case .unableToOpenPath: return "Unable to open path"
+        case .portNotOpen: return "Port not open"
+        case .invalidPin(let p): return "Invalid pin (\(p))"
+        case .invalidMode: return "Invalid mode"
+        case .invalidValue: return "Invalid value"
+        }
+    }
 }
 
 
 /// Used to track the Sketch type
 enum ArduinoIOSketch: CustomStringConvertible {
-    case Unknown
-    case IO
-    case EncoderIO
-    case ServoEncoderIO
-    case MotorShield1
-    case MotorShield2
+    case unknown
+    case io
+    case encoderIO
+    case servoEncoderIO
+    case motorShield1
+    case motorShield2
     
     var description: String {
         switch self {
-        case .Unknown: return "Unknown"
-        case .IO: return "Analog & Digital I/O (adio.pde)"
-        case .EncoderIO: return "Analog & Digital I/O + Encoder (arioe.pde)"
-        case .ServoEncoderIO: return "Analog & Digital I/O + Encoder + Servos (arioes.pde)"
-        case .MotorShield1: return "Motor Shield V1"
-        case .MotorShield2: return "Motor Shield V2"
+        case .unknown: return "Unknown"
+        case .io: return "Analog & Digital I/O (adio.pde)"
+        case .encoderIO: return "Analog & Digital I/O + Encoder (arioe.pde)"
+        case .servoEncoderIO: return "Analog & Digital I/O + Encoder + Servos (arioes.pde)"
+        case .motorShield1: return "Motor Shield V1"
+        case .motorShield2: return "Motor Shield V2"
         }
     }
 }
 
 enum ArduinoIOQueue {
-    case Request(ORSSerialRequest)
-    case Send(NSData)
+    case request(ORSSerialRequest)
+    case send(Data)
 }
 
 enum ArduinoIOPin: Int, CustomStringConvertible {
-    case Unassigned = -1
-    case Input = 0
-    case Output = 1
+    case unassigned = -1
+    case input = 0
+    case output = 1
     
     var description: String {
         switch self {
-        case .Unassigned: return "Unassigned"
-        case .Input: return "Input"
-        case .Output: return "Output"
+        case .unassigned: return "Unassigned"
+        case .input: return "Input"
+        case .output: return "Output"
         }
     }
 }
 
 enum ArduinoIODevice {
-    case Detached
-    case Attached
+    case detached
+    case attached
 }
 
 
 protocol ArduinoIODelegate: class {
     //func arduinoStateChangedFrom(oldState: ArduinoIOState, newState: ArduinoIOState)
     
-    func arduinoError(message: String, isPermanent: Bool)
+    func arduinoError(_ message: String, isPermanent: Bool)
+}
+
+///  An example of an extension of the ORSSerialPacketDescriptor that enables identifying delimited packets.
+class DelimitedSerialPacketDescriptor: ORSSerialPacketDescriptor {
+    var delimiter: Data?
+    
+    convenience init(delimiter: Data, maximumPacketLength maxPacketLength: UInt, userInfo: AnyObject?, responseEvaluator: @escaping ORSSerialPacketEvaluator) {
+        self.init(maximumPacketLength: maxPacketLength, userInfo: userInfo, responseEvaluator: responseEvaluator)
+        
+        // set delimiter
+        self.delimiter = delimiter
+    }
+    
+    convenience init(delimiterString: String, maximumPacketLength maxPacketLength: UInt, userInfo: AnyObject?, responseEvaluator: @escaping ORSSerialPacketEvaluator) {
+        self.init(maximumPacketLength: maxPacketLength, userInfo: userInfo, responseEvaluator: responseEvaluator)
+        
+        // set delimiter
+        self.delimiter = delimiterString.data(using: String.Encoding.utf8)
+    }
+    
+    private func packetMatchingExcludingFinalDelimiter(_ buffer: Data) -> Data? {
+        // only use log if delimiter is provided (should only be called if delimiter exists)
+        guard let delimiter = delimiter else {
+            return nil
+        }
+        
+        // empty buffer? potentially valid
+        if buffer.count == 0 {
+            if dataIsValidPacket(buffer) {
+                return buffer
+            }
+            return nil
+        }
+        
+        // work back from the end of the buffer
+        for i in 0...buffer.count {
+            // check for delimiter if not reading from the beginning of the buffer
+            if i < buffer.count {
+                // not enough space for the delimiter
+                if i + delimiter.count > buffer.count {
+                    continue
+                }
+                
+                // check for proceeding delimiter
+                // (could be more lenient and just check for the end of the delimiter)
+                let windowDel = buffer.subdata(in: (buffer.count - i - delimiter.count)..<(buffer.count - i))
+                
+                // does not match? continue
+                if windowDel != delimiter {
+                    continue
+                }
+            }
+            
+            // make window
+            let window = buffer.subdata(in: (buffer.count - i)..<buffer.count)
+            if dataIsValidPacket(window) {
+                return window
+            }
+        }
+        
+        return nil
+    }
+    
+    override func packetMatching(atEndOfBuffer buffer: Data?) -> Data? {
+        // only use log if delimiter is provided
+        guard let delimiter = delimiter else {
+            // otherwise inherit normal behavior
+            return super.packetMatching(atEndOfBuffer: buffer)
+        }
+        
+        // unwrap buffer
+        guard let buffer = buffer else { return nil }
+        
+        // space for delimiter
+        if buffer.count < delimiter.count {
+            return nil
+        }
+        
+        // ensure buffer ends with delimiter
+        let windowFinalDel = buffer.subdata(in: (buffer.count - delimiter.count)..<buffer.count)
+        if windowFinalDel != delimiter {
+            return nil
+        }
+        
+        return packetMatchingExcludingFinalDelimiter(buffer.subdata(in: 0..<(buffer.count - delimiter.count)))
+    }
 }
 
 /// An arduinio input output class based off of the 
@@ -107,37 +204,29 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     // is port open
-    private var state: ArduinoIOState = .Uninitialized {
+    private var state: ArduinoIOState = .uninitialized {
         didSet {
             //self.delegate?.arduinoStateChangedFrom(oldValue, newState: state)
         }
     }
     
     // sketch id
-    var sketch = ArduinoIOSketch.Unknown
+    var sketch = ArduinoIOSketch.unknown
     
     // board information
-    private var pins = [ArduinoIOPin](count: 70, repeatedValue: ArduinoIOPin.Unassigned) // 0 and 1 are invalid pins
-    private var servos = [ArduinoIODevice](count: 69, repeatedValue: ArduinoIODevice.Detached)
-    private var encoders = [ArduinoIODevice](count: 3, repeatedValue: ArduinoIODevice.Detached)
-    private var motors = [UInt8](count: 4, repeatedValue: UInt8(0))
-    private var steppers = [UInt8](count: 2, repeatedValue: UInt8(0))
+    private var pins = [ArduinoIOPin](repeating: ArduinoIOPin.unassigned, count: 70) // 0 and 1 are invalid pins
+    private var servos = [ArduinoIODevice](repeating: ArduinoIODevice.detached, count: 69)
+    private var encoders = [ArduinoIODevice](repeating: ArduinoIODevice.detached, count: 3)
+    private var motors = [UInt8](repeating: UInt8(0), count: 4)
+    private var steppers = [UInt8](repeating: UInt8(0), count: 2)
     
-    lazy private var cbEndOfRequest: ORSSerialRequestResponseEvaluator = { (d: NSData?) -> Bool in
+    lazy private var responseDescription: ORSSerialPacketDescriptor = DelimitedSerialPacketDescriptor(delimiter: "\r\n".data(using: String.Encoding.ascii)!, maximumPacketLength: 16, userInfo: nil, responseEvaluator: {
+        (d: Data?) -> Bool in
         guard let data = d else {
             return false
         }
-        if data.length < 3 {
-            return false
-        }
-        if let s = NSString(data: data, encoding: NSASCIIStringEncoding) {
-            let str = s as String
-            if str.hasSuffix("\r\n") {
-                return true
-            }
-        }
-        return false
-    }
+        return data.count > 0
+    })
     
     // used to hold requests while waiting to open
     private var pendingConnection: [ArduinoIOQueue] = []
@@ -166,42 +255,43 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             self.init(serial: port)
             return
         }
-        throw ArduinoIOError.UnableToOpenPath
+        throw ArduinoIOError.unableToOpenPath
     }
     
-    private func send(data: NSData, withRequest req: ArduinoIORequest) {
-        let num = requestInfoId++
+    private func send(_ data: Data, withRequest req: ArduinoIORequest) {
+        let num = requestInfoId
+        requestInfoId += 1
         requestInfo[num] = req
         
         // send request
-        let serialReq = ORSSerialRequest(dataToSend: data, userInfo: num as AnyObject, timeoutInterval: kTimeoutDuration, responseEvaluator: cbEndOfRequest)
+        let serialReq = ORSSerialRequest(dataToSend: data, userInfo: num as AnyObject, timeoutInterval: kTimeoutDuration, responseDescriptor: responseDescription)
         send(serialReq)
     }
     
-    private func send(req: ORSSerialRequest) {
-        if state == .Opened {
+    private func send(_ req: ORSSerialRequest) {
+        if state == .opened {
             if let serialPort = serial {
-                serialPort.sendRequest(req)
+                serialPort.send(req)
             }
         }
-        else if state == .WaitingToOpen {
-            pendingConnection.append(ArduinoIOQueue.Request(req))
+        else if state == .waitingToOpen {
+            pendingConnection.append(ArduinoIOQueue.request(req))
         }
     }
     
-    private func send(data: NSData) {
-        if state == .Opened {
+    private func send(_ data: Data) {
+        if state == .opened {
             if let serialPort = serial {
-                serialPort.sendData(data)
+                serialPort.send(data)
             }
         }
-        else if state == .WaitingToOpen {
-            pendingConnection.append(ArduinoIOQueue.Send(data))
+        else if state == .waitingToOpen {
+            pendingConnection.append(ArduinoIOQueue.send(data))
         }
     }
     
     private func open() {
-        guard state == .Uninitialized else {
+        guard state == .uninitialized else {
             return
         }
         guard let serialPort = serial else {
@@ -213,33 +303,33 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         serialPort.open()
         
         // set waiting to open state
-        state = .WaitingToOpen
+        state = .waitingToOpen
         
         // setup timer
-        NSTimer.scheduledTimerWithTimeInterval(kStartupTime, target: self, selector: "completeOpen:", userInfo: nil, repeats: false)
+        Timer.scheduledTimer(timeInterval: kStartupTime, target: self, selector: #selector(ArduinoIO.completeOpen(_:)), userInfo: nil, repeats: false)
     }
     
     /// Opening process takes 2~6 seconds. Inital requests are held until Arduino is online.
-    func completeOpen(timer: NSTimer!) {
-        guard self.state == .WaitingToOpen else {
+    func completeOpen(_ timer: Timer!) {
+        guard self.state == .waitingToOpen else {
             return
         }
         
         DLog("ARDUINO OPEN")
         
         // set state to opened
-        state = .Opened
+        state = .opened
         
         // send request to complete opening process
-        let data = "99".dataUsingEncoding(NSASCIIStringEncoding)!
-        send(data, withRequest: ArduinoIORequest.SketchInitialize)
+        let data = "99".data(using: String.Encoding.ascii)!
+        send(data, withRequest: ArduinoIORequest.sketchInitialize)
     }
     
     private func runPendingConnectionQueue() {
         guard let serialPort = serial else {
             return
         }
-        guard self.state == .Opened else {
+        guard self.state == .opened else {
             pendingConnection.removeAll()
             return
         }
@@ -248,40 +338,40 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         // clear pending requests
         for entry in pendingConnection {
             switch entry {
-            case ArduinoIOQueue.Send(let data):
-                serialPort.sendData(data)
-            case ArduinoIOQueue.Request(let req):
-                serialPort.sendRequest(req)
+            case ArduinoIOQueue.send(let data):
+                serialPort.send(data)
+            case ArduinoIOQueue.request(let req):
+                serialPort.send(req)
             }
         }
         pendingConnection.removeAll()
     }
     
     func canInteract() -> Bool {
-        return state == .Opened || state == .WaitingToOpen
+        return state == .opened || state == .waitingToOpen
     }
     
     func isOpen() -> Bool {
-        return state == .Opened
+        return state == .opened
     }
     
     func close() {
         switch state {
-        case .Closed, .Error:
+        case .closed, .error:
             return
-        case .Uninitialized:
-            state = .Closed
+        case .uninitialized:
+            state = .closed
             return
-        case .Opened:
+        case .opened:
             // leave in a good state
             for i in 2...69 {
                 do {
                     switch pins[i] {
-                    case .Unassigned: continue
-                    case .Output:
+                    case .unassigned: continue
+                    case .output:
                         try writeTo(i, digitalValue: false)
-                    case .Input:
-                        try setPinMode(i, to: ArduinoIOPin.Output)
+                    case .input:
+                        try setPinMode(i, to: ArduinoIOPin.output)
                         try writeTo(i, digitalValue: false)
                     }
                 }
@@ -292,42 +382,42 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             
             serial?.close()
             serial = nil
-            state = .Closed
+            state = .closed
             
             return
-        case .WaitingToOpen:
+        case .waitingToOpen:
             serial?.close()
             serial = nil
-            state = .Closed
+            state = .closed
             return
         }
     }
     
     // MARK: - Interface
     
-    private func isValidPin(pin: Int) -> Bool {
+    private func isValidPin(_ pin: Int) -> Bool {
         return pin >= 2 && pin <= 69
     }
     
-    func setPinMode(pin: Int, to: ArduinoIOPin) throws {
+    func setPinMode(_ pin: Int, to: ArduinoIOPin) throws {
         guard canInteract() else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         guard isValidPin(pin) else {
-            throw ArduinoIOError.InvalidPin
+            throw ArduinoIOError.invalidPin(pin)
         }
-        guard to != .Unassigned else {
-            throw ArduinoIOError.InvalidMode
+        guard to != .unassigned else {
+            throw ArduinoIOError.invalidMode
         }
         guard nil != serial else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         
         DLog("ARDUINO CONFIG \(pin): \(to)")
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [48, 97 + UInt8(pin), 48 + UInt8(to.rawValue)]
-        let data = NSData(bytes: dataBytes, length: dataBytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(dataBytes), count: dataBytes.count)
         send(data)
         
         // set the internal representation
@@ -336,145 +426,145 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         // TODO: potentially dettach servo
     }
     
-    func getPinMode(pin: Int) -> ArduinoIOPin {
+    func getPinMode(_ pin: Int) -> ArduinoIOPin {
         if pin >= 2 && pin <= 69 {
             return pins[pin]
         }
-        return .Unassigned
+        return .unassigned
     }
     
-    func writeTo(pin: Int, digitalValue: Bool) throws {
+    func writeTo(_ pin: Int, digitalValue: Bool) throws {
         guard canInteract() else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         guard isValidPin(pin) else {
-            throw ArduinoIOError.InvalidPin
+            throw ArduinoIOError.invalidPin(pin)
         }
-        guard pins[pin] == .Output else {
-            throw ArduinoIOError.InvalidMode
+        guard pins[pin] == .output else {
+            throw ArduinoIOError.invalidMode
         }
         guard nil != serial else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [50, 97 + UInt8(pin), 48 + UInt8(digitalValue ? 1 : 0)]
-        let data = NSData(bytes: dataBytes, length: dataBytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(dataBytes), count: dataBytes.count)
         send(data)
         
         DLog("ARDUINO WRITE \(pin): \(digitalValue)")
     }
     
-    func readDigitalValueFrom(pin: Int, andExecute cb: (Bool?) -> Void) throws {
+    func readDigitalValueFrom(_ pin: Int, andExecute cb: @escaping (Bool?) -> Void) throws {
         guard canInteract() else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         guard isValidPin(pin) else {
-            throw ArduinoIOError.InvalidPin
+            throw ArduinoIOError.invalidPin(pin)
         }
-        guard pins[pin] == .Input else {
-            throw ArduinoIOError.InvalidMode
+        guard pins[pin] == .input else {
+            throw ArduinoIOError.invalidMode
         }
         guard nil != serial else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [49, 97 + UInt8(pin)]
-        let data = NSData(bytes: dataBytes, length: dataBytes.count)
-        send(data, withRequest: ArduinoIORequest.ReadDigital(pin, cb))
+        let data = Data(bytes: UnsafePointer<UInt8>(dataBytes), count: dataBytes.count)
+        send(data, withRequest: ArduinoIORequest.readDigital(pin, cb))
     }
     
-    func writeTo(pin: Int, analogValue: UInt8) throws {
+    func writeTo(_ pin: Int, analogValue: UInt8) throws {
         guard canInteract() else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         guard (pin >= 2 && pin <= 13) || (pin >= 44 && pin <= 46) else {
-            throw ArduinoIOError.InvalidPin
+            throw ArduinoIOError.invalidPin(pin)
         }
-        guard pins[pin] == .Output else {
-            throw ArduinoIOError.InvalidMode 
+        guard pins[pin] == .output else {
+            throw ArduinoIOError.invalidMode 
         }
         guard nil != serial else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [52, 97 + UInt8(pin), analogValue]
-        let data = NSData(bytes: dataBytes, length: dataBytes.count)
+        let data = Data(bytes: UnsafePointer<UInt8>(dataBytes), count: dataBytes.count)
         send(data)
         
         DLog("ARDUINO WRITE \(pin): \(analogValue)")
     }
     
-    func readAnalogValueFrom(pin: Int, andExecute cb: (UInt16?) -> Void) throws {
+    func readAnalogValueFrom(_ pin: Int, andExecute cb: @escaping (UInt16?) -> Void) throws {
         guard canInteract() else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         guard pin >= 0 && pin <= 15 else {
-            throw ArduinoIOError.InvalidPin
+            throw ArduinoIOError.invalidPin(pin)
         }
-        guard pin < 2 || pins[pin] == .Input else {
-            throw ArduinoIOError.InvalidMode
+        guard pin < 2 || pins[pin] == .input else {
+            throw ArduinoIOError.invalidMode
         }
         guard nil != serial else {
-            throw ArduinoIOError.PortNotOpen
+            throw ArduinoIOError.portNotOpen
         }
         
         // build data to change pin mode
         let dataBytes: [UInt8] = [51, 97 + UInt8(pin)]
-        let data = NSData(bytes: dataBytes, length: dataBytes.count)
-        send(data, withRequest: ArduinoIORequest.ReadAnalog(pin, cb))
+        let data = Data(bytes: UnsafePointer<UInt8>(dataBytes), count: dataBytes.count)
+        send(data, withRequest: ArduinoIORequest.readAnalog(pin, cb))
     }
     
     // MARK: - ORSSerialPortDelegate
     
-    func serialPortWasOpened(serialPort: ORSSerialPort) {
+    func serialPortWasOpened(_ serialPort: ORSSerialPort) {
         DLog("SERIAL OPENED: \(serialPort)")
     }
     
-    func serialPortWasClosed(serialPort: ORSSerialPort) {
+    func serialPortWasClosed(_ serialPort: ORSSerialPort) {
         DLog("SERIAL CLOSED: \(serialPort)")
     }
     
-    func serialPort(serialPort: ORSSerialPort, didReceiveData data: NSData) {
+    func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
         // debugging
 //        if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
 //            DLog("SERIAL \(serialPort) RECEIVED: \(string)")
 //        }
     }
     
-    func serialPort(serialPort: ORSSerialPort, didReceiveResponse responseData: NSData, toRequest request: ORSSerialRequest) {
+    func serialPort(_ serialPort: ORSSerialPort, didReceiveResponse responseData: Data, to request: ORSSerialRequest) {
         guard let info = request.userInfo, let reqId = info as? Int, let reqType = requestInfo[reqId] else {
             return
         }
         
         // remove value
-        requestInfo.removeValueForKey(reqId)
+        requestInfo.removeValue(forKey: reqId)
         
         // convert to NSString
-        guard let s = NSString(data: responseData, encoding: NSASCIIStringEncoding) else {
+        guard let s = NSString(data: responseData, encoding: String.Encoding.ascii.rawValue) else {
             return
         }
         
-        let dataAsString: String = (s as String).stringByTrimmingCharactersInSet(NSCharacterSet.newlineCharacterSet())
+        let dataAsString: String = (s as String).trimmingCharacters(in: CharacterSet.newlines)
         
         switch reqType {
-        case .SketchInitialize:
+        case .sketchInitialize:
             // get sketch identifier
             switch dataAsString {
-            case "0": sketch = .IO
-            case "1": sketch = .EncoderIO
-            case "2": sketch = .ServoEncoderIO
-            case "3": sketch = .MotorShield1
-            case "4": sketch = .MotorShield2
-            default: sketch = .Unknown
+            case "0": sketch = .io
+            case "1": sketch = .encoderIO
+            case "2": sketch = .servoEncoderIO
+            case "3": sketch = .motorShield1
+            case "4": sketch = .motorShield2
+            default: sketch = .unknown
             }
             
             // log sketch
             DLog("ARDUINO SKETCH: \(sketch)")
             
-            if sketch == .Unknown {
+            if sketch == .unknown {
                 // send to delegate
                 delegate?.arduinoError("Unknown Sketch", isPermanent: true)
                 
@@ -485,7 +575,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             // run queue
             runPendingConnectionQueue()
             
-        case .ReadDigital(let pin, let cb):
+        case .readDigital(let pin, let cb):
             DLog("ARDUINO READ \(pin): \(dataAsString)")
             switch dataAsString {
             case "0": cb(false)
@@ -493,9 +583,9 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
             default: cb(nil)
             }
         
-        case .ReadAnalog(let pin, let cb):
+        case .readAnalog(let pin, let cb):
             DLog("ARDUINO READ \(pin): \(dataAsString)")
-            if let val = Int(dataAsString) where val >= 0 && val <= 1023 {
+            if let val = Int(dataAsString), val >= 0 && val <= 1023 {
                 cb(UInt16(val))
             }
             else {
@@ -504,33 +594,33 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         }
     }
     
-    func serialPort(serialPort: ORSSerialPort, requestDidTimeout request: ORSSerialRequest) {
+    func serialPort(_ serialPort: ORSSerialPort, requestDidTimeout request: ORSSerialRequest) {
         guard let info = request.userInfo, let reqId = info as? Int, let reqType = requestInfo[reqId] else {
             return
         }
         
         // remove value
-        requestInfo.removeValueForKey(reqId)
+        requestInfo.removeValue(forKey: reqId)
         
         // log it
         DLog("ARDUINO TIMEOUT: \(reqType)")
         
         switch reqType {
-        case .SketchInitialize:
+        case .sketchInitialize:
             // send to delegate
             delegate?.arduinoError("Initialization Timeout", isPermanent: true)
             
             // close connection
             close()
             
-        case .ReadAnalog(_, let cb):
+        case .readAnalog(_, let cb):
             // send to delegate
             delegate?.arduinoError("Timeout \(reqType)", isPermanent: false)
             
             // callback with no value
             cb(nil)
             
-        case .ReadDigital(_, let cb):
+        case .readDigital(_, let cb):
             // send to delegate
             delegate?.arduinoError("Timeout \(reqType)", isPermanent: false)
             
@@ -539,10 +629,10 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         }
     }
     
-    func serialPortWasRemovedFromSystem(serialPort: ORSSerialPort) {
+    func serialPortWasRemoved(fromSystem serialPort: ORSSerialPort) {
         DLog("SERIAL \(serialPort) REMOVED")
         
-        if state == .WaitingToOpen || state == .Opened {
+        if state == .waitingToOpen || state == .opened {
             // send to delegate
             delegate?.arduinoError("Disconnected", isPermanent: true)
         }
@@ -552,7 +642,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         close()
     }
     
-    func serialPort(serialPort: ORSSerialPort, didEncounterError error: NSError) {
+    func serialPort(_ serialPort: ORSSerialPort, didEncounterError error: Error) {
         DLog("SERIAL \(serialPort) ERROR: \(error)")
         
         // send to delegate
