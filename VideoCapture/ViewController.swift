@@ -1797,7 +1797,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             in
             
             defer {
-                sender.isEnabled = true
+                // on main thread
+                DispatchQueue.main.async {
+                    sender.isEnabled = true
+                }
             }
             
             // no sample buffer?
