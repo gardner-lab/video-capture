@@ -629,7 +629,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         }
     }
     
-    func serialPortWasRemoved(fromSystem serialPort: ORSSerialPort) {
+    func serialPortWasRemovedFromSystem(_ serialPort: ORSSerialPort) {
         DLog("SERIAL \(serialPort) REMOVED")
         
         if state == .waitingToOpen || state == .opened {
