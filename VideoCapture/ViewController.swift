@@ -2093,7 +2093,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // adjust buffer
             if bytesTotal > self.bufferSize {
                 free(self.buffer)
-                self.buffer = calloc(bytesTotal, MemoryLayout<UInt8>.size)
+                self.buffer = calloc(bytesTotal, MemoryLayout<UInt8>.stride)
                 self.bufferSize = bytesTotal
             }
             
