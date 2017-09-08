@@ -134,7 +134,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             // setup new value
             if let newPreviewLayer = avPreviewLayer {
-                newPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspect
+                newPreviewLayer.videoGravity = AVLayerVideoGravity.resizeAspect
                 
                 // add it
                 if let containingView = self.previewView {
@@ -287,10 +287,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // initialize drag from table
         if let tv = tableAnnotations {
-            tv.register(forDraggedTypes: [kPasteboardROI])
+            tv.registerForDraggedTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
         }
         if let tf = tokenFeedback {
-            tf.register(forDraggedTypes: [NSPasteboardTypeString, kPasteboardROI])
+            tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
         }
         
         // hide/show toggle button
@@ -440,7 +440,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         annotableView?.isEnabled = editable
         // annotation names
         if let tv = tableAnnotations {
-            let col = tv.column(withIdentifier: "name")
+            let col = tv.column(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "name"))
             if 0 <= col {
                 tv.tableColumns[col].isEditable = editable
             }
@@ -476,17 +476,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let devices = AVCaptureDevice.devices()
         
         // find video devices
-        let devices_video = devices?.filter({
+        let devices_video = devices.filter({
             d -> Bool in
-            let dev: AVCaptureDevice = d as! AVCaptureDevice
-            return dev.hasMediaType(AVMediaTypeVideo) || dev.hasMediaType(AVMediaTypeMuxed)
+            let dev: AVCaptureDevice = d 
+            return dev.hasMediaType(AVMediaType.video) || dev.hasMediaType(AVMediaType.muxed)
         })
         
         // find the audio devices
-        let devices_audio = devices?.filter({
-            d -> Bool in
-            let dev: AVCaptureDevice = d as! AVCaptureDevice
-            return dev.hasMediaType(AVMediaTypeAudio) || dev.hasMediaType(AVMediaTypeMuxed)
+        let devices_audio = devices.filter({
+            dev -> Bool in
+            return dev.hasMediaType(AVMediaType.audio) || dev.hasMediaType(AVMediaType.muxed)
         })
         
         var newDeviceUniqueIDs = [Int: String]()
@@ -505,8 +504,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             list.removeAllItems()
             list.addItem(withTitle: "Video")
-            for d in devices_video! {
-                let dev: AVCaptureDevice = d as! AVCaptureDevice
+            for dev in devices_video {
                 let item = NSMenuItem()
                 if dev.isInUseByAnotherApplication {
                     item.title = dev.localizedName + " (in use)"
@@ -545,8 +543,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             list.removeAllItems()
             list.addItem(withTitle: "Audio")
-            for d in devices_audio! {
-                let dev: AVCaptureDevice = d as! AVCaptureDevice
+            for dev in devices_audio {
                 let item = NSMenuItem()
                 if dev.isInUseByAnotherApplication {
                     item.title = "\(dev.localizedName) (in use)"
@@ -627,11 +624,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         return nil
     }
     
-    func getDevice(_ deviceUniqueID: String, mediaTypes: [String]) -> AVCaptureDevice? {
-        let dev = AVCaptureDevice(uniqueID: deviceUniqueID)
+    func getDevice(_ deviceUniqueID: String, mediaTypes: [AVMediaType]) -> AVCaptureDevice? {
+        guard let dev = AVCaptureDevice(uniqueID: deviceUniqueID) else { return nil }
         if !mediaTypes.isEmpty {
             for mediaType in mediaTypes {
-                if (dev?.hasMediaType(mediaType))! {
+                if dev.hasMediaType(mediaType) {
                     return dev
                 }
             }
@@ -698,7 +695,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             panel.nameFieldStringValue = prefix + ".mov"
         }
         else {
-            panel.allowedFileTypes = [AVFileTypeAppleM4A]
+            panel.allowedFileTypes = [AVFileType.m4a.rawValue]
             panel.nameFieldStringValue = prefix + ".m4a"
         }
         panel.canCreateDirectories = true
@@ -784,7 +781,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // create capture session
             let session = AVCaptureSession()
             self.avSession = session
-            session.sessionPreset = AVCaptureSessionPresetHigh
+            session.sessionPreset = AVCaptureSession.Preset.high
             
             session.startRunning()
         }
@@ -829,7 +826,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let videoStill = AVCaptureStillImageOutput()
         avVideoCaptureStill = videoStill
         //videoStill.outputSettings = [AVVideoCodecKey: NSNumber(unsignedInt: kCMVideoCodecType_JPEG)]
-        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey as AnyHashable: NSNumber(value: kCVPixelFormatType_32BGRA)]
+        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(value: kCVPixelFormatType_32BGRA)]
         
         if !session.canAddOutput(videoStill) {
             DLog("Unable to add video still.")
@@ -906,8 +903,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         switch appPreferences.videoFormat {
         case .raw:
             // configure video connection with empty dictionary
-            if let con = movieOut.connection(withMediaType: AVMediaTypeVideo) {
-                let settings = NSDictionary() as! [NSObject: Any]
+            if let con = movieOut.connection(with: AVMediaType.video) {
+                let settings: [String : Any] = []
                 movieOut.setOutputSettings(settings, for: con)
             }
         case .h264:
@@ -947,7 +944,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // create file control
         if nil == avFileControl {
-            avFileControl = CaptureControl(parent: self, outputFileType: AVFileTypeAppleM4A)
+            avFileControl = CaptureControl(parent: self, outputFileType: AVFileType.m4a.rawValue)
 
         }
         
@@ -1447,7 +1444,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func disableSyncPin(_ timer: Timer!) {
+    @objc func disableSyncPin(_ timer: Timer!) {
         // turn off sync pin
         do {
             // set sync pin
@@ -1456,7 +1453,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         catch { }
     }
     
-    func monitorCheckTrigger(_ timer: Timer!) {
+    @objc func monitorCheckTrigger(_ timer: Timer!) {
         guard let arduino = ioArduino else {
             DLog("POLLING failed")
             stopMonitoring()
@@ -1581,7 +1578,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             // get device and add it
-            if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
+            if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.video, AVMediaType.muxed]) {
                 // get formats
 //                for f in videoDevice.formats {
 //                    let f2 = f as! AVCaptureDeviceFormat
@@ -1599,8 +1596,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 if nil != avInputVideo {
                     // update preview layer
                     if let previewLayer = avPreviewLayer {
-                        previewLayer.connection.automaticallyAdjustsVideoMirroring = false
-                        previewLayer.connection.isVideoMirrored = false
+                        previewLayer.connection?.automaticallyAdjustsVideoMirroring = false
+                        previewLayer.connection?.isVideoMirrored = false
                     }
                 }
             }
@@ -1667,7 +1664,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             }
             
             // get device and add it
-            if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
+            if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.audio, AVMediaType.muxed]) {
                 avInputAudio = addInput(audioDevice)
                 
                 // update document
@@ -1788,7 +1785,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBAction func captureStill(_ sender: NSButton!) {
         guard let videoStill = avVideoCaptureStill else { return }
         guard !videoStill.isCapturingStillImage else { return }
-        guard let conn = videoStill.connection(withMediaType: AVMediaTypeVideo) else { return }
+        guard let conn = videoStill.connection(with: AVMediaType.video) else { return }
         
         sender.isEnabled = false
         
@@ -1855,7 +1852,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                             var keyCallbacks = kCFTypeDictionaryKeyCallBacks
                             var valueCallbacks = kCFTypeDictionaryValueCallBacks
                             
-                            var compression = NSTIFFCompression.LZW.rawValue
+                            var compression = NSBitmapImageRep.TIFFCompression.lzw.rawValue
                             
                             let saveOpts = CFDictionaryCreateMutable(nil, 0, &keyCallbacks,  &valueCallbacks)
                             let tiffProps = CFDictionaryCreateMutable(nil, 0, &keyCallbacks, &valueCallbacks)
@@ -1880,7 +1877,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
+    func fileOutput(captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         var success = true, isReadable = true
         
         if nil != error {
@@ -1998,7 +1995,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
     }
     
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    func captureOutput(captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         #if BENCHMARK
             Time.stopAndSave(withName: "wait")
             Time.start(withName: "process")
@@ -2177,7 +2174,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         #endif
     }
     
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didDrop sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         DLog("DROPPED FRAME!")
         
         // string
@@ -2195,7 +2192,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func timerUpdateValues(_ timer: Timer!) {
+    @objc func timerUpdateValues(_ timer: Timer!) {
         objc_sync_enter(self)
         defer {
             objc_sync_exit(self)
@@ -2216,18 +2213,18 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // MARK: - arduino delegate and controls
     
     // monitoring
-    func avDeviceWasConnected(_ notification: Notification) {
+    @objc func avDeviceWasConnected(_ notification: Notification) {
         updateDeviceLists()
         DLog("AV Devices were connected")
     }
     
-    func avDeviceWasDisconnected(_ notification: Notification) {
+    @objc func avDeviceWasDisconnected(_ notification: Notification) {
         updateDeviceLists()
         DLog("AV Devices were disconnected")
     }
     
     // serial port
-    func serialPortsWereConnected(_ notification: Notification) {
+    @objc func serialPortsWereConnected(_ notification: Notification) {
         if let userInfo = (notification as NSNotification).userInfo {
             let connectedPorts = userInfo[ORSConnectedSerialPortsKey] as! [ORSSerialPort]
             DLog("Ports were connected: \(connectedPorts)")
@@ -2235,7 +2232,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func serialPortsWereDisconnected(_ notification: Notification) {
+    @objc func serialPortsWereDisconnected(_ notification: Notification) {
         if let userInfo = (notification as NSNotification).userInfo {
             let disconnectedPorts: [ORSSerialPort] = userInfo[ORSDisconnectedSerialPortsKey] as! [ORSSerialPort]
             DLog("Ports were disconnected: \(disconnectedPorts)")
@@ -2375,7 +2372,7 @@ extension ViewController: NSTableViewDataSource {
             return
         }
         
-        if "name" == col.identifier && row < annotView.annotations.count {
+        if "name" == col.identifier.rawValue && row < annotView.annotations.count {
             if let newName = object as? String {
                 annotView.annotations[row].name = newName
             }
@@ -2396,9 +2393,9 @@ extension ViewController: NSTableViewDataSource {
             // assemble data (just dictionary with ID)
             let dict: [String: Any] = ["id": annotView.annotations[row].id]
             let data = NSArchiver.archivedData(withRootObject: dict)
-            pboard.declareTypes([kPasteboardROI, NSPasteboardTypeString], owner: nil)
-            pboard.setData(data, forType: kPasteboardROI)
-            pboard.setString(annotView.annotations[row].name, forType: NSPasteboardTypeString)
+            pboard.declareTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI), NSPasteboard.PasteboardType.string], owner: nil)
+            pboard.setData(data, forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI))
+            pboard.setString(annotView.annotations[row].name, forType: NSPasteboard.PasteboardType.string)
             return true
         }
         
@@ -2496,7 +2493,7 @@ extension ViewController: NSTokenFieldDelegate {
         return nil
     }
     
-    func tokenField(_ tokenField: NSTokenField, representedObjectForEditing editingString: String) -> Any {
+    func tokenField(_ tokenField: NSTokenField, representedObjectForEditing editingString: String) -> (Any)? {
         let re = Regex(pattern: "^ROI[0-9]+$")
         if re.match(editingString) {
             let s = editingString.characters.index(editingString.startIndex, offsetBy: 3), e = editingString.endIndex
@@ -2510,7 +2507,7 @@ extension ViewController: NSTokenFieldDelegate {
     // Return an array of represented objects to add to the token field.
     func tokenField(_ tokenField: NSTokenField, readFrom pboard: NSPasteboard) -> [Any]? {
         var ret = [Any]()
-        if let data = pboard.data(forType: kPasteboardROI), let un = NSUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
+        if let data = pboard.data(forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI)), let un = NSUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
             if let v = dict["id"], let id = v as? Int {
                 ret.append(TokenROI(id: id))
             }
@@ -2518,11 +2515,11 @@ extension ViewController: NSTokenFieldDelegate {
         return ret
     }
     
-    func tokenField(_ tokenField: NSTokenField, styleForRepresentedObject representedObject: Any) -> NSTokenStyle {
+    func tokenField(_ tokenField: NSTokenField, styleForRepresentedObject representedObject: Any) -> NSTokenField.TokenStyle {
         if representedObject is TokenROI {
-            return NSTokenStyle.default
+            return NSTokenField.TokenStyle.default
         }
-        return NSTokenStyle.none
+        return NSTokenField.TokenStyle.none
     }
 }
 

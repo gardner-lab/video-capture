@@ -274,11 +274,11 @@
 					D8013F911B4037870053F452 = {
 						CreatedOnToolsVersion = 6.3.2;
 						DevelopmentTeam = WRZPP65FJN;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0900;
 					};
 					D81710B51C8160F00023E3D3 = {
 						CreatedOnToolsVersion = 7.2.1;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0900;
 						TestTargetID = D8013F911B4037870053F452;
 					};
 				};
@@ -535,7 +535,8 @@
 				PRODUCT_NAME = "Video Capture";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -561,7 +562,8 @@
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
@@ -577,7 +579,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.MaxMo.VideoCaptureTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Video Capture.app/Contents/MacOS/Video Capture";
 			};
 			name = Debug;
@@ -595,7 +598,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/VideoCapture-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Video Capture.app/Contents/MacOS/Video Capture";
 			};
 			name = Release;

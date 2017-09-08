@@ -21,7 +21,7 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
     private var outputFileType: String
     weak private var recordingDelegate: AVCaptureFileOutputRecordingDelegate?
     
-    init(parent: AVCaptureFileOutputRecordingDelegate, outputFileType: String = AVFileTypeAppleM4A) {
+    init(parent: AVCaptureFileOutputRecordingDelegate, outputFileType: String = AVFileType.m4a) {
         self.recordingDelegate = parent
         self.outputFileType = outputFileType
     }
@@ -45,11 +45,11 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
         status = .shouldStop
     }
     
-    func captureOutputShouldProvideSampleAccurateRecordingStart(_ captureOutput: AVCaptureOutput!) -> Bool {
+    func fileOutputShouldProvideSampleAccurateRecordingStart(captureOutput: AVCaptureFileOutput) -> Bool {
         return true
     }
     
-    func capture(_ captureOutput: AVCaptureFileOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    func fileOutput(captureOutput: AVCaptureFileOutput, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         objc_sync_enter(self)
         defer {
             objc_sync_exit(self)
@@ -58,10 +58,10 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
         switch status {
         case .shouldStart where !captureOutput.isRecording:
             if let captureAudioOutput = captureOutput as? AVCaptureAudioFileOutput {
-                captureAudioOutput.startRecording(toOutputFileURL: url!, outputFileType: outputFileType, recordingDelegate: recordingDelegate)
+                captureAudioOutput.startRecording(to: url!, outputFileType: AVFileType(rawValue: outputFileType), recordingDelegate: recordingDelegate!)
             }
             else {
-                captureOutput.startRecording(toOutputFileURL: url!, recordingDelegate: recordingDelegate)
+                captureOutput.startRecording(to: url!, recordingDelegate: recordingDelegate!)
             }
             url = nil
             status = .none

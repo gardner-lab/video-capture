@@ -67,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let crashReportText = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS)
         
         let alert = NSAlert()
-        alert.alertStyle = NSAlertStyle.informational
+        alert.alertStyle = NSAlert.Style.informational
         alert.messageText = "Crash Report"
         alert.informativeText = "The application appears to have crashed during the last use. To help us improve the app and ensure reliable performance, it would help if you could share information anonymous information about the machine and the circumstances of the crash.\n\nIf this computer is connected to the internet, this can be automatically transmitted. Otherwise, we can save the report to a file, which you can send."
         alert.addButton(withTitle: "Send")
@@ -77,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let resp = alert.runModal()
         
         switch resp {
-        case NSAlertFirstButtonReturn: // Send
+        case NSApplication.ModalResponse.alertFirstButtonReturn: // Send
             DLog("CRASH: send")
             
             // make request
@@ -96,7 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
             
-        case NSAlertSecondButtonReturn: // Save
+        case NSApplication.ModalResponse.alertSecondButtonReturn: // Save
             let panel = NSSavePanel()
             panel.title = "Save Crash Report"
             
