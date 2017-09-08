@@ -1582,9 +1582,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // get device and add it
             if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeVideo, AVMediaTypeMuxed]) {
-                // update document
-                copyToDocument()
-                
                 // get formats
 //                for f in videoDevice.formats {
 //                    let f2 = f as! AVCaptureDeviceFormat
@@ -1594,6 +1591,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                 // add input
                 avInputVideo = addInput(videoDevice)
+                
+                // update document
+                copyToDocument()
                 
                 // start preview layer
                 if nil != avInputVideo {
@@ -1668,10 +1668,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // get device and add it
             if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaTypeAudio, AVMediaTypeMuxed]) {
+                avInputAudio = addInput(audioDevice)
+                
                 // update document
                 copyToDocument()
-                
-                avInputAudio = addInput(audioDevice)
             }
         }
         else {
