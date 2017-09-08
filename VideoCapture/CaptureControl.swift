@@ -18,10 +18,10 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
     
     private var status = CaptureControl.Status.none
     private var url: URL?
-    private var outputFileType: String
+    private var outputFileType: AVFileType
     weak private var recordingDelegate: AVCaptureFileOutputRecordingDelegate?
     
-    init(parent: AVCaptureFileOutputRecordingDelegate, outputFileType: String = AVFileType.m4a) {
+    init(parent: AVCaptureFileOutputRecordingDelegate, outputFileType: AVFileType = AVFileType.m4a) {
         self.recordingDelegate = parent
         self.outputFileType = outputFileType
     }
@@ -45,11 +45,11 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
         status = .shouldStop
     }
     
-    func fileOutputShouldProvideSampleAccurateRecordingStart(captureOutput: AVCaptureFileOutput) -> Bool {
+    func fileOutputShouldProvideSampleAccurateRecordingStart(_ captureOutput: AVCaptureFileOutput) -> Bool {
         return true
     }
     
-    func fileOutput(captureOutput: AVCaptureFileOutput, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    func fileOutput(_ captureOutput: AVCaptureFileOutput, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         objc_sync_enter(self)
         defer {
             objc_sync_exit(self)
@@ -58,7 +58,7 @@ class CaptureControl: NSObject, AVCaptureFileOutputDelegate {
         switch status {
         case .shouldStart where !captureOutput.isRecording:
             if let captureAudioOutput = captureOutput as? AVCaptureAudioFileOutput {
-                captureAudioOutput.startRecording(to: url!, outputFileType: AVFileType(rawValue: outputFileType), recordingDelegate: recordingDelegate!)
+                captureAudioOutput.startRecording(to: url!, outputFileType: outputFileType, recordingDelegate: recordingDelegate!)
             }
             else {
                 captureOutput.startRecording(to: url!, recordingDelegate: recordingDelegate!)

@@ -105,8 +105,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             panel.canCreateDirectories = true
             panel.isExtensionHidden = false
             panel.begin {
-                (result: Int) -> Void in
-                if NSFileHandlingPanelOKButton == result {
+                (result: NSApplication.ModalResponse) -> Void in
+                if NSApplication.ModalResponse.OK == result {
                     if let url = panel.url {
                         // remove existing
                         do {

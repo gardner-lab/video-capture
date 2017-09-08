@@ -75,8 +75,8 @@ class Document : NSDocument {
         dict["Annotations"] = listAnnotations.map({
             a -> [String: Any] in
             var ret = a.toDictionary()
-            for (name, type) in self.annotationTypes {
-                if String(describing: type(of: a)) == String(describing: type) {
+            for (name, annot_type) in self.annotationTypes {
+                if String(describing: type(of: a)) == String(describing: annot_type) {
                     ret["Type"] = name as AnyObject
                 }
             }

@@ -690,7 +690,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // Let the user select any images supported by
         // the AVMovie.
         if nil != videoDeviceID {
-            panel.allowedFileTypes = AVMovie.movieTypes()
+            panel.allowedFileTypes = AVMovie.movieTypes().map {
+                return $0.rawValue
+            }
             panel.allowsOtherFileTypes = false
             panel.nameFieldStringValue = prefix + ".mov"
         }
@@ -703,8 +705,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // callback for handling response
         let cb = {
-            (result: Int) -> Void in
-            if NSFileHandlingPanelOKButton == result {
+            (result: NSApplication.ModalResponse) -> Void in
+            if NSApplication.ModalResponse.OK == result {
                 if let url = panel.url {
                     self.startCapturing(url)
                 }
@@ -750,8 +752,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // callback for handling response
         let cb = {
-            (result: Int) -> Void in
-            if NSFileHandlingPanelOKButton == result {
+            (result: NSApplication.ModalResponse) -> Void in
+            if NSApplication.ModalResponse.OK == result {
                 if let url = panel.url {
                     self.startMonitoring(url)
                 }
@@ -826,7 +828,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let videoStill = AVCaptureStillImageOutput()
         avVideoCaptureStill = videoStill
         //videoStill.outputSettings = [AVVideoCodecKey: NSNumber(unsignedInt: kCMVideoCodecType_JPEG)]
-        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey: NSNumber(value: kCVPixelFormatType_32BGRA)]
+        videoStill.outputSettings = [kCVPixelBufferPixelFormatTypeKey as String: NSNumber(value: kCVPixelFormatType_32BGRA)]
         
         if !session.canAddOutput(videoStill) {
             DLog("Unable to add video still.")
@@ -904,7 +906,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .raw:
             // configure video connection with empty dictionary
             if let con = movieOut.connection(with: AVMediaType.video) {
-                let settings: [String : Any] = []
+                let settings: [String : Any] = [:]
                 movieOut.setOutputSettings(settings, for: con)
             }
         case .h264:
@@ -944,7 +946,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // create file control
         if nil == avFileControl {
-            avFileControl = CaptureControl(parent: self, outputFileType: AVFileType.m4a.rawValue)
+            avFileControl = CaptureControl(parent: self, outputFileType: AVFileType.m4a)
 
         }
         
@@ -1834,8 +1836,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 
                 // callback for handling response
                 let cb = {
-                    (result: Int) -> Void in
-                    if NSFileHandlingPanelOKButton == result {
+                    (result: NSApplication.ModalResponse) -> Void in
+                    if NSApplication.ModalResponse.OK == result {
                         if let url = panel.url {
                             // delete existting
                             let fm = FileManager.default
@@ -1877,7 +1879,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
-    func fileOutput(captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+    func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         var success = true, isReadable = true
         
         if nil != error {
@@ -1893,7 +1895,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             DLog("CAPTURE success!")
         }
         else {
-            DLog("CAPTURE failure: \(error)")
+            DLog("CAPTURE failure: \(String(describing: error))")
             
             // clear move
             avFileOut = nil
@@ -1995,7 +1997,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
     }
     
-    func captureOutput(captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         #if BENCHMARK
             Time.stopAndSave(withName: "wait")
             Time.start(withName: "process")
@@ -2198,7 +2200,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             objc_sync_exit(self)
         }
         if let tv = tableAnnotations {
-            tv.reloadData(forRowIndexes: IndexSet(integersIn: NSRange(location: 0, length: extractValues.count).toRange() ?? 0..<0), columnIndexes: IndexSet(integer: 2))
+            tv.reloadData(forRowIndexes: IndexSet(integersIn: 0..<extractValues.count), columnIndexes: IndexSet(integer: 2))
         }
         if nil != extractEquation {
             if extractEquationOn {
@@ -2346,7 +2348,7 @@ extension ViewController: NSTableViewDataSource {
         }
         
         // handle column identifiers
-        switch (col.identifier) {
+        switch (col.identifier.rawValue) {
         case "color":
             if row < annotView.annotations.count {
                 return annotView.annotations[row].color
