@@ -97,7 +97,7 @@ class AnnotableViewer: NSView {
         super.init(coder: coder)
         
         let className = self.className, nibName = className.components(separatedBy: ".").last!
-        if Bundle.main.loadNibNamed(nibName, owner: self, topLevelObjects: nil) {
+        if Bundle.main.loadNibNamed(NSNib.Name(rawValue: nibName), owner: self, topLevelObjects: nil) {
             if let v = view {
                 v.frame = frame
                 addSubview(v)
@@ -120,7 +120,7 @@ class AnnotableViewer: NSView {
         super.draw(dirtyRect)
 
         // draw annotations
-        if let nsContext = NSGraphicsContext.current() {
+        if let nsContext = NSGraphicsContext.current {
             let drawRect = NSRect(origin: CGPoint(x: 0.0, y: 0.0), size: self.frame.size)
             for annot in annotations {
                 annot.drawOutline(nsContext, inRect: drawRect)
