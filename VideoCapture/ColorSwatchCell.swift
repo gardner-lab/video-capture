@@ -14,7 +14,7 @@ class ColorSwatchCell: NSCell {
         // Drawing code here.
         if let obj = self.objectValue, let color = obj as? NSColor {
             color.set()
-            NSRectFill(cellFrame)
+            cellFrame.fill()
         }
     }
 }

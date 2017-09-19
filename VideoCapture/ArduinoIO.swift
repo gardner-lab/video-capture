@@ -310,7 +310,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
     }
     
     /// Opening process takes 2~6 seconds. Inital requests are held until Arduino is online.
-    func completeOpen(_ timer: Timer!) {
+    @objc func completeOpen(_ timer: Timer!) {
         guard self.state == .waitingToOpen else {
             return
         }
@@ -629,7 +629,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         }
     }
     
-    func serialPortWasRemoved(fromSystem serialPort: ORSSerialPort) {
+    func serialPortWasRemovedFromSystem(_ serialPort: ORSSerialPort) {
         DLog("SERIAL \(serialPort) REMOVED")
         
         if state == .waitingToOpen || state == .opened {

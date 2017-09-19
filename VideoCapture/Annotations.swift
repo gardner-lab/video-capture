@@ -394,14 +394,14 @@ struct AnnotationRectangle: Annotation {
         color.set()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
-        NSRectFill(drawRect)
+        drawRect.fill()
     }
     
     func drawOutline(_ context: NSGraphicsContext, inRect rect: NSRect) {
         color.set()
         
         let drawRect = makeAbsoluteRect(NSRect(origin: origin, size: size), inRect: rect)
-        NSFrameRectWithWidth(drawRect, 4.0)
+        drawRect.frame(withWidth: 4.0)
     }
     
     func containsPoint(_ point: NSPoint) -> Bool {
