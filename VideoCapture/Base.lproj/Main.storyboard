@@ -743,19 +743,19 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <binding destination="354-ix-K1g" name="value" keyPath="values.PinDigitalCamera" id="U9l-G3-f3b"/>
+                                    <binding destination="354-ix-K1g" name="value" keyPath="values.PinDigitalRecord" id="ys8-D1-uHe"/>
                                 </connections>
                             </textField>
                             <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sQd-17-3xz">
                                 <rect key="frame" x="285" y="269" width="19" height="27"/>
                                 <stepperCell key="cell" continuous="YES" alignment="left" maxValue="13" id="Bee-Fy-IHv"/>
                                 <connections>
-                                    <binding destination="354-ix-K1g" name="value" keyPath="values.PinDigitalCamera" id="027-7e-7kk"/>
+                                    <binding destination="354-ix-K1g" name="value" keyPath="values.PinDigitalRecord" id="Gmg-1R-QPe"/>
                                 </connections>
                             </stepper>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="I5j-it-Wbr">
-                                <rect key="frame" x="143" y="274" width="74" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Camera Pin" id="n1T-DO-WPt">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="I5j-it-Wbr">
+                                <rect key="frame" x="147" y="274" width="70" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record Pin" id="n1T-DO-WPt">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

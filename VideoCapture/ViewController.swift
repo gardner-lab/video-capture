@@ -76,18 +76,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // session information
     var avSession: AVCaptureSession?
     var avInputVideo: AVCaptureDeviceInput? {
-        willSet {
-            // has arduino?
-            if let arduino = ioArduino {
-                // toggle pin
-                do {
-                    try arduino.writeTo(appPreferences.pinDigitalCamera, digitalValue: nil != newValue)
-                }
-                catch {
-                    DLog("ERROR Unable to toggle camera power.")
-                }
-            }
-        }
         didSet {
             // manage list of used devices
             if let ov = oldValue {
@@ -1331,7 +1319,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // turn off led and camera
         do {
-            try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
             try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
             if let pin = appPreferences.pinAnalogSecondLED {
                 try ioArduino?.writeTo(pin, analogValue: UInt8(0))
@@ -1394,7 +1381,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // turn on LED and camera
             do {
-                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
                 if let ledBrightness = sliderLedBrightness?.integerValue {
                     // set led pin
                     if activeLED == .Secondary, let pin = appPreferences.pinAnalogSecondLED {
@@ -1434,7 +1420,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             
             // turn off LED and camera
             do {
-                try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
                 try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
                 if let pin = appPreferences.pinAnalogSecondLED {
                     try ioArduino?.writeTo(pin, analogValue: 0)
@@ -1726,7 +1711,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // open new port
             do {
                 try ioArduino = ArduinoIO(path: devicePath)
-                try ioArduino!.setPinMode(appPreferences.pinDigitalCamera, to: ArduinoIOPin.output) // pin 4: digital camera relay
+                try ioArduino!.setPinMode(appPreferences.pinDigitalRecord, to: ArduinoIOPin.output) // pin 4: digital record signal
                 try ioArduino!.setPinMode(appPreferences.pinDigitalFeedback, to: ArduinoIOPin.output) // pin 9: digital feedback
                 try ioArduino!.setPinMode(appPreferences.pinAnalogLED, to: ArduinoIOPin.output) // pin 13: analog brightness
                 if let pin = appPreferences.pinAnalogSecondLED {
@@ -1736,11 +1721,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 //if appPreferences.triggerType == .ArduinoPin {
                 //    try ioArduino!.setPinMode(appPreferences.pinAnalogTrigger, to: ArduinoIOPin.Input) // pin: 0 analog trigger
                 //}
-                
-                // turn camera on, if already selected
-                if nil != self.avInputVideo {
-                    try ioArduino!.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
-                }
             }
             catch {
                 DLog("Unable to communicate with selected Arduino. \(error)")
@@ -1876,6 +1856,43 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // show
                 panel.beginSheetModal(for: self.view.window!, completionHandler: cb)
             }
+        }
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        do {
+            try ioArduino?.writeTo(appPreferences.pinDigitalRecord, digitalValue: true)
+        }
+        catch {
+            DLog("ERROR toggling recording pin")
+        }
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        do {
+            try ioArduino?.writeTo(appPreferences.pinDigitalRecord, digitalValue: false)
+        }
+        catch {
+            DLog("ERROR toggling recording pin")
+        }
+    }
+    
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        do {
+            try ioArduino?.writeTo(appPreferences.pinDigitalRecord, digitalValue: true)
+        }
+        catch {
+            DLog("ERROR toggling recording pin")
+        }
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, willFinishRecordingTo fileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        do {
+            try ioArduino?.writeTo(appPreferences.pinDigitalRecord, digitalValue: false)
+        }
+        catch {
+            DLog("ERROR toggling recording pin")
         }
     }
     
@@ -2332,6 +2349,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // update document
         copyToDocument()
     }
+    
+    
 }
 
 extension ViewController: NSTableViewDataSource {

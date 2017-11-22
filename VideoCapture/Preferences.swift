@@ -8,7 +8,7 @@ import Foundation
 import Cocoa
 
 private let keyPinAnalogTrigger = "PinAnalogTrigger"
-private let keyPinDigitalCamera = "PinDigitalCamera"
+private let keyPinDigitalRecord = "PinDigitalRecord"
 private let keyPinDigitalFeedback = "PinDigitalFeedback"
 private let keyPinAnalogLED = "PinAnalogLED"
 private let keyPinAnalogSecondLED = "PinAnalogSecondLED"
@@ -78,9 +78,9 @@ struct Preferences {
             UserDefaults.standard.set(pinAnalogTrigger, forKey: keyPinAnalogTrigger)
         }
     }
-    var pinDigitalCamera: Int {
+    var pinDigitalRecord: Int {
         didSet {
-            UserDefaults.standard.set(pinDigitalCamera, forKey: keyPinDigitalCamera)
+            UserDefaults.standard.set(pinDigitalRecord, forKey: keyPinDigitalRecord)
         }
     }
     var pinDigitalFeedback: Int {
@@ -157,7 +157,7 @@ struct Preferences {
         let defaults = UserDefaults.standard
         
         pinAnalogTrigger = defaults.integer(forKey: keyPinAnalogTrigger)
-        pinDigitalCamera = defaults.integer(forKey: keyPinDigitalCamera)
+        pinDigitalRecord = defaults.integer(forKey: keyPinDigitalRecord)
         pinDigitalFeedback = defaults.integer(forKey: keyPinDigitalFeedback)
         pinAnalogLED = defaults.integer(forKey: keyPinAnalogLED)
         
@@ -182,7 +182,7 @@ struct Preferences {
     
     static let defaultPreferences: [String: Any] = [
         keyPinAnalogTrigger: NSNumber(value: 0 as Int),
-        keyPinDigitalCamera: NSNumber(value: 4 as Int),
+        keyPinDigitalRecord: NSNumber(value: 4 as Int),
         keyPinDigitalFeedback: NSNumber(value: 9 as Int),
         keyPinAnalogLED: NSNumber(value: 13 as Int),
         //keyPinAnalogSecondLED: nil,
