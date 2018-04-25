@@ -166,7 +166,7 @@ private func extractComponents(_ s: String) -> [EquationToken] {
     var ret: [EquationToken] = []
     var cur: EquationToken? = nil
     var last: EquationToken? = nil
-    for c in s.characters {
+    for c in s {
         if nil == cur {
             // start new token
             cur = EquationToken(fromCharacter: c, after: last)

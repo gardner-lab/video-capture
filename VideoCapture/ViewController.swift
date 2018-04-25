@@ -374,7 +374,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 in
                 let re = Regex(pattern: "^ROI[0-9]+$")
                 if re.match(str) {
-                    let s = str.characters.index(str.startIndex, offsetBy: 3), e = str.endIndex
+                    let s = str.index(str.startIndex, offsetBy: 3), e = str.endIndex
                     if let id = Int(str[s..<e]) {
                         return TokenROI(id: id)
                     }

@@ -479,7 +479,7 @@ class ArduinoIO: NSObject, ORSSerialPortDelegate {
         guard canInteract() else {
             throw ArduinoIOError.portNotOpen
         }
-        guard (pin >= 2 && pin <= 13) || (pin >= 44 && pin <= 46) else {
+        guard (pin >= 2 && pin <= 13) || (pin >= 44 && pin <= 46) || pin == 66 || pin == 67 else {
             throw ArduinoIOError.invalidPin(pin)
         }
         guard pins[pin] == .output else {
