@@ -10,6 +10,7 @@ import Cocoa
 private let keyPinAnalogTrigger = "PinAnalogTrigger"
 private let keyPinDigitalCamera = "PinDigitalCamera"
 private let keyPinDigitalFeedback = "PinDigitalFeedback"
+private let keyPinDigitalToggleLED = "PinDigitalToggleLED"
 private let keyPinAnalogLED = "PinAnalogLED"
 private let keyPinAnalogSecondLED = "PinAnalogSecondLED"
 private let keyPinDigitalSync = "PinDigitalSync"
@@ -93,9 +94,14 @@ struct Preferences {
             UserDefaults.standard.set(pinAnalogLED, forKey: keyPinAnalogLED)
         }
     }
-    var pinAnalogSecondLED: Int? {
+    var pinAnalogSecondLED: Int {
         didSet {
             UserDefaults.standard.set(pinAnalogSecondLED, forKey: keyPinAnalogSecondLED)
+        }
+    }
+    var pinDigitalToggleLED: Int {
+        didSet {
+            UserDefaults.standard.set(pinDigitalToggleLED, forKey: keyPinDigitalToggleLED)
         }
     }
     var pinDigitalSync: Int {
@@ -160,15 +166,8 @@ struct Preferences {
         pinDigitalCamera = defaults.integer(forKey: keyPinDigitalCamera)
         pinDigitalFeedback = defaults.integer(forKey: keyPinDigitalFeedback)
         pinAnalogLED = defaults.integer(forKey: keyPinAnalogLED)
-        
-        // second led is optional
-        let pin = defaults.integer(forKey: keyPinAnalogSecondLED)
-        if pin > 0 {
-            pinAnalogSecondLED = pin
-        }
-        else {
-            pinAnalogSecondLED = nil
-        }
+        pinAnalogSecondLED = defaults.integer(forKey: keyPinAnalogSecondLED)
+        pinDigitalToggleLED = defaults.integer(forKey: keyPinDigitalToggleLED)
         
         pinDigitalSync = defaults.integer(forKey: keyPinDigitalSync)
         secondsAfterSong = defaults.double(forKey: keySecondsAfterSong)
@@ -184,8 +183,9 @@ struct Preferences {
         keyPinAnalogTrigger: NSNumber(value: 0 as Int),
         keyPinDigitalCamera: NSNumber(value: 4 as Int),
         keyPinDigitalFeedback: NSNumber(value: 9 as Int),
-        keyPinAnalogLED: NSNumber(value: 13 as Int),
-        //keyPinAnalogSecondLED: nil,
+        keyPinAnalogLED: NSNumber(value: 66 as Int),
+        keyPinAnalogSecondLED: NSNumber(value: 67 as Int),
+        keyPinDigitalToggleLED: NSNumber(value: 12 as Int),
         keyPinDigitalSync: NSNumber(value: 7 as Int),
         keySecondsAfterSong: NSNumber(value: 1.5 as Double),
         keyTriggerType: "Arduino Pin",

@@ -54,6 +54,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     @IBOutlet weak var listSerialPorts: NSPopUpButton!
     @IBOutlet weak var textLedBrightness: NSTextField!
     @IBOutlet weak var sliderLedBrightness: NSSlider!
+    @IBOutlet weak var textLedTwoBrightness: NSTextField!
+    @IBOutlet weak var sliderLedTwoBrightness: NSSlider!
     @IBOutlet weak var buttonToggleLed: NSButton!
     @IBOutlet weak var buttonCapture: NSButton!
     @IBOutlet weak var buttonMonitor: NSButton!
@@ -175,28 +177,22 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             guard let arduino = ioArduino else { return }
             
             // figure out old and new pin
-            let oldPin: Int, newPin: Int
+            let val: Bool
             switch activeLED {
             case .Primary:
-                oldPin = appPreferences.pinAnalogSecondLED!
-                newPin = appPreferences.pinAnalogLED
                 buttonToggleLed.title = "1"
+                val = false
             case .Secondary:
-                oldPin = appPreferences.pinAnalogLED
-                newPin = appPreferences.pinAnalogSecondLED!
                 buttonToggleLed.title = "2"
+                val = true
             }
-            
-            // get led brightness
-            guard let ledBrightness = sliderLedBrightness?.integerValue, ledBrightness > 0 else { return }
             
             // set values
             do {
-                try arduino.writeTo(oldPin, analogValue: 0)
-                try arduino.writeTo(newPin, analogValue: UInt8(ledBrightness))
+                try arduino.writeTo(appPreferences.pinDigitalToggleLED, digitalValue: val)
             }
             catch {
-                DLog("ARDUINO brightness: failed! \(error)")
+                DLog("ARDUINO toggle: failed! \(error)")
             }
         }
     }
@@ -293,9 +289,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
         }
         
-        // hide/show toggle button
-        buttonToggleLed?.isHidden = nil == appPreferences.pinAnalogSecondLED
-        
         // refresh interface
         refreshInterface()
     }
@@ -331,6 +324,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             textName?.stringValue = doc.name
             sliderLedBrightness?.integerValue = Int(doc.ledBrightness)
             textLedBrightness?.integerValue = Int(doc.ledBrightness)
+            sliderLedTwoBrightness?.integerValue = Int(doc.ledTwoBrightness)
+            textLedTwoBrightness?.integerValue = Int(doc.ledTwoBrightness)
             
             var tagVideo = -1, tagAudio = -1, tagSerial = -1
             for (key, val) in deviceUniqueIDs {
@@ -389,6 +384,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let doc = document {
             doc.name = textName?.stringValue ?? ""
             doc.ledBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0 )
+            doc.ledTwoBrightness = UInt8(sliderLedBrightness?.integerValue ?? 0)
             if let inputVideoDevice = avInputVideo {
                 doc.devVideo = inputVideoDevice.device.uniqueID
             }
@@ -436,6 +432,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         listSerialPorts?.isEnabled = editable
         sliderLedBrightness?.isEnabled = editable && nil != ioArduino
         textLedBrightness?.isEnabled = editable && nil != ioArduino
+        sliderLedTwoBrightness?.isEnabled = editable && nil != ioArduino
+        textLedTwoBrightness?.isEnabled = editable && nil != ioArduino
         buttonToggleLed?.isEnabled = editable && nil != ioArduino
         annotableView?.isEnabled = editable
         // annotation names
@@ -763,9 +761,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // turn off LED before hand (avoid bleaching)
         do {
             try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-            if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
-            }
+            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(0))
         }
         catch { }
         
@@ -1110,7 +1106,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             headers += "Video,\"\(doc.devVideo)\"\n"
             headers += "Audio,\"\(doc.devAudio)\"\n"
             headers += "Arduino,\"\(doc.devSerial)\"\n"
-            headers += "LED Brightness,\"\(doc.ledBrightness)\"\n"
+            headers += "LED 1 Brightness,\"\(doc.ledBrightness)\"\n"
+            headers += "LED 2 Brightness,\"\(doc.ledTwoBrightness)\"\n"
         }
         
         let date = Date(), formatter = DateFormatter()
@@ -1333,9 +1330,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         do {
             try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
             try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-            if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
-            }
+            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(0))
         }
         catch {
             
@@ -1395,23 +1390,22 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // turn on LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: true)
+                
+                // set led pin
                 if let ledBrightness = sliderLedBrightness?.integerValue {
-                    // set led pin
-                    if activeLED == .Secondary, let pin = appPreferences.pinAnalogSecondLED {
-                        try ioArduino?.writeTo(pin, analogValue: UInt8(ledBrightness))
-                    }
-                    else {
-                        try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
-                    }
-                    
-                    // set sync pin
-                    try ioArduino?.writeTo(appPreferences.pinDigitalSync, digitalValue: true)
-                    
-                    // must schedule clean up on main thread
-                    DispatchQueue.main.async {
-                        // start sync timer
-                        Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(self.disableSyncPin(_:)), userInfo: nil, repeats: false)
-                    }
+                    try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
+                }
+                if let ledTwoBrightness = sliderLedTwoBrightness?.integerValue {
+                    try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(ledTwoBrightness))
+                }
+                
+                // set sync pin
+                try ioArduino?.writeTo(appPreferences.pinDigitalSync, digitalValue: true)
+                
+                // must schedule clean up on main thread
+                DispatchQueue.main.async {
+                    // start sync timer
+                    Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(self.disableSyncPin(_:)), userInfo: nil, repeats: false)
                 }
             }
             catch {
@@ -1436,9 +1430,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
                 try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-                if let pin = appPreferences.pinAnalogSecondLED {
-                    try ioArduino?.writeTo(pin, analogValue: 0)
-                }
+                try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: 0)
             }
             catch {
                 
@@ -1728,14 +1720,23 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 try ioArduino = ArduinoIO(path: devicePath)
                 try ioArduino!.setPinMode(appPreferences.pinDigitalCamera, to: ArduinoIOPin.output) // pin 4: digital camera relay
                 try ioArduino!.setPinMode(appPreferences.pinDigitalFeedback, to: ArduinoIOPin.output) // pin 9: digital feedback
+                try ioArduino!.setPinMode(appPreferences.pinDigitalToggleLED, to: .output)
                 try ioArduino!.setPinMode(appPreferences.pinAnalogLED, to: ArduinoIOPin.output) // pin 13: analog brightness
-                if let pin = appPreferences.pinAnalogSecondLED {
-                    try ioArduino!.setPinMode(pin, to: .output) // pin x: analog brightness
-                }
+                try ioArduino!.setPinMode(appPreferences.pinAnalogSecondLED, to: .output) // pin x: analog brightness
                 try ioArduino!.setPinMode(appPreferences.pinDigitalSync, to: ArduinoIOPin.output) // pin 7: digital sync
                 //if appPreferences.triggerType == .ArduinoPin {
                 //    try ioArduino!.setPinMode(appPreferences.pinAnalogTrigger, to: ArduinoIOPin.Input) // pin: 0 analog trigger
                 //}
+                
+                // set led brightness
+                var ledToggleVal = (activeLED == .Secondary)
+                try ioArduino?.writeTo(appPreferences.pinDigitalToggleLED, digitalValue: ledToggleVal)
+                if let ledBrightness = sliderLedBrightness?.integerValue {
+                    try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
+                }
+                if let ledTwoBrightness = sliderLedTwoBrightness?.integerValue {
+                    try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(ledTwoBrightness))
+                }
                 
                 // turn camera on, if already selected
                 if nil != self.avInputVideo {
@@ -2269,15 +2270,31 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             copyToDocument()
             do {
                 DLog("ARDUINO brightness \(sender.integerValue)")
-                if activeLED == .Secondary, let pin = appPreferences.pinAnalogSecondLED {
-                    try arduino.writeTo(pin, analogValue: UInt8(sender.integerValue))
-                }
-                else {
-                    try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
-                }
+                try arduino.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(sender.integerValue))
             }
             catch {
                 DLog("ARDUINO brightness: failed! \(error)")
+            }
+        }
+    }
+    
+    @IBAction func setLedTwoBrightness(_ sender: NSControl!) {
+        // synchronize values
+        if sender !== sliderLedTwoBrightness {
+            sliderLedTwoBrightness.integerValue = sender.integerValue
+        }
+        if sender !== textLedTwoBrightness {
+            textLedTwoBrightness.integerValue = sender.integerValue
+        }
+        
+        if let arduino = ioArduino {
+            copyToDocument()
+            do {
+                DLog("ARDUINO brightness2 \(sender.integerValue)")
+                try arduino.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(sender.integerValue))
+            }
+            catch {
+                DLog("ARDUINO brightness2: failed! \(error)")
             }
         }
     }

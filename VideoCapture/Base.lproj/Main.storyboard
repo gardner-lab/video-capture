@@ -1132,13 +1132,13 @@
                                 </connections>
                             </popUpButton>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-hv-t7c">
-                                <rect key="frame" x="20" y="171" width="220" height="122"/>
+                                <rect key="frame" x="20" y="171" width="220" height="80"/>
                                 <clipView key="contentView" id="CK7-pG-0jI">
-                                    <rect key="frame" x="1" y="0.0" width="218" height="121"/>
+                                    <rect key="frame" x="1" y="0.0" width="218" height="79"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="vm2-5k-HNv" id="ur6-Ur-zr2">
-                                            <rect key="frame" x="0.0" y="0.0" width="218" height="98"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="218" height="56"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1229,8 +1229,8 @@
                                 </connections>
                             </slider>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0Ej-hu-93S">
-                                <rect key="frame" x="18" y="318" width="29" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="LED" id="yCH-OG-eUU">
+                                <rect key="frame" x="18" y="318" width="40" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="LED 1" id="yCH-OG-eUU">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -1326,7 +1326,7 @@
                                 </connections>
                             </button>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="7Yb-zf-7Hf">
-                                <rect key="frame" x="55" y="319" width="56" height="14"/>
+                                <rect key="frame" x="66" y="319" width="56" height="14"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="52" id="V2X-o3-7Lx"/>
                                 </constraints>
@@ -1343,6 +1343,39 @@
                                     <action selector="setLedBrightness:" target="XfG-lQ-9wD" id="Exm-0N-gYX"/>
                                 </connections>
                             </textField>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="JQ6-iG-Kpd">
+                                <rect key="frame" x="18" y="259" width="224" height="19"/>
+                                <sliderCell key="cell" enabled="NO" state="on" alignment="left" maxValue="255" tickMarkPosition="above" sliderType="linear" id="h53-73-8nJ"/>
+                                <connections>
+                                    <action selector="setLedTwoBrightness:" target="XfG-lQ-9wD" id="dfg-a5-P0G"/>
+                                </connections>
+                            </slider>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bzT-04-DCw">
+                                <rect key="frame" x="18" y="276" width="40" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="LED 2" id="NNH-fu-H4h">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="5FS-vG-9xX">
+                                <rect key="frame" x="66" y="277" width="56" height="14"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="52" id="3ZG-yI-rck"/>
+                                </constraints>
+                                <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" title="0" id="p8p-7l-0AX">
+                                    <numberFormatter key="formatter" formatterBehavior="default10_4" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="kML-vt-EFh">
+                                        <real key="minimum" value="0.0"/>
+                                        <real key="maximum" value="255"/>
+                                    </numberFormatter>
+                                    <font key="font" metaFont="smallSystem"/>
+                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <action selector="setLedTwoBrightness:" target="XfG-lQ-9wD" id="BZo-lb-Gsn"/>
+                                </connections>
+                            </textField>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="7Bp-BT-xUt" secondAttribute="trailing" constant="20" id="0hc-gU-EeO"/>
@@ -1353,7 +1386,9 @@
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="gst-KI-PKh" secondAttribute="trailing" constant="20" id="8E7-je-H9b"/>
                             <constraint firstItem="EdX-Vc-JjP" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="8mn-dn-Rza"/>
                             <constraint firstItem="0Ej-hu-93S" firstAttribute="top" secondItem="gst-KI-PKh" secondAttribute="bottom" constant="10" id="BBQ-15-Bdm"/>
+                            <constraint firstItem="5FS-vG-9xX" firstAttribute="centerY" secondItem="bzT-04-DCw" secondAttribute="centerY" id="C6H-wM-foa"/>
                             <constraint firstItem="ZyL-3c-Q7T" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="CVZ-rw-DdA"/>
+                            <constraint firstItem="bzT-04-DCw" firstAttribute="top" secondItem="ZyL-3c-Q7T" secondAttribute="bottom" constant="10" id="DGH-d2-h2D"/>
                             <constraint firstAttribute="bottom" secondItem="Zow-fl-5WS" secondAttribute="bottom" constant="20" id="F9Y-Sp-5L0"/>
                             <constraint firstItem="f3G-RJ-eJw" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="GdI-lb-Avk"/>
                             <constraint firstItem="7Yb-zf-7Hf" firstAttribute="centerY" secondItem="0Ej-hu-93S" secondAttribute="centerY" id="IIG-u6-SeM"/>
@@ -1361,13 +1396,17 @@
                             <constraint firstItem="fEc-hv-t7c" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="KnE-Zt-yZP"/>
                             <constraint firstItem="neZ-Dt-SJB" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="KzC-wT-hIB"/>
                             <constraint firstItem="Jlq-2j-1cC" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="MTH-gU-IXu"/>
+                            <constraint firstItem="bzT-04-DCw" firstAttribute="width" secondItem="0Ej-hu-93S" secondAttribute="width" id="QOR-X8-SLa"/>
                             <constraint firstItem="Zow-fl-5WS" firstAttribute="top" secondItem="aZh-fI-0zG" secondAttribute="bottom" constant="10" id="Qep-yb-C5Y"/>
+                            <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="JQ6-iG-Kpd" secondAttribute="trailing" constant="20" id="R19-SX-VEK"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="Jlq-2j-1cC" secondAttribute="trailing" constant="20" id="Rc0-za-0B8"/>
                             <constraint firstItem="aZh-fI-0zG" firstAttribute="top" secondItem="f3G-RJ-eJw" secondAttribute="bottom" constant="10" id="Rnx-6h-lPG"/>
+                            <constraint firstItem="JQ6-iG-Kpd" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="Sq2-84-ifo"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="ZyL-3c-Q7T" secondAttribute="trailing" constant="20" id="URY-t3-rdQ"/>
+                            <constraint firstItem="5FS-vG-9xX" firstAttribute="leading" secondItem="bzT-04-DCw" secondAttribute="trailing" constant="12" id="VDr-4M-bhT"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="top" secondItem="neZ-Dt-SJB" secondAttribute="bottom" constant="10" id="WXQ-cE-wlw"/>
-                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="ZyL-3c-Q7T" secondAttribute="bottom" constant="10" id="Wmn-7B-NlS"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="f3G-RJ-eJw" secondAttribute="trailing" constant="20" id="a42-Lk-JdW"/>
+                            <constraint firstItem="bzT-04-DCw" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="c2t-Q7-Jhw"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="aZh-fI-0zG" secondAttribute="trailing" constant="20" id="c94-yX-meR"/>
                             <constraint firstItem="0Ej-hu-93S" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="dmR-zt-YJq"/>
                             <constraint firstItem="gst-KI-PKh" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="eQ1-kd-EaF"/>
@@ -1377,6 +1416,7 @@
                             <constraint firstItem="Jlq-2j-1cC" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="lZK-jU-3PB"/>
                             <constraint firstItem="LFi-iA-ALW" firstAttribute="centerY" secondItem="0Ej-hu-93S" secondAttribute="centerY" id="mDV-Vk-ve1"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="EdX-Vc-JjP" secondAttribute="trailing" constant="20" id="mJ2-sC-qAe"/>
+                            <constraint firstItem="JQ6-iG-Kpd" firstAttribute="top" secondItem="bzT-04-DCw" secondAttribute="bottom" id="ojW-0k-c8C"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="LFi-iA-ALW" secondAttribute="trailing" constant="20" id="qkm-LP-AxV"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="leading" secondItem="Zow-fl-5WS" secondAttribute="trailing" constant="20" id="rS7-VB-3Vm"/>
                             <constraint firstAttribute="bottom" secondItem="7Bp-BT-xUt" secondAttribute="bottom" constant="20" id="rpj-TG-G53"/>
@@ -1386,6 +1426,7 @@
                             <constraint firstItem="ZyL-3c-Q7T" firstAttribute="top" secondItem="0Ej-hu-93S" secondAttribute="bottom" id="uii-kN-3QL"/>
                             <constraint firstItem="M5E-ks-Vxv" firstAttribute="top" secondItem="fEc-hv-t7c" secondAttribute="bottom" constant="10" id="wKM-Ws-3jd"/>
                             <constraint firstItem="Af7-RF-GaS" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="yUK-Ad-QS6"/>
+                            <constraint firstItem="fEc-hv-t7c" firstAttribute="top" secondItem="JQ6-iG-Kpd" secondAttribute="bottom" constant="10" id="zac-la-XMh"/>
                             <constraint firstItem="7Bp-BT-xUt" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" id="zhM-Ug-aHj"/>
                         </constraints>
                     </view>
@@ -1400,8 +1441,10 @@
                         <outlet property="listVideoSources" destination="EdX-Vc-JjP" id="0q4-QZ-2bb"/>
                         <outlet property="previewView" destination="Ra3-tA-3Ku" id="rwb-hL-cOB"/>
                         <outlet property="sliderLedBrightness" destination="ZyL-3c-Q7T" id="car-HI-Px1"/>
+                        <outlet property="sliderLedTwoBrightness" destination="JQ6-iG-Kpd" id="75M-lA-Pk9"/>
                         <outlet property="tableAnnotations" destination="ur6-Ur-zr2" id="6El-c3-2PO"/>
                         <outlet property="textLedBrightness" destination="7Yb-zf-7Hf" id="llC-FS-D47"/>
+                        <outlet property="textLedTwoBrightness" destination="5FS-vG-9xX" id="IcI-OX-HJV"/>
                         <outlet property="textName" destination="Jlq-2j-1cC" id="dND-yx-q06"/>
                         <outlet property="tokenFeedback" destination="M5E-ks-Vxv" id="bnY-TC-fBe"/>
                         <outlet property="view" destination="m2S-Jp-Qdl" id="bl6-jL-P0I"/>

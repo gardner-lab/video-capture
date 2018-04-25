@@ -34,6 +34,7 @@ class Document : NSDocument {
     
     // led brightness
     var ledBrightness: UInt8 = 0
+    var ledTwoBrightness: UInt8 = 0
     
     
     override init() {
@@ -72,6 +73,7 @@ class Document : NSDocument {
         dict["FeedbackTrigger"] = feedbackTrigger as AnyObject
         dict["OuputDirectory"] = outputDirectory as AnyObject
         dict["LEDBrightness"] = Int(ledBrightness) as AnyObject
+        dict["LEDTwoBrightness"] = Int(ledTwoBrightness) as AnyObject
         dict["Annotations"] = listAnnotations.map({
             a -> [String: Any] in
             var ret = a.toDictionary()
@@ -131,6 +133,7 @@ class Document : NSDocument {
         feedbackTrigger = dict["FeedbackTrigger"] as? [String] ?? [String]()
         outputDirectory = dict["OutputDirectory"] as? String ?? ""
         ledBrightness = UInt8(dict["LEDBrightness"] as? Int ?? 0)
+        ledTwoBrightness = UInt8(dict["LEDTwoBrightness"] as? Int ?? 0)
         
 
         listAnnotations = []
