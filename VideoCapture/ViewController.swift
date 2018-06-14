@@ -551,7 +551,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 }
                 else if dev.localizedName == "USB2.0 MIC" {
                     // try to give it a nicer name
-                    let parts = dev.uniqueID.characters.split { $0 == ":" }.map(String.init)
+                    let parts = dev.uniqueID.split { $0 == ":" }
                     let c = parts.count
                     if c > 1 {
                         item.title = "USB MIC (\(parts[c-2]) \(parts[c-1]))"
@@ -2498,7 +2498,7 @@ extension ViewController: NSTokenFieldDelegate {
     func tokenField(_ tokenField: NSTokenField, representedObjectForEditing editingString: String) -> (Any)? {
         let re = Regex(pattern: "^ROI[0-9]+$")
         if re.match(editingString) {
-            let s = editingString.characters.index(editingString.startIndex, offsetBy: 3), e = editingString.endIndex
+            let s = editingString.index(editingString.startIndex, offsetBy: 3), e = editingString.endIndex
             if let id = Int(editingString[s..<e]) {
                 return TokenROI(id: id)
             }
