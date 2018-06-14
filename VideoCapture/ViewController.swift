@@ -901,7 +901,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let movieOut = AVCaptureMovieFileOutput()
         movieOut.delegate = avFileControl
         
-        // output settings
+        // add session
+        if !session.canAddOutput(movieOut) {
+            DLog("Unable to add movie file output.")
+            return false
+        }
+        session.addOutput(movieOut)
+        
+        // output settings (must be configured after adding session, otherwise no connection)
         switch appPreferences.videoFormat {
         case .raw:
             // configure video connection with empty dictionary
@@ -913,13 +920,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             break // default, no configuration required
         }
         
-        // add session
-        if !session.canAddOutput(movieOut) {
-            DLog("Unable to add movie file output.")
-            return false
-        }
-        session.addOutput(movieOut)
-        
+        // store output
         avFileOut = movieOut
         
         return true
