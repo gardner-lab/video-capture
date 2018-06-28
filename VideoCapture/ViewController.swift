@@ -308,6 +308,14 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // remove notification center
         NotificationCenter.default.removeObserver(self)
         
+        // stop any acquisitions
+        if mode.isMonitoring() {
+            stopMonitoring()
+        }
+        else if mode.isCapturing() {
+            stopCapturing()
+        }
+        
         // end any session
         stopVideoData()
         stopVideoFile()
