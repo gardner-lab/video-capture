@@ -20,6 +20,7 @@ private let keySecondsAfterSong = "SecondsAfterSong"
 private let keyThresholdSongNonsongRatio = "ThresholdSongNonsongRatio"
 private let keyThresholdSongBackgroundRatio = "ThresholdSongBackgroundRatio"
 private let keyVideoFormat = "VideoFormat"
+private let keyAudioFormat = "AudioFormat"
 
 enum PreferenceVideoFormat: CustomStringConvertible, Equatable {
     case raw
@@ -41,6 +42,33 @@ enum PreferenceVideoFormat: CustomStringConvertible, Equatable {
             switch self {
             case .h264:
                 return "H264"
+            case .raw:
+                return "Raw"
+            }
+        }
+    }
+}
+
+enum PreferenceAudioFormat: CustomStringConvertible, Equatable {
+    case aac
+    case raw // pcm
+    
+    init?(fromString s: String) {
+        switch s {
+        case "AAC":
+            self = .aac
+        case "Raw":
+            self = .raw
+        default:
+            return nil
+        }
+    }
+    
+    var description: String {
+        get {
+            switch self {
+            case .aac:
+                return "AAC"
             case .raw:
                 return "Raw"
             }
@@ -149,6 +177,12 @@ struct Preferences {
         }
     }
     
+    var audioFormat: PreferenceAudioFormat {
+        didSet {
+            UserDefaults.standard.setValue(audioFormat.description, forKey: keyAudioFormat)
+        }
+    }
+    
     init() {
         // register preference defaults
         Preferences.registerDefaults()
@@ -178,6 +212,7 @@ struct Preferences {
         thresholdSongNongsongRatio = defaults.double(forKey: keyThresholdSongNonsongRatio)
         thresholdSongBackgroundRatio = defaults.double(forKey: keyThresholdSongBackgroundRatio)
         videoFormat = PreferenceVideoFormat(fromString: defaults.string(forKey: keyVideoFormat) ?? "H264") ?? PreferenceVideoFormat.h264
+        audioFormat = PreferenceAudioFormat(fromString: defaults.string(forKey: keyAudioFormat) ?? "AAC") ?? PreferenceAudioFormat.aac
     }
     
     static let defaultPreferences: [String: Any] = [
@@ -193,7 +228,8 @@ struct Preferences {
         keyTriggerValue: NSNumber(value: 500 as Int),
         keyThresholdSongNonsongRatio: NSNumber(value: 1.4 as Double),
         keyThresholdSongBackgroundRatio: NSNumber(value: 25.0 as Double),
-        keyVideoFormat: "H264"
+        keyVideoFormat: "H264",
+        keyAudioFormat: "AAC"
     ]
     
     // track
