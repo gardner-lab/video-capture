@@ -912,12 +912,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         switch appPreferences.videoFormat {
         case .raw:
             // configure video connection with empty dictionary
-            if let con = movieOut.connection(with: AVMediaType.video) {
+            if let con = movieOut.connection(with: .video) {
                 let settings: [String : Any] = [:]
                 movieOut.setOutputSettings(settings, for: con)
             }
+            
         case .h264:
             break // default, no configuration required
+        }
+        
+        // audio output settings
+        switch appPreferences.audioFormat {
+        case .raw:
+            // configure audio connection with lossless format
+            if let con = movieOut.connection(with: .audio) {
+                movieOut.setOutputSettings([
+                    AVFormatIDKey: kAudioFormatAppleLossless // TODO: kAudioFormatFLAC maybe?
+                    ], for: con)
+            }
+        case .aac:
+            break
         }
         
         // store output
@@ -948,7 +962,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create file control
         if nil == avFileControl {
             avFileControl = CaptureControl(parent: self, outputFileType: AVFileType.m4a)
-
         }
         
         // create nice capture
@@ -961,6 +974,16 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         session.addOutput(audioOut)
+        
+        // configure audio format
+        switch appPreferences.audioFormat {
+        case .aac:
+            break
+        case .raw:
+            audioOut.audioSettings = [
+                AVFormatIDKey: kAudioFormatAppleLossless // TODO: kAudioFormatFLAC maybe?
+            ]
+        }
         
         self.avFileOut = audioOut
         
@@ -1007,37 +1030,36 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func refreshOutputs() {
         if nil == avInputVideo && nil == avInputAudio {
             // no inputs
+            avSession?.beginConfiguration()
             stopVideoData()
             stopVideoFile()
             stopAudioFile()
+            avSession?.commitConfiguration()
+            return
         }
-        else if nil == avInputVideo {
-            // has movie out?
-            stopVideoData()
-            if let _ = self.avFileOut as? AVCaptureMovieFileOutput {
-                stopVideoFile()
-            }
-            
+        
+        // start session
+        startSession()
+        
+        // lock configuration
+        avSession?.beginConfiguration()
+        
+        // stop existing files
+        stopVideoData()
+        stopVideoFile()
+        stopAudioFile()
+        
+        // restart files / data
+        if nil == avInputVideo {
             startAudioFile()
         }
         else {
-            // has audio out?
-            if let _ = self.avFileOut as? AVCaptureAudioFileOutput {
-                stopAudioFile()
-            }
-            
-            if nil == avFileOut && nil == avVideoData {
-                startSession()
-                avSession?.beginConfiguration()
-                startVideoData()
-                startVideoFile()
-                avSession?.commitConfiguration()
-            }
-            else {
-                startVideoData()
-                startVideoFile()
-            }
+            startVideoData()
+            startVideoFile()
         }
+        
+        // commit configuration
+        avSession?.commitConfiguration()
     }
     
     func createAudioOutputs(_ file: URL) -> Bool {
@@ -1584,8 +1606,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.video, AVMediaType.muxed]) {
                 // get formats
 //                for f in videoDevice.formats {
-//                    let f2 = f as! AVCaptureDeviceFormat
-//                    let d = CMVideoFormatDescriptionGetDimensions(f2.formatDescription)
+//                    print("\(f)")
+//                    let d = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
 //                    DLog("\(d)")
 //                }
                 
