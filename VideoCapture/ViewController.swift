@@ -43,7 +43,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     // document mode
     var mode = VideoCaptureMode.configure {
         didSet {
-            refreshInterface()
+            DispatchQueue.main.async {
+                self.refreshInterface()
+            }
         }
     }
     
