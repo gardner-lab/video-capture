@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14109" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14109"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14113"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -1013,11 +1013,11 @@
             <objects>
                 <viewController title="Capture" showSeguePresentationStyle="single" id="8nG-xv-1tU" customClass="PreferencesViewController" customModule="VideoCapture" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="s4F-CY-wqS">
-                        <rect key="frame" x="0.0" y="0.0" width="360" height="190"/>
+                        <rect key="frame" x="0.0" y="0.0" width="360" height="231"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2qr-Yo-N10">
-                                <rect key="frame" x="18" y="102" width="324" height="68"/>
+                                <rect key="frame" x="18" y="143" width="324" height="68"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="320" id="Hcn-EZ-1M5"/>
                                     <constraint firstAttribute="width" constant="320" id="SSR-jh-IOy"/>
@@ -1030,10 +1030,10 @@
                                 </textFieldCell>
                             </textField>
                             <box hidden="YES" horizontalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="D8H-P6-LFo">
-                                <rect key="frame" x="178" y="20" width="5" height="150"/>
+                                <rect key="frame" x="178" y="20" width="5" height="191"/>
                             </box>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bJ5-OQ-LWG">
-                                <rect key="frame" x="86" y="63" width="86" height="17"/>
+                                <rect key="frame" x="86" y="104" width="86" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Video Format" id="7Q4-bq-OjC">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -1051,7 +1051,7 @@
                                 </connections>
                             </button>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="nEU-N9-jav">
-                                <rect key="frame" x="189" y="58" width="71" height="26"/>
+                                <rect key="frame" x="189" y="99" width="71" height="26"/>
                                 <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="OpY-w2-cXp">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -1066,22 +1066,50 @@
                                     <binding destination="6Ct-dS-8bX" name="selectedValue" keyPath="values.VideoFormat" id="DPM-31-EPZ"/>
                                 </connections>
                             </popUpButton>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="YnZ-ce-lcn">
+                                <rect key="frame" x="86" y="63" width="86" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Audio Format" id="yjf-XO-m3l">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="GPh-Qr-jTe">
+                                <rect key="frame" x="189" y="58" width="64" height="26"/>
+                                <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="eLX-IV-YZf">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="Fpk-t1-SdD">
+                                        <items>
+                                            <menuItem title="Raw" id="KlT-XO-4Nv"/>
+                                            <menuItem title="AAC" id="g7D-GF-uIh"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <binding destination="6Ct-dS-8bX" name="selectedValue" keyPath="values.AudioFormat" id="B5z-zh-94b"/>
+                                </connections>
+                            </popUpButton>
                         </subviews>
                         <constraints>
                             <constraint firstItem="D8H-P6-LFo" firstAttribute="top" secondItem="s4F-CY-wqS" secondAttribute="top" constant="20" id="5I8-J5-E7q"/>
                             <constraint firstAttribute="bottom" secondItem="D8H-P6-LFo" secondAttribute="bottom" constant="20" id="7aS-zd-n6k"/>
                             <constraint firstItem="2qr-Yo-N10" firstAttribute="top" secondItem="s4F-CY-wqS" secondAttribute="top" constant="20" id="Abu-p3-o2D"/>
-                            <constraint firstItem="h1C-Y1-wsu" firstAttribute="top" secondItem="nEU-N9-jav" secondAttribute="bottom" constant="20" id="FWb-Jo-beZ"/>
+                            <constraint firstItem="h1C-Y1-wsu" firstAttribute="top" secondItem="GPh-Qr-jTe" secondAttribute="bottom" constant="20" id="EHA-JQ-MYF"/>
                             <constraint firstItem="nEU-N9-jav" firstAttribute="top" secondItem="2qr-Yo-N10" secondAttribute="bottom" constant="20" id="Ih9-sf-R1v"/>
                             <constraint firstItem="nEU-N9-jav" firstAttribute="leading" secondItem="D8H-P6-LFo" secondAttribute="trailing" constant="10" id="JOb-0G-5zI"/>
                             <constraint firstItem="D8H-P6-LFo" firstAttribute="centerX" secondItem="s4F-CY-wqS" secondAttribute="centerX" id="KdX-jP-wcZ"/>
                             <constraint firstItem="nEU-N9-jav" firstAttribute="centerY" secondItem="bJ5-OQ-LWG" secondAttribute="centerY" id="LqQ-hf-Fla"/>
                             <constraint firstItem="2qr-Yo-N10" firstAttribute="centerX" secondItem="s4F-CY-wqS" secondAttribute="centerX" id="Vr3-xM-ugW"/>
                             <constraint firstAttribute="trailing" secondItem="2qr-Yo-N10" secondAttribute="trailing" constant="20" id="aQE-qf-UO2"/>
+                            <constraint firstItem="GPh-Qr-jTe" firstAttribute="top" secondItem="nEU-N9-jav" secondAttribute="bottom" constant="20" id="c3C-K2-qX5"/>
+                            <constraint firstItem="GPh-Qr-jTe" firstAttribute="centerY" secondItem="YnZ-ce-lcn" secondAttribute="centerY" id="d7x-80-UcP"/>
                             <constraint firstItem="D8H-P6-LFo" firstAttribute="leading" secondItem="bJ5-OQ-LWG" secondAttribute="trailing" constant="10" id="hmf-He-m6W"/>
                             <constraint firstAttribute="bottom" secondItem="h1C-Y1-wsu" secondAttribute="bottom" constant="20" id="kcE-k1-J8O"/>
+                            <constraint firstItem="GPh-Qr-jTe" firstAttribute="leading" secondItem="D8H-P6-LFo" secondAttribute="trailing" constant="10" id="nIR-lY-9mp"/>
                             <constraint firstItem="h1C-Y1-wsu" firstAttribute="leading" secondItem="D8H-P6-LFo" secondAttribute="trailing" constant="10" id="oIv-IH-eSf"/>
                             <constraint firstItem="2qr-Yo-N10" firstAttribute="leading" secondItem="s4F-CY-wqS" secondAttribute="leading" constant="20" id="ozn-G1-mIP"/>
+                            <constraint firstItem="D8H-P6-LFo" firstAttribute="leading" secondItem="YnZ-ce-lcn" secondAttribute="trailing" constant="10" id="ry4-kw-XK8"/>
                         </constraints>
                     </view>
                     <connections>
@@ -1091,7 +1119,7 @@
                 <customObject id="xhI-ii-das" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <userDefaultsController representsSharedInstance="YES" id="6Ct-dS-8bX"/>
             </objects>
-            <point key="canvasLocation" x="1616" y="1082"/>
+            <point key="canvasLocation" x="1616" y="1114.5"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="hIz-AP-VOD">
