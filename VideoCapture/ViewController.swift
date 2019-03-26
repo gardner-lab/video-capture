@@ -267,10 +267,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasDisconnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasDisconnected, object: nil)
         
         // connect document
-        if let doc = view.window?.windowController?.document {
-            document = doc as? Document
-            copyFromDocument()
-        }
+        let doc = view.window?.windowController?.document
+        checkMediaAccess([.video, .audio], onSuccess: {
+            if let doc = doc {
+                self.document = doc as? Document
+                self.copyFromDocument()
+            }
+        }, onFailure: {
+            // show alert, then close
+            let alert = NSAlert()
+            alert.messageText = "Unable to access camera or microphone"
+            alert.informativeText = "The application needs access to your camera and microphone to operate. Open \"System Preferences\" and review your privacy settings to provide access."
+            alert.addButton(withTitle: "Ok")
+            
+            // can not open modal here, so defer it (hacky)
+            DispatchQueue.main.async {
+                alert.runModal()
+                self.view.window?.close()
+            }
+        })
         
         // initialize preview background
         if let view = previewView, let root = view.layer {
