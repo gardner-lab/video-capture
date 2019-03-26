@@ -1762,7 +1762,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 //}
                 
                 // set led brightness
-                var ledToggleVal = (activeLED == .Secondary)
+                let ledToggleVal = (activeLED == .Secondary)
                 try ioArduino?.writeTo(appPreferences.pinDigitalToggleLED, digitalValue: ledToggleVal)
                 if let ledBrightness = sliderLedBrightness?.integerValue {
                     try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(ledBrightness))
@@ -2130,7 +2130,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 self.bufferSize = bytesTotal
             }
             
-            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
+            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: CIFormat.ARGB8, colorSpace: nil)
             
             let bytes = UnsafeBufferPointer<UInt8>(start: self.buffer!.assumingMemoryBound(to: UInt8.self), count: Int(bytesTotal))
             annotSum = [Float](repeating: 0.0, count: extractValues.count)
