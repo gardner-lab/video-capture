@@ -266,6 +266,28 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasConnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil)
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasDisconnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasDisconnected, object: nil)
         
+        // initialize preview background
+        if let view = previewView {
+            let root = CALayer()
+            root.backgroundColor = CGColor(gray: 0.2, alpha: 1.0)
+            root.layoutManager = CAConstraintLayoutManager()
+            view.layer = root
+            //CGColorGetConstantColor(kCGColorBlack)
+        }
+        
+        if let view = annotableView, let root = view.layer {
+            view.wantsLayer = true
+            root.zPosition = 1.0
+        }
+        
+        // initialize drag from table
+        if let tv = tableAnnotations {
+            tv.registerForDraggedTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
+        }
+        if let tf = tokenFeedback {
+            tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
+        }
+        
         // connect document
         let doc = view.window?.windowController?.document
         checkMediaAccess([.video, .audio], onSuccess: {
@@ -286,25 +308,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 self.view.window?.close()
             }
         })
-        
-        // initialize preview background
-        if let view = previewView, let root = view.layer {
-            root.backgroundColor = CGColor(gray: 0.2, alpha: 1.0)
-            //CGColorGetConstantColor(kCGColorBlack)
-        }
-        
-        if let view = annotableView, let root = view.layer {
-            view.wantsLayer = true
-            root.zPosition = 1.0
-        }
-        
-        // initialize drag from table
-        if let tv = tableAnnotations {
-            tv.registerForDraggedTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
-        }
-        if let tf = tokenFeedback {
-            tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
-        }
         
         // refresh interface
         refreshInterface()
