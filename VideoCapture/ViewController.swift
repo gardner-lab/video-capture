@@ -791,8 +791,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // turn off LED before hand (avoid bleaching)
         do {
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: 0)
         }
         catch { }
         
@@ -1383,8 +1383,8 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // turn off led and camera
         do {
             try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
-            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
+            try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: 0)
         }
         catch {
             
@@ -1483,7 +1483,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // turn off LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
                 try ioArduino?.writeTo(appPreferences.pinAnalogSecondLED, analogValue: 0)
             }
             catch {
