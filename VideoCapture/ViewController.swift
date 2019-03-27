@@ -291,9 +291,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // connect document
         let doc = view.window?.windowController?.document
         checkMediaAccess([.video, .audio], onSuccess: {
-            if let doc = doc {
-                self.document = doc as? Document
-                self.copyFromDocument()
+            // run on the main thread
+            DispatchQueue.main.async {
+                if let doc = doc {
+                    self.document = doc as? Document
+                    self.copyFromDocument()
+                }
             }
         }, onFailure: {
             // show alert, then close
