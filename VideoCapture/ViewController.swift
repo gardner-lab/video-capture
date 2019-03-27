@@ -333,9 +333,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // end any session
+        avSession?.beginConfiguration()
         stopVideoData()
         stopVideoFile()
         stopAudioFile()
+        avSession?.commitConfiguration()
+        
         stopSession()
         
         // will disappear
@@ -806,19 +809,29 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func startSession() {
+        let startRunning: Bool
+        
         if nil == self.avSession {
             // create capture session
             let session = AVCaptureSession()
             self.avSession = session
             session.sessionPreset = AVCaptureSession.Preset.high
             
-            session.startRunning()
+            startRunning = true
+        }
+        else {
+            startRunning = false
         }
         
         // preview layer
         if nil == self.avPreviewLayer {
             let previewLayer = AVCaptureVideoPreviewLayer(session: self.avSession!)
             self.avPreviewLayer = previewLayer
+        }
+        
+        // start session (after adding preview layer)
+        if startRunning {
+            self.avSession!.startRunning()
         }
     }
     
@@ -833,6 +846,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // begin configuring (can be nested)
         session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
         
         // raw data
         let videoData = AVCaptureVideoDataOutput()
@@ -862,9 +878,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         session.addOutput(videoStill)
-        
-        // commit configuration
-        session.commitConfiguration()
         
         // create timer for redraw
         timerRedraw = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.timerUpdateValues(_:)), userInfo: nil, repeats: true)
@@ -928,6 +941,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let movieOut = AVCaptureMovieFileOutput()
         movieOut.delegate = avFileControl
         
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
+        
         // add session
         if !session.canAddOutput(movieOut) {
             DLog("Unable to add movie file output.")
@@ -960,6 +979,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .aac:
             break
         }
+        
+        // commit configuration
+        avSession?.commitConfiguration()
         
         // store output
         avFileOut = movieOut
@@ -994,6 +1016,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create nice capture
         let audioOut = AVCaptureAudioFileOutput()
         audioOut.delegate = avFileControl
+        
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
         
         // add session
         if !session.canAddOutput(audioOut) {
@@ -1064,10 +1092,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             avSession?.commitConfiguration()
             return
         }
-        
+
         // start session
         startSession()
-        
+
         // lock configuration
         avSession?.beginConfiguration()
         
@@ -1075,7 +1103,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         stopVideoData()
         stopVideoFile()
         stopAudioFile()
-        
+
         // restart files / data
         if nil == avInputVideo {
             startAudioFile()
@@ -1084,7 +1112,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             startVideoData()
             startVideoFile()
         }
-        
+
         // commit configuration
         avSession?.commitConfiguration()
     }
@@ -1230,6 +1258,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func setupBeforeCapture() -> Bool {
         // create video inputs
         if nil != avInputVideo {
+            // handle in a configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             if !startVideoData() {
                 return false
             }
@@ -1604,6 +1638,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return
             }
             
+            // start sesion
+            startSession()
+            
+            // handle in configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             // get existing device
             if nil != avInputVideo {
                 // should be defined
@@ -1620,20 +1663,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 avSession!.removeInput(avInputVideo!)
                 avInputVideo = nil
             }
-            else {
-                // start sesion
-                startSession()
-            }
             
             // get device and add it
             if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.video, AVMediaType.muxed]) {
-                // get formats
-//                for f in videoDevice.formats {
-//                    print("\(f)")
-//                    let d = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
-//                    DLog("\(d)")
-//                }
-                
                 // add input
                 avInputVideo = addInput(videoDevice)
                 
@@ -1655,6 +1687,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // should be defined
                 assert(nil != avSession)
                 
+                // handle in configuration block
+                avSession?.beginConfiguration()
+                defer {
+                    avSession?.commitConfiguration()
+                }
                 
                 // remove video
                 avSession!.removeInput(avInputVideo!)
@@ -1690,6 +1727,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return
             }
             
+            // start sesion
+            startSession()
+            
+            // handle in configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             // get existing device
             if nil != avInputAudio {
                 // should be defined
@@ -1706,10 +1752,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 avSession!.removeInput(avInputAudio!)
                 avInputAudio = nil
             }
-            else {
-                // start sesion
-                startSession()
-            }
             
             // get device and add it
             if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.audio, AVMediaType.muxed]) {
@@ -1723,6 +1765,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if nil != avInputAudio {
                 // should be defined
                 assert(nil != self.avSession)
+                
+                // handle in configuration block
+                avSession?.beginConfiguration()
+                defer {
+                    avSession?.commitConfiguration()
+                }
                 
                 // remove audio
                 avSession!.removeInput(avInputAudio!)
