@@ -51,6 +51,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     
     @IBOutlet weak var textName: NSTextField!
     @IBOutlet weak var tokenFeedback: NSTokenField!
+    @IBOutlet weak var buttonVideoSettings: NSButton!
     @IBOutlet weak var listVideoSources: NSPopUpButton!
     @IBOutlet weak var listAudioSources: NSPopUpButton!
     @IBOutlet weak var listSerialPorts: NSPopUpButton!
@@ -248,6 +249,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     var ciContext: CIContext?
     var buffer: UnsafeMutableRawPointer? = nil
     var bufferSize = 0
+    
+    // configuration status
+    var avConfigureDepth: Int = 0
+    var avConfigureLockVideo: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -333,11 +338,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // end any session
-        avSession?.beginConfiguration()
+        sessionBeginConfiguration(lockDevices: false)
         stopVideoData()
         stopVideoFile()
         stopAudioFile()
-        avSession?.commitConfiguration()
+        sessionEndConfiguration()
         
         stopSession()
         
@@ -458,18 +463,19 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func refreshInterface() {
         // editability
         let editable = mode.isEditable()
-        textName?.isEnabled = editable
-        tokenFeedback?.isEnabled = editable
+        textName.isEnabled = editable
+        tokenFeedback.isEnabled = editable
         buttonStill.isEnabled = editable && nil != avInputVideo
-        listVideoSources?.isEnabled = editable
-        listAudioSources?.isEnabled = editable
-        listSerialPorts?.isEnabled = editable
-        sliderLedBrightness?.isEnabled = editable && nil != ioArduino
-        textLedBrightness?.isEnabled = editable && nil != ioArduino
-        sliderLedTwoBrightness?.isEnabled = editable && nil != ioArduino
-        textLedTwoBrightness?.isEnabled = editable && nil != ioArduino
-        buttonToggleLed?.isEnabled = editable && nil != ioArduino
-        annotableView?.isEnabled = editable
+        buttonVideoSettings.isEnabled = editable && nil != avInputVideo
+        listVideoSources.isEnabled = editable
+        listAudioSources.isEnabled = editable
+        listSerialPorts.isEnabled = editable
+        sliderLedBrightness.isEnabled = editable && nil != ioArduino
+        textLedBrightness.isEnabled = editable && nil != ioArduino
+        sliderLedTwoBrightness.isEnabled = editable && nil != ioArduino
+        textLedTwoBrightness.isEnabled = editable && nil != ioArduino
+        buttonToggleLed.isEnabled = editable && nil != ioArduino
+        annotableView.isEnabled = editable
         // annotation names
         if let tv = tableAnnotations {
             let col = tv.column(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "name"))
@@ -481,25 +487,25 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // button modes
         switch mode {
         case .configure:
-            buttonCapture?.isEnabled = (nil != avInputVideo || nil != avInputAudio)
-            buttonCapture?.title = "Start Capturing"
-            buttonMonitor?.isEnabled = (nil != avInputVideo || nil != avInputAudio) && nil != ioArduino
-            buttonMonitor?.title = "Start Monitoring Pin"
+            buttonCapture.isEnabled = (nil != avInputVideo || nil != avInputAudio)
+            buttonCapture.title = "Start Capturing"
+            buttonMonitor.isEnabled = (nil != avInputVideo || nil != avInputAudio) && nil != ioArduino
+            buttonMonitor.title = "Start Monitoring Pin"
         case .manualCapture:
-            buttonCapture?.isEnabled = true
-            buttonCapture?.title = "Stop Capturing"
-            buttonMonitor?.isEnabled = false
-            buttonMonitor?.title = "Start Monitoring Pin"
+            buttonCapture.isEnabled = true
+            buttonCapture.title = "Stop Capturing"
+            buttonMonitor.isEnabled = false
+            buttonMonitor.title = "Start Monitoring Pin"
         case .triggeredCapture:
-            buttonCapture?.isEnabled = false
-            buttonCapture?.title = "Stop Capturing"
-            buttonMonitor?.isEnabled = true
-            buttonMonitor?.title = "Stop Monitoring Pin"
+            buttonCapture.isEnabled = false
+            buttonCapture.title = "Stop Capturing"
+            buttonMonitor.isEnabled = true
+            buttonMonitor.title = "Stop Monitoring Pin"
         case .monitor:
-            buttonCapture?.isEnabled = false
-            buttonCapture?.title = "Start Capturing"
-            buttonMonitor?.isEnabled = true
-            buttonMonitor?.title = "Stop Monitoring Pin"
+            buttonCapture.isEnabled = false
+            buttonCapture.title = "Start Capturing"
+            buttonMonitor.isEnabled = true
+            buttonMonitor.title = "Stop Monitoring Pin"
         }
     }
     
@@ -808,6 +814,66 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
     }
     
+    func sessionBeginConfiguration(lockDevices: Bool = true) {
+        if 0 < avConfigureDepth {
+            // increment configure depth
+            avConfigureDepth += 1
+            return
+        }
+        
+        // get session (otherwise nothing to do)
+        guard let session = avSession else {
+            return
+        }
+        
+        // lock video
+        avConfigureLockVideo = false
+        if lockDevices {
+            if let videoDevice = self.avInputVideo?.device {
+                do {
+                    try videoDevice.lockForConfiguration()
+                    avConfigureLockVideo = true
+                }
+                catch {
+                    DLog("[WARNING] Unable to lock video: \(error)")
+                }
+            }
+        }
+        
+        // lock session
+        session.beginConfiguration()
+        
+        // increment configure depth
+        avConfigureDepth = 1
+    }
+    
+    func sessionEndConfiguration() {
+        if 1 < avConfigureDepth {
+            // decrement configure depth
+            avConfigureDepth -= 1
+        }
+        
+        // get session (otherwise nothing to do)
+        guard let session = avSession else {
+            avConfigureDepth = 0
+            return
+        }
+        
+        // unlock session
+        session.commitConfiguration()
+        
+        // unlock video
+        if avConfigureLockVideo {
+            if let videoDevice = self.avInputVideo?.device {
+                videoDevice.unlockForConfiguration()
+            }
+            avConfigureLockVideo = false
+        }
+        
+        // reset configure depth
+        avConfigureDepth = 0
+    }
+    
     func startSession() {
         let startRunning: Bool
         
@@ -845,9 +911,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // begin configuring (can be nested)
-        session.beginConfiguration()
+        sessionBeginConfiguration()
         defer {
-            session.commitConfiguration()
+            sessionEndConfiguration()
         }
         
         // raw data
@@ -893,7 +959,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // begin configuring (can be nested)
-        avSession?.beginConfiguration()
+        sessionBeginConfiguration()
         
         // stop data output
         if nil != avVideoData {
@@ -908,7 +974,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // commit configuration
-        avSession?.commitConfiguration()
+        sessionEndConfiguration()
         
         // release dispatch queue
         if nil != avVideoDispatchQueue {
@@ -942,9 +1008,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         movieOut.delegate = avFileControl
         
         // begin configuring (can be nested)
-        session.beginConfiguration()
+        sessionBeginConfiguration()
         defer {
-            session.commitConfiguration()
+            sessionEndConfiguration()
         }
         
         // add session
@@ -979,9 +1045,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .aac:
             break
         }
-        
-        // commit configuration
-        avSession?.commitConfiguration()
         
         // store output
         avFileOut = movieOut
@@ -1018,9 +1081,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         audioOut.delegate = avFileControl
         
         // begin configuring (can be nested)
-        session.beginConfiguration()
+        sessionBeginConfiguration()
         defer {
-            session.commitConfiguration()
+            sessionEndConfiguration()
         }
         
         // add session
@@ -1085,11 +1148,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func refreshOutputs() {
         if nil == avInputVideo && nil == avInputAudio {
             // no inputs
-            avSession?.beginConfiguration()
+            sessionBeginConfiguration()
             stopVideoData()
             stopVideoFile()
             stopAudioFile()
-            avSession?.commitConfiguration()
+            sessionEndConfiguration()
             return
         }
 
@@ -1097,7 +1160,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         startSession()
 
         // lock configuration
-        avSession?.beginConfiguration()
+        sessionBeginConfiguration()
         
         // stop existing files
         stopVideoData()
@@ -1114,7 +1177,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
 
         // commit configuration
-        avSession?.commitConfiguration()
+        sessionEndConfiguration()
     }
     
     func createAudioOutputs(_ file: URL) -> Bool {
@@ -1259,9 +1322,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create video inputs
         if nil != avInputVideo {
             // handle in a configuration block
-            avSession?.beginConfiguration()
+            sessionBeginConfiguration()
             defer {
-                avSession?.commitConfiguration()
+                sessionEndConfiguration()
             }
             
             if !startVideoData() {
@@ -1642,9 +1705,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             startSession()
             
             // handle in configuration block
-            avSession?.beginConfiguration()
+            sessionBeginConfiguration()
             defer {
-                avSession?.commitConfiguration()
+                sessionEndConfiguration()
             }
             
             // get existing device
@@ -1688,9 +1751,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 assert(nil != avSession)
                 
                 // handle in configuration block
-                avSession?.beginConfiguration()
+                sessionBeginConfiguration()
                 defer {
-                    avSession?.commitConfiguration()
+                    sessionEndConfiguration()
                 }
                 
                 // remove video
@@ -1701,6 +1764,26 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 copyToDocument()
             }
         }
+    }
+    
+    @IBAction func openVideoSettings(_ sender: NSButton!) {
+        // guards
+        guard mode.isEditable() else { return }
+        guard let session = self.avSession else { return }
+        guard let videoInput = self.avInputVideo else { return }
+        
+        // make view controller
+        let viewController = self.storyboard?.instantiateController(withIdentifier: "VideoSettings") as! VideoSettingsVideoController
+        
+        // configure view controller
+        viewController.session = session
+        viewController.videoInput = videoInput
+        
+        // make popover
+        let popover = NSPopover()
+        popover.contentViewController = viewController
+        popover.behavior = .transient
+        popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
     }
     
     @IBAction func selectAudioSource(_ sender: NSPopUpButton!) {
@@ -1731,9 +1814,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             startSession()
             
             // handle in configuration block
-            avSession?.beginConfiguration()
+            sessionBeginConfiguration()
             defer {
-                avSession?.commitConfiguration()
+                sessionEndConfiguration()
             }
             
             // get existing device
@@ -1767,9 +1850,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 assert(nil != self.avSession)
                 
                 // handle in configuration block
-                avSession?.beginConfiguration()
+                sessionBeginConfiguration()
                 defer {
-                    avSession?.commitConfiguration()
+                    sessionEndConfiguration()
                 }
                 
                 // remove audio
