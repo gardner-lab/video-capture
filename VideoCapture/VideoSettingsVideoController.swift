@@ -36,9 +36,37 @@ fileprivate extension AVCaptureDevice.Format
     }
 }
 
+fileprivate func parseSubstringHexToUInt32(str: String, range: NSRange) -> UInt32? {
+    guard let str_range = Range(range, in: str) else { return nil }
+    
+    // get substring
+    let substr = str[str_range]
+    
+    var ret: UInt32 = 0
+    let scanner = Scanner(string: String(substr))
+    guard scanner.scanHexInt32(&ret) else { return nil }
+    
+    return ret
+}
+
+fileprivate func parseDeviceID(deviceID: String) -> (locationID: UInt32, vendorID: UInt32, productID: UInt32)? {
+    // validate device ID
+    let pattern = try! NSRegularExpression(pattern: "^0x([a-f0-9]{8})([a-f0-9]{4})([a-f0-9]{4})$", options: .caseInsensitive)
+    guard let match = pattern.firstMatch(in: deviceID, options: [], range: NSRange(deviceID.startIndex..<deviceID.endIndex, in: deviceID)) else { return nil }
+    
+    // pull out parts
+    guard let locationID = parseSubstringHexToUInt32(str: deviceID, range: match.range(at: 1)) else { return nil }
+    guard let vendorID = parseSubstringHexToUInt32(str: deviceID, range: match.range(at: 2)) else { return nil }
+    guard let productID = parseSubstringHexToUInt32(str: deviceID, range: match.range(at: 3)) else { return nil }
+    
+    return (locationID: locationID, vendorID: vendorID, productID: productID)
+}
+
 class VideoSettingsVideoController: NSViewController {
     var session: AVCaptureSession?
     var videoInput: AVCaptureDeviceInput?
+    
+    var uvcCameraControl: UVCCameraControl?
     
     @IBOutlet var listVideoFormats: NSPopUpButton!
     @IBOutlet var listVideoFrameRates: NSPopUpButton!
@@ -70,6 +98,14 @@ class VideoSettingsVideoController: NSViewController {
         }
         if 0 <= selectedIndex {
             listVideoFormats.selectItem(at: selectedIndex)
+        }
+        
+        // load uvc camera control
+        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID) {
+            self.uvcCameraControl = UVCCameraControl(locationID: uvcDetails.locationID)
+        }
+        else {
+            self.uvcCameraControl = nil
         }
         
         // list frame rates
@@ -133,6 +169,10 @@ class VideoSettingsVideoController: NSViewController {
 //    }
     
     override func viewWillDisappear() {
+        // release camera control
+        let cameraControl = self.uvcCameraControl
+        self.uvcCameraControl = nil
+        
         guard let session = self.session else { return }
         guard let videoDevice = self.videoInput?.device else { return }
         
