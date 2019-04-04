@@ -70,6 +70,8 @@ class VideoSettingsVideoController: NSViewController {
     
     @IBOutlet var listVideoFormats: NSPopUpButton!
     @IBOutlet var listVideoFrameRates: NSPopUpButton!
+    @IBOutlet var sliderExposure: NSSlider!
+    @IBOutlet var sliderGain: NSSlider!
     // @IBOutlet var textExposure: NSTextField!
 
     override func viewDidLoad() {
@@ -101,11 +103,33 @@ class VideoSettingsVideoController: NSViewController {
         }
         
         // load uvc camera control
-        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID) {
-            self.uvcCameraControl = UVCCameraControl(locationID: uvcDetails.locationID)
+        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID), let cameraControl = UVCCameraControl(locationID: uvcDetails.locationID){
+            self.uvcCameraControl = cameraControl
+            
+            // exposure
+            let exposure = cameraControl.getExposure()
+            if exposure >= 0.0 && exposure <= 1.0 {
+                self.sliderExposure.isEnabled = true
+                self.sliderExposure.floatValue = exposure
+            }
+            else {
+                self.sliderExposure.isEnabled = false
+            }
+            
+            // gain
+            let gain = cameraControl.getGain()
+            if gain >= 0.0 && gain <= 1.0 {
+                self.sliderGain.isEnabled = true
+                self.sliderGain.floatValue = gain
+            }
+            else {
+                self.sliderGain.isEnabled = false
+            }
         }
         else {
             self.uvcCameraControl = nil
+            self.sliderExposure.isEnabled = false
+            self.sliderGain.isEnabled = false
         }
         
         // list frame rates
@@ -191,6 +215,16 @@ class VideoSettingsVideoController: NSViewController {
         if let frameRate = getFrameRate() {
             videoDevice.activeVideoMinFrameDuration = frameRate.minFrameDuration
             videoDevice.activeVideoMaxFrameDuration = frameRate.maxFrameDuration
+        }
+        
+        // configure: exposure
+        if self.sliderExposure.isEnabled, let cc = cameraControl {
+            cc.setExposure(self.sliderExposure.floatValue)
+        }
+        
+        // configure: exposure
+        if self.sliderGain.isEnabled, let cc = cameraControl {
+            cc.setGain(self.sliderExposure.floatValue)
         }
         
         // commit session configuration

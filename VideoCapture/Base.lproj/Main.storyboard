@@ -1557,17 +1557,6 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yp3-9y-xaJ">
-                                <rect key="frame" x="192" y="53" width="72" height="22"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="F4h-Zi-MUS">
-                                    <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="tPq-6l-OtI">
-                                        <real key="minimum" value="1"/>
-                                    </numberFormatter>
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9Ny-rB-I22">
                                 <rect key="frame" x="190" y="90" width="77" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="GGL-4z-vC2" id="skc-wq-wmi">
@@ -1582,29 +1571,41 @@
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="l9p-Ba-PJ3">
+                                <rect key="frame" x="190" y="54" width="76" height="19"/>
+                                <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="lFm-8h-6sz"/>
+                            </slider>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="LnU-Bb-UC5">
+                                <rect key="frame" x="190" y="14" width="76" height="19"/>
+                                <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="y0B-4W-YNd"/>
+                            </slider>
                         </subviews>
                         <constraints>
                             <constraint firstItem="9Ny-rB-I22" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="hh4-ym-wKD" secondAttribute="trailing" priority="500" constant="30" id="0Gb-bc-9Da"/>
+                            <constraint firstItem="l9p-Ba-PJ3" firstAttribute="width" secondItem="mq4-dD-U5u" secondAttribute="width" id="2jG-IS-htI"/>
                             <constraint firstItem="1Nw-8p-K3s" firstAttribute="leading" secondItem="L5K-lt-3UV" secondAttribute="leading" constant="15" id="6W0-9O-Vdr"/>
                             <constraint firstItem="mq4-dD-U5u" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="1Nw-8p-K3s" secondAttribute="trailing" priority="500" constant="30" id="6ns-TU-Zfj"/>
                             <constraint firstItem="XRg-lh-lL7" firstAttribute="width" secondItem="1Nw-8p-K3s" secondAttribute="width" id="7uL-Re-6M9"/>
-                            <constraint firstItem="yp3-9y-xaJ" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U1D-3F-RHb" secondAttribute="trailing" priority="500" constant="30" id="9D1-jf-cZR"/>
+                            <constraint firstAttribute="trailing" secondItem="LnU-Bb-UC5" secondAttribute="trailing" constant="15" id="9BJ-3Z-vdu"/>
+                            <constraint firstItem="LnU-Bb-UC5" firstAttribute="width" secondItem="mq4-dD-U5u" secondAttribute="width" id="9ln-7Q-asj"/>
+                            <constraint firstItem="LnU-Bb-UC5" firstAttribute="centerY" secondItem="XRg-lh-lL7" secondAttribute="centerY" id="9pz-8I-aP8"/>
                             <constraint firstAttribute="bottom" secondItem="XRg-lh-lL7" secondAttribute="bottom" constant="15" id="DpS-93-k6V"/>
-                            <constraint firstItem="yp3-9y-xaJ" firstAttribute="centerY" secondItem="U1D-3F-RHb" secondAttribute="centerY" id="Ejt-k4-Vto"/>
                             <constraint firstItem="mq4-dD-U5u" firstAttribute="centerY" secondItem="1Nw-8p-K3s" secondAttribute="centerY" id="Eoh-eI-7Xv"/>
+                            <constraint firstItem="LnU-Bb-UC5" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="XRg-lh-lL7" secondAttribute="trailing" priority="500" constant="30" id="Eto-VB-3HV"/>
                             <constraint firstItem="hh4-ym-wKD" firstAttribute="top" secondItem="1Nw-8p-K3s" secondAttribute="bottom" constant="23" id="NAG-xv-6rZ"/>
-                            <constraint firstItem="yp3-9y-xaJ" firstAttribute="width" secondItem="mq4-dD-U5u" secondAttribute="width" id="NKk-14-w4M"/>
                             <constraint firstItem="9Ny-rB-I22" firstAttribute="width" secondItem="mq4-dD-U5u" secondAttribute="width" id="NdT-B4-97b"/>
                             <constraint firstItem="U1D-3F-RHb" firstAttribute="leading" secondItem="L5K-lt-3UV" secondAttribute="leading" constant="15" id="ODZ-lv-OkQ"/>
                             <constraint firstAttribute="trailing" secondItem="9Ny-rB-I22" secondAttribute="trailing" constant="15" id="Zf5-1d-EGI"/>
+                            <constraint firstAttribute="trailing" secondItem="l9p-Ba-PJ3" secondAttribute="trailing" constant="15" id="cX6-cl-PFl"/>
+                            <constraint firstItem="l9p-Ba-PJ3" firstAttribute="centerY" secondItem="U1D-3F-RHb" secondAttribute="centerY" id="cwV-L4-HR9"/>
                             <constraint firstItem="9Ny-rB-I22" firstAttribute="centerY" secondItem="hh4-ym-wKD" secondAttribute="centerY" id="eoR-FZ-Y4o"/>
                             <constraint firstItem="U1D-3F-RHb" firstAttribute="width" secondItem="1Nw-8p-K3s" secondAttribute="width" id="hhF-Bj-Cp6"/>
                             <constraint firstItem="U1D-3F-RHb" firstAttribute="top" secondItem="hh4-ym-wKD" secondAttribute="bottom" constant="23" id="hlJ-Is-l0F"/>
                             <constraint firstItem="XRg-lh-lL7" firstAttribute="top" secondItem="U1D-3F-RHb" secondAttribute="bottom" constant="23" id="nCE-19-X2d"/>
                             <constraint firstItem="hh4-ym-wKD" firstAttribute="leading" secondItem="L5K-lt-3UV" secondAttribute="leading" constant="15" id="qfa-hg-Jby"/>
+                            <constraint firstItem="l9p-Ba-PJ3" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="U1D-3F-RHb" secondAttribute="trailing" priority="500" constant="30" id="swZ-3P-1qa"/>
                             <constraint firstItem="1Nw-8p-K3s" firstAttribute="top" secondItem="L5K-lt-3UV" secondAttribute="top" constant="15" id="txg-Vc-s0W"/>
                             <constraint firstAttribute="trailing" secondItem="mq4-dD-U5u" secondAttribute="trailing" constant="15" id="xKn-wH-YVX"/>
-                            <constraint firstAttribute="trailing" secondItem="yp3-9y-xaJ" secondAttribute="trailing" constant="15" id="xlV-Js-Mkk"/>
                             <constraint firstItem="XRg-lh-lL7" firstAttribute="leading" secondItem="L5K-lt-3UV" secondAttribute="leading" constant="15" id="y61-oo-f54"/>
                             <constraint firstItem="hh4-ym-wKD" firstAttribute="width" secondItem="1Nw-8p-K3s" secondAttribute="width" id="zL0-7W-1Yh"/>
                         </constraints>
@@ -1612,6 +1613,8 @@
                     <connections>
                         <outlet property="listVideoFormats" destination="mq4-dD-U5u" id="tWM-mY-s0e"/>
                         <outlet property="listVideoFrameRates" destination="9Ny-rB-I22" id="RFZ-pP-52P"/>
+                        <outlet property="sliderExposure" destination="l9p-Ba-PJ3" id="Ckg-FB-HH8"/>
+                        <outlet property="sliderGain" destination="LnU-Bb-UC5" id="B6f-X8-4EL"/>
                     </connections>
                 </viewController>
                 <customObject id="J0i-9i-Sei" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
