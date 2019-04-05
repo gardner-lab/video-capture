@@ -70,8 +70,11 @@ class VideoSettingsVideoController: NSViewController {
     
     @IBOutlet var listVideoFormats: NSPopUpButton!
     @IBOutlet var listVideoFrameRates: NSPopUpButton!
+    @IBOutlet var buttonAutoExposure: NSButton!
     @IBOutlet var sliderExposure: NSSlider!
     @IBOutlet var sliderGain: NSSlider!
+    @IBOutlet var buttonAutoWhiteBalance: NSButton!
+    @IBOutlet var sliderWhiteBalance: NSSlider!
     // @IBOutlet var textExposure: NSTextField!
 
     override func viewDidLoad() {
@@ -109,10 +112,12 @@ class VideoSettingsVideoController: NSViewController {
             // exposure
             let exposure = cameraControl.getExposure()
             if exposure >= 0.0 && exposure <= 1.0 {
-                self.sliderExposure.isEnabled = true
+                self.buttonAutoExposure.isEnabled = true
+                self.sliderExposure.isEnabled = !cameraControl.getAutoExposure()
                 self.sliderExposure.floatValue = exposure
             }
             else {
+                self.buttonAutoExposure.isEnabled = false
                 self.sliderExposure.isEnabled = false
             }
             
@@ -125,6 +130,18 @@ class VideoSettingsVideoController: NSViewController {
             else {
                 self.sliderGain.isEnabled = false
             }
+            
+            // white balance
+            let whiteBalance = cameraControl.getWhiteBalance()
+            if whiteBalance >= 0.0 && whiteBalance <= 1.0 {
+                self.buttonAutoWhiteBalance.isEnabled = true
+                self.sliderWhiteBalance.isEnabled = !cameraControl.getAutoWhiteBalance()
+                self.sliderWhiteBalance.floatValue = whiteBalance
+            }
+            else {
+                self.buttonAutoWhiteBalance.isEnabled = false
+                self.sliderWhiteBalance.isEnabled = false
+            }
         }
         else {
             self.uvcCameraControl = nil
@@ -134,6 +151,18 @@ class VideoSettingsVideoController: NSViewController {
         
         // list frame rates
         self.refreshFrameRate(forFormat: videoDevice.activeFormat)
+    }
+    
+    private func whileConfiguring(cb: () -> ()) {
+        if let videoDevice = self.videoInput?.device {
+            // will crash if fails, bad
+            try! videoDevice.lockForConfiguration()
+            cb()
+            videoDevice.unlockForConfiguration()
+        }
+        else {
+            cb()
+        }
     }
     
     func refreshFrameRate(forFormat format: AVCaptureDevice.Format) {
@@ -171,6 +200,13 @@ class VideoSettingsVideoController: NSViewController {
     @IBAction func selectFormat(_ sender: NSPopUpButton!) {
         guard let format = self.getFormat() else { return }
         self.refreshFrameRate(forFormat: format)
+        
+        // update format
+        if let videoDevice = self.videoInput?.device {
+            self.whileConfiguring {
+                videoDevice.activeFormat = format
+            }
+        }
     }
     
     func getFrameRate() -> AVFrameRateRange? {
@@ -183,57 +219,89 @@ class VideoSettingsVideoController: NSViewController {
         return nil
     }
     
-//    @IBAction func selectFrameRate(_ sender: NSPopUpButton!) {
-//        guard let frameRate = self.getFrameRate() else { return }
-//        self.refreshExposure(forFrameRate: frameRate)
-//    }
-//    
-//    func refreshExposure(forFrameRate: AVFrameRateRange) {
-//        
-//    }
+    @IBAction func selectFrameRate(_ sender: NSPopUpButton!) {
+        guard let frameRate = self.getFrameRate() else { return }
+    
+        // update frame rate
+        if let videoDevice = self.videoInput?.device {
+            // will crash if fails, bad
+            self.whileConfiguring {
+                videoDevice.activeVideoMinFrameDuration = frameRate.minFrameDuration
+                videoDevice.activeVideoMaxFrameDuration = frameRate.maxFrameDuration
+            }
+        }
+    }
+    
+    @IBAction func toggleAutoExposure(_ sender: NSButton!) {
+        let enableAutoExposure: Bool
+        switch sender.state {
+        case .on:
+            enableAutoExposure = true
+            break
+        default:
+            enableAutoExposure = false
+            break
+        }
+        self.sliderExposure.isEnabled = !enableAutoExposure
+        
+        // update auto exposure
+        if let cameraControl = self.uvcCameraControl {
+            self.whileConfiguring {
+                cameraControl.setAutoExposure(enableAutoExposure)
+            }
+        }
+    }
+    
+    @IBAction func setExposure(_ sender: NSSlider!) {
+        // update exposure
+        if let cameraControl = self.uvcCameraControl {
+            self.whileConfiguring {
+                cameraControl.setExposure(sender.floatValue)
+            }
+        }
+    }
+    
+    @IBAction func setGain(_ sender: NSSlider!) {
+        // update gain
+        if let cameraControl = self.uvcCameraControl {
+            self.whileConfiguring {
+                cameraControl.setGain(sender.floatValue)
+            }
+        }
+    }
+    
+    @IBAction func toggleAutoWhiteBalance(_ sender: NSButton!) {
+        let enableAutoWhiteBalance: Bool
+        switch sender.state {
+        case .on:
+            enableAutoWhiteBalance = true
+            break
+        default:
+            enableAutoWhiteBalance = false
+            break
+        }
+        self.sliderWhiteBalance.isEnabled = !enableAutoWhiteBalance
+        
+        // update auto white balance
+        if let cameraControl = self.uvcCameraControl {
+            self.whileConfiguring {
+                cameraControl.setAutoWhiteBalance(enableAutoWhiteBalance)
+            }
+        }
+    }
+    
+    @IBAction func setWhiteBalance(_ sender: NSSlider!) {
+        // update white balance
+        if let cameraControl = self.uvcCameraControl {
+            self.whileConfiguring {
+                cameraControl.setWhiteBalance(sender.floatValue)
+            }
+        }
+    }
     
     override func viewWillDisappear() {
         // release camera control
-        let cameraControl = self.uvcCameraControl
         self.uvcCameraControl = nil
-        
-        guard let session = self.session else { return }
-        guard let videoDevice = self.videoInput?.device else { return }
-        
-        // lock device for configuration
-        try! videoDevice.lockForConfiguration()
-        
-        // begin session configuration
-        session.beginConfiguration()
-        
-        // configure: format
-        if let format = getFormat() {
-            videoDevice.activeFormat = format
-        }
-        
-        // configure: frame rate
-        if let frameRate = getFrameRate() {
-            videoDevice.activeVideoMinFrameDuration = frameRate.minFrameDuration
-            videoDevice.activeVideoMaxFrameDuration = frameRate.maxFrameDuration
-        }
-        
-        // configure: exposure
-        if self.sliderExposure.isEnabled, let cc = cameraControl {
-            cc.setExposure(self.sliderExposure.floatValue)
-        }
-        
-        // configure: exposure
-        if self.sliderGain.isEnabled, let cc = cameraControl {
-            cc.setGain(self.sliderExposure.floatValue)
-        }
-        
-        // commit session configuration
-        session.commitConfiguration()
-        
-        // unlock the device
-        videoDevice.unlockForConfiguration()
-        
-        // TODO: save to document
     }
     
     override func viewDidDisappear() {
