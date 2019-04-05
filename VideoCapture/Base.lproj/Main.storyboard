@@ -1573,11 +1573,11 @@
                             </popUpButton>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="l9p-Ba-PJ3">
                                 <rect key="frame" x="190" y="54" width="76" height="19"/>
-                                <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="lFm-8h-6sz"/>
+                                <sliderCell key="cell" state="on" alignment="left" maxValue="1" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="lFm-8h-6sz"/>
                             </slider>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="LnU-Bb-UC5">
                                 <rect key="frame" x="190" y="14" width="76" height="19"/>
-                                <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="y0B-4W-YNd"/>
+                                <sliderCell key="cell" state="on" alignment="left" maxValue="1" tickMarkPosition="above" sliderType="linear" id="y0B-4W-YNd"/>
                             </slider>
                         </subviews>
                         <constraints>
