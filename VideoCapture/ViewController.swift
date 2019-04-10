@@ -2140,6 +2140,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         let maxX = Int(dimensions.width), maxY = Int(dimensions.height)
         
+        // sync
+        objc_sync_enter(self)
+        defer {
+            objc_sync_exit(self)
+        }
+        
         extractArray.removeAll()
         extractNames.removeAll()
         if let view = annotableView {
@@ -2385,6 +2391,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         defer {
             objc_sync_exit(self)
         }
+        
         if let tv = tableAnnotations {
             tv.reloadData(forRowIndexes: IndexSet(integersIn: 0..<extractValues.count), columnIndexes: IndexSet(integer: 2))
         }
