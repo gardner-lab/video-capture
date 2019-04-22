@@ -17,6 +17,10 @@
 #define UVC_GET_CUR	0x81
 #define UVC_GET_MIN	0x82
 #define UVC_GET_MAX	0x83
+#define UVC_GET_RES_REQ 0x84
+#define UVC_GET_LEN_REQ   0x85
+#define UVC_GET_INFO    0x86
+#define UVC_GET_DEF_REQ   0x86
 
 typedef struct {
 	int min, max;
@@ -27,6 +31,13 @@ typedef struct {
 	int selector;
 	int size;
 } uvc_control_info_t;
+
+typedef struct {
+    bool supports_get;
+    bool supports_set;
+    bool supports_autoupdate;
+    bool asynchronous;
+} uvc_control_capabilities_t;
 
 typedef struct {
 	uvc_control_info_t autoExposure;
@@ -55,6 +66,7 @@ typedef struct {
 - (BOOL)setData:(long)value withLength:(int)length forSelector:(int)selector at:(int)unitID;
 - (long)getDataFor:(int)type withLength:(int)length fromSelector:(int)selector at:(int)unitID;
 
+- (uvc_control_capabilities_t)getCapabilitiesForControl:(const uvc_control_info_t *)control;
 - (uvc_range_t)getRangeForControl:(const uvc_control_info_t *)control;
 - (float)mapValue:(float)value fromMin:(float)fromMin max:(float)fromMax toMin:(float)toMin max:(float)toMax;
 - (float)getValueForControl:(const uvc_control_info_t *)control;

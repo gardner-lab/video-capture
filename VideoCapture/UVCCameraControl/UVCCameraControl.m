@@ -213,8 +213,8 @@ const uvc_controls_t uvc_controls = {
 	
 	kr = (*interface)->ControlRequest( interface, 0, &controlRequest );
 	if( kr != kIOReturnSuccess ) {
+        NSLog( @"CameraControl Error: Control request failed: %08x", kr );
 		kr = (*interface)->USBInterfaceClose(interface);
-		NSLog( @"CameraControl Error: Control request failed: %08x", kr );
 		return NO;
 	}
 	
@@ -249,6 +249,17 @@ const uvc_controls_t uvc_controls = {
 	controlRequest.pData = &value;
 	BOOL success = [self sendControlRequest:controlRequest];
 	return ( success ? value : 0 );
+}
+
+- (uvc_control_capabilities_t)getCapabilitiesForControl:(const uvc_control_info_t *)control {
+    long response = [self getDataFor:UVC_GET_INFO withLength:control->size fromSelector:control->selector at:control->unit];
+    
+    uvc_control_capabilities_t capabilities = { false, false , false, false };
+    capabilities.supports_get = (response & 0x1) > 0;
+    capabilities.supports_set = (response & 0x2) > 0;
+    capabilities.supports_autoupdate = (response & 0x8) > 0;
+    capabilities.asynchronous = (response & 0x16) > 0;
+    return capabilities;
 }
 
 

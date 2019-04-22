@@ -106,7 +106,7 @@ class VideoSettingsVideoController: NSViewController {
         }
         
         // load uvc camera control
-        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID), let cameraControl = UVCCameraControl(locationID: uvcDetails.locationID){
+        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID), let cameraControl = UVCCameraControl(locationID: uvcDetails.locationID) {
             self.uvcCameraControl = cameraControl
             
             // exposure
