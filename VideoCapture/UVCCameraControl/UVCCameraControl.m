@@ -273,6 +273,10 @@ const uvc_controls_t uvc_controls = {
     capabilities.supports_autoupdate = (response & 0x8) > 0;
     capabilities.asynchronous = (response & 0x16) > 0;
     
+    // log capabilies
+    // TODO: remove me
+    NSLog(@"CameraControl: %02x %02x: get: %@; set: %@; auto: %@; async: %@\n", control->selector, control->unit, capabilities.supports_get ? @"YES" : @"NO", capabilities.supports_set ? @"YES" : @"NO", capabilities.supports_autoupdate ? @"YES" : @"NO", capabilities.asynchronous ? @"YES" : @"NO");
+    
     // add to cache
     cacheValue = [NSValue valueWithBytes:&capabilities objCType:@encode(uvc_control_capabilities_t)];
     [cacheCapabilities setObject:cacheValue forKey:cacheKey];
@@ -298,7 +302,7 @@ const uvc_controls_t uvc_controls = {
 	range.max = (int)[self getDataFor:UVC_GET_MAX withLength:control->size fromSelector:control->selector at:control->unit];
     range.res = (int)[self getDataFor:UVC_GET_RES withLength:control->size fromSelector:control->selector at:control->unit];
     
-    // log capabilities
+    // log range
     // TODO: remove me
     NSLog(@"CameraControl: %02x %02x: min: %04x (%d); max: %04x (%d); resolution: %02x (%d)\n", control->selector, control->unit, range.min, range.min, range.max, range.max, range.res, range.res);
     
@@ -331,6 +335,11 @@ const uvc_controls_t uvc_controls = {
 	uvc_range_t range = [self getRangeForControl:control];
 	
 	int intval = (int)[self getDataFor:UVC_GET_CUR withLength:control->size fromSelector:control->selector at:control->unit];
+    
+    // log get
+    // TODO: remove me
+    NSLog(@"CameraControl: %02x %02x: get: %04x (%d)\n", control->selector, control->unit, intval, intval);
+    
     return [self mapFromUvcValue:intval withRange:range];
 }
 
@@ -340,10 +349,13 @@ const uvc_controls_t uvc_controls = {
 	uvc_range_t range = [self getRangeForControl:control];
 	
     int intval = [self mapToUvcValue:value withRange:range];
+    
+    // log set
+    // TODO: remove me
+    NSLog(@"CameraControl: %02x %02x: set: %04x (%d)\n", control->selector, control->unit, intval, intval);
+    
 	return [self setData:intval withLength:control->size forSelector:control->selector at:control->unit];
 }
-
-
 
 
 
