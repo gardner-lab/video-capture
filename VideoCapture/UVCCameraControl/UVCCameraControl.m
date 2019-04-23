@@ -88,6 +88,8 @@ const uvc_controls_t uvc_controls = {
 			if( currentLocationID == locationID ) {
 				// Yep, this is the USB Device that was requested!
 				interface = [self getControlInferaceWithDeviceInterface:deviceInterface];
+                cacheRange = [NSMutableDictionary dictionaryWithCapacity:8];
+                cacheCapabilities = [NSMutableDictionary dictionaryWithCapacity:8];
 				return self;
 			}
 		} // end while
@@ -133,6 +135,8 @@ const uvc_controls_t uvc_controls = {
         }
 		
 		interface = [self getControlInferaceWithDeviceInterface:deviceInterface];
+        cacheRange = [NSMutableDictionary dictionaryWithCapacity:8];
+        cacheCapabilities = [NSMutableDictionary dictionaryWithCapacity:8];
 	}
 	return self;
 }
@@ -294,6 +298,10 @@ const uvc_controls_t uvc_controls = {
 	range.max = (int)[self getDataFor:UVC_GET_MAX withLength:control->size fromSelector:control->selector at:control->unit];
     range.res = (int)[self getDataFor:UVC_GET_RES withLength:control->size fromSelector:control->selector at:control->unit];
     
+    // log capabilities
+    // TODO: remove me
+    NSLog(@"CameraControl: %02x %02x: min: %04x (%d); max: %04x (%d); resolution: %02x (%d)\n", control->selector, control->unit, range.min, range.min, range.max, range.max, range.res, range.res);
+    
     // add to cache
     cacheValue = [NSValue valueWithBytes:&range objCType:@encode(uvc_range_t)];
     [cacheRange setObject:cacheValue forKey:cacheKey];
@@ -303,17 +311,27 @@ const uvc_controls_t uvc_controls = {
 
 
 // Used to de-/normalize values
-- (float)mapValue:(float)value fromMin:(float)fromMin max:(float)fromMax toMin:(float)toMin max:(float)toMax {
-	return toMin + (toMax - toMin) * ((value - fromMin) / (fromMax - fromMin));
+- (float)mapFromUvcValue:(int)value withRange:(uvc_range_t)range {
+    return (float)(value - range.min) / (float)(range.max - range.min);
 }
 
+- (int)mapToUvcValue:(float)value withRange:(uvc_range_t)range {
+    int intval = (int)(value * (float)(range.max - range.min));
+    
+    // ensure value matches resolution
+    if (1 < range.res) {
+        intval -= intval % range.res;
+    }
+    
+    return range.min + intval;
+}
 
 // Get a normalized value
 - (float)getValueForControl:(const uvc_control_info_t *)control {
 	uvc_range_t range = [self getRangeForControl:control];
 	
 	int intval = (int)[self getDataFor:UVC_GET_CUR withLength:control->size fromSelector:control->selector at:control->unit];
-	return [self mapValue:intval fromMin:range.min max:range.max toMin:0 max:1];
+    return [self mapFromUvcValue:intval withRange:range];
 }
 
 
@@ -321,7 +339,7 @@ const uvc_controls_t uvc_controls = {
 - (BOOL)setValue:(float)value forControl:(const uvc_control_info_t *)control {
 	uvc_range_t range = [self getRangeForControl:control];
 	
-	int intval = [self mapValue:value fromMin:0 max:1 toMin:range.min max:range.max];
+    int intval = [self mapToUvcValue:value withRange:range];
 	return [self setData:intval withLength:control->size forSelector:control->selector at:control->unit];
 }
 

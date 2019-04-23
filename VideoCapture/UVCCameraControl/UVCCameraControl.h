@@ -70,7 +70,8 @@ typedef struct {
 
 - (uvc_control_capabilities_t)getCapabilitiesForControl:(const uvc_control_info_t *)control;
 - (uvc_range_t)getRangeForControl:(const uvc_control_info_t *)control;
-- (float)mapValue:(float)value fromMin:(float)fromMin max:(float)fromMax toMin:(float)toMin max:(float)toMax;
+- (float)mapFromUvcValue:(int)value withRange:(uvc_range_t)range;
+- (int)mapToUvcValue:(float)value withRange:(uvc_range_t)range;
 - (float)getValueForControl:(const uvc_control_info_t *)control;
 - (BOOL)setValue:(float)value forControl:(const uvc_control_info_t *)control;
 
