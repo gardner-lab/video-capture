@@ -252,22 +252,51 @@ const uvc_controls_t uvc_controls = {
 }
 
 - (uvc_control_capabilities_t)getCapabilitiesForControl:(const uvc_control_info_t *)control {
-    long response = [self getDataFor:UVC_GET_INFO withLength:control->size fromSelector:control->selector at:control->unit];
-    
     uvc_control_capabilities_t capabilities = { false, false , false, false };
+    
+    // check cache
+    NSNumber *cacheKey = [NSNumber numberWithInt:(control->selector << 8) + control->unit];
+    NSValue *cacheValue = [cacheCapabilities objectForKey:cacheKey];
+    if (cacheValue) {
+        [cacheValue getValue:&capabilities];
+        return capabilities;
+    }
+    
+    // fetch capabilities
+    long response = [self getDataFor:UVC_GET_INFO withLength:control->size fromSelector:control->selector at:control->unit];
     capabilities.supports_get = (response & 0x1) > 0;
     capabilities.supports_set = (response & 0x2) > 0;
     capabilities.supports_autoupdate = (response & 0x8) > 0;
     capabilities.asynchronous = (response & 0x16) > 0;
+    
+    // add to cache
+    cacheValue = [NSValue valueWithBytes:&capabilities objCType:@encode(uvc_control_capabilities_t)];
+    [cacheCapabilities setObject:cacheValue forKey:cacheKey];
+    
     return capabilities;
 }
 
 
 // Get Range (min, max)
 - (uvc_range_t)getRangeForControl:(const uvc_control_info_t *)control {
-	uvc_range_t range = { 0, 0 };
+    uvc_range_t range = { 0, 0 };
+    
+    // check cache
+    NSNumber *cacheKey = [NSNumber numberWithInt:(control->selector << 8) + control->unit];
+    NSValue *cacheValue = [cacheRange objectForKey:cacheKey];
+    if (cacheValue) {
+        [cacheValue getValue:&range];
+        return range;
+    }
+    
+    // fetch range data
 	range.min = (int)[self getDataFor:UVC_GET_MIN withLength:control->size fromSelector:control->selector at:control->unit];
 	range.max = (int)[self getDataFor:UVC_GET_MAX withLength:control->size fromSelector:control->selector at:control->unit];
+    
+    // add to cache
+    cacheValue = [NSValue valueWithBytes:&range objCType:@encode(uvc_range_t)];
+    [cacheRange setObject:cacheValue forKey:cacheKey];
+    
 	return range;
 }
 
@@ -280,7 +309,6 @@ const uvc_controls_t uvc_controls = {
 
 // Get a normalized value
 - (float)getValueForControl:(const uvc_control_info_t *)control {
-	// TODO: Cache the range somewhere?
 	uvc_range_t range = [self getRangeForControl:control];
 	
 	int intval = (int)[self getDataFor:UVC_GET_CUR withLength:control->size fromSelector:control->selector at:control->unit];
@@ -290,7 +318,6 @@ const uvc_controls_t uvc_controls = {
 
 // Set a normalized value
 - (BOOL)setValue:(float)value forControl:(const uvc_control_info_t *)control {
-	// TODO: Cache the range somewhere?
 	uvc_range_t range = [self getRangeForControl:control];
 	
 	int intval = [self mapValue:value fromMin:0 max:1 toMin:range.min max:range.max];

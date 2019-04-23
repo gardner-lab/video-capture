@@ -27,17 +27,17 @@ typedef struct {
 } uvc_range_t;
 
 typedef struct {
-	int unit;
-	int selector;
-	int size;
-} uvc_control_info_t;
-
-typedef struct {
     bool supports_get;
     bool supports_set;
     bool supports_autoupdate;
     bool asynchronous;
 } uvc_control_capabilities_t;
+
+typedef struct {
+	int unit;
+	int selector;
+	int size;
+} uvc_control_info_t;
 
 typedef struct {
 	uvc_control_info_t autoExposure;
@@ -55,6 +55,8 @@ typedef struct {
 @interface UVCCameraControl : NSObject {
 	long dataBuffer;
 	IOUSBInterfaceInterface190 **interface;
+    NSMutableDictionary<NSNumber*, NSValue*> *cacheCapabilities;
+    NSMutableDictionary<NSNumber*, NSValue*> *cacheRange;
 }
 
 
