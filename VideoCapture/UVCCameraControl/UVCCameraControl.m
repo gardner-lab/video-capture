@@ -279,7 +279,7 @@ const uvc_controls_t uvc_controls = {
 
 // Get Range (min, max)
 - (uvc_range_t)getRangeForControl:(const uvc_control_info_t *)control {
-    uvc_range_t range = { 0, 0 };
+    uvc_range_t range = { 0, 0, 0 };
     
     // check cache
     NSNumber *cacheKey = [NSNumber numberWithInt:(control->selector << 8) + control->unit];
@@ -292,6 +292,7 @@ const uvc_controls_t uvc_controls = {
     // fetch range data
 	range.min = (int)[self getDataFor:UVC_GET_MIN withLength:control->size fromSelector:control->selector at:control->unit];
 	range.max = (int)[self getDataFor:UVC_GET_MAX withLength:control->size fromSelector:control->selector at:control->unit];
+    range.res = (int)[self getDataFor:UVC_GET_RES withLength:control->size fromSelector:control->selector at:control->unit];
     
     // add to cache
     cacheValue = [NSValue valueWithBytes:&range objCType:@encode(uvc_range_t)];
@@ -333,8 +334,43 @@ const uvc_controls_t uvc_controls = {
 // Set/Get the actual values for the camera
 //
 
+// CONTROL: auto exposure
+
+- (BOOL)canSetAutoExposure {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.autoExposure];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetAutoExposure {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.autoExposure];
+    return capabilities.supports_get;
+}
+
 - (BOOL)setAutoExposure:(BOOL)enabled {
-	int intval = (enabled ? 0x08 : 0x01); // "auto exposure modes" ar NOT boolean (on|off) as it seems
+    // 0x01: manual
+    // 0x02: auto exposure, auto iris
+    // 0x04: shutter priority (manual exposure, auto iris)
+    // 0x08: aperture priority (auto exposure, manual iris)
+    
+    int intval;
+    
+    // figure out auto exposure value based on what is supported (resolution contains bit mask)
+    if (enabled) {
+        uvc_range_t range = [self getRangeForControl:&uvc_controls.autoExposure];
+        if (range.res & 0x02) { // fully auto
+            intval = 0x02;
+        }
+        else if (range.res & 0x08) { // aperture priority
+            intval = 0x08;
+        }
+        else { // last resort: shutter priority
+            intval = 0x04;
+        }
+    }
+    else {
+        intval = 0x01;
+    }
+    
 	return [self setData:intval 
 			  withLength:uvc_controls.autoExposure.size 
 			 forSelector:uvc_controls.autoExposure.selector 
@@ -347,7 +383,19 @@ const uvc_controls_t uvc_controls = {
                           fromSelector:uvc_controls.autoExposure.selector
                                     at:uvc_controls.autoExposure.unit];
 	
-	return ( intval == 0x08 ? YES : NO );
+	return ( intval & 0x0e ? YES : NO );
+}
+
+// CONTROL: exposure
+
+- (BOOL)canSetExposure {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.exposure];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetExposure {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.exposure];
+    return capabilities.supports_get;
 }
 
 - (BOOL)setExposure:(float)value {
@@ -360,12 +408,36 @@ const uvc_controls_t uvc_controls = {
 	return 1 - value;
 }
 
+// CONTROL: gain
+
+- (BOOL)canSetGain {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.gain];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetGain {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.gain];
+    return capabilities.supports_get;
+}
+
 - (BOOL)setGain:(float)value {
 	return [self setValue:value forControl:&uvc_controls.gain];
 }
 
 - (float)getGain {
 	return [self getValueForControl:&uvc_controls.gain];
+}
+
+// CONTROL: brightness
+
+- (BOOL)canSetBrightness {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.brightness];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetBrightness {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.brightness];
+    return capabilities.supports_get;
 }
 
 - (BOOL)setBrightness:(float)value {
@@ -376,12 +448,36 @@ const uvc_controls_t uvc_controls = {
 	return [self getValueForControl:&uvc_controls.brightness];
 }
 
+// CONTROL: contrast
+
+- (BOOL)canSetContrast {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.contrast];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetContrast {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.contrast];
+    return capabilities.supports_get;
+}
+
 - (BOOL)setContrast:(float)value {
 	return [self setValue:value forControl:&uvc_controls.contrast];
 }
 
 - (float)getContrast {
 	return [self getValueForControl:&uvc_controls.contrast];
+}
+
+// CONTROL: saturation
+
+- (BOOL)canSetSaturation {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.saturation];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetSaturation {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.saturation];
+    return capabilities.supports_get;
 }
 
 - (BOOL)setSaturation:(float)value {
@@ -392,12 +488,36 @@ const uvc_controls_t uvc_controls = {
 	return [self getValueForControl:&uvc_controls.saturation];
 }
 
+// CONTROL: sharpness
+
+- (BOOL)canSetSharpness {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.sharpness];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetSharpness {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.sharpness];
+    return capabilities.supports_get;
+}
+
 - (BOOL)setSharpness:(float)value {
 	return [self setValue:value forControl:&uvc_controls.sharpness];
 }
 
 - (float)getSharpness {
 	return [self getValueForControl:&uvc_controls.sharpness];
+}
+
+// CONTROL: auto white balance
+
+- (BOOL)canSetAutoWhiteBalance {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.autoWhiteBalance];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetAutoWhiteBalance {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.autoWhiteBalance];
+    return capabilities.supports_get;
 }
 
 - (BOOL)setAutoWhiteBalance:(BOOL)enabled {
@@ -415,6 +535,18 @@ const uvc_controls_t uvc_controls = {
                                     at:uvc_controls.autoWhiteBalance.unit];
 	
 	return ( intval ? YES : NO );
+}
+
+// CONTROL: white balance
+
+- (BOOL)canSetWhiteBalance {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.whiteBalance];
+    return capabilities.supports_set;
+}
+
+- (BOOL)canGetWhiteBalance {
+    uvc_control_capabilities_t capabilities = [self getCapabilitiesForControl:&uvc_controls.whiteBalance];
+    return capabilities.supports_get;
 }
 
 - (BOOL)setWhiteBalance:(float)value {

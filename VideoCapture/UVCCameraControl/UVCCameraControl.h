@@ -17,13 +17,13 @@
 #define UVC_GET_CUR	0x81
 #define UVC_GET_MIN	0x82
 #define UVC_GET_MAX	0x83
-#define UVC_GET_RES_REQ 0x84
-#define UVC_GET_LEN_REQ   0x85
-#define UVC_GET_INFO    0x86
-#define UVC_GET_DEF_REQ   0x86
+#define UVC_GET_RES 0x84
+#define UVC_GET_LEN 0x85
+#define UVC_GET_INFO 0x86
+#define UVC_GET_DEF 0x87
 
 typedef struct {
-	int min, max;
+	int min, max, res;
 } uvc_range_t;
 
 typedef struct {
@@ -75,22 +75,57 @@ typedef struct {
 - (BOOL)setValue:(float)value forControl:(const uvc_control_info_t *)control;
 
 
+// CONTROL: auto exposure
+- (BOOL)canSetAutoExposure;
+- (BOOL)canGetAutoExposure;
 - (BOOL)setAutoExposure:(BOOL)enabled;
 - (BOOL)getAutoExposure;
+
+// CONTROL: exposure
+- (BOOL)canSetExposure;
+- (BOOL)canGetExposure;
 - (BOOL)setExposure:(float)value;
 - (float)getExposure;
+
+// CONTROL: gain
+- (BOOL)canSetGain;
+- (BOOL)canGetGain;
 - (BOOL)setGain:(float)value;
 - (float)getGain;
+
+// CONTROL: brightness
+- (BOOL)canSetBrightness;
+- (BOOL)canGetBrightness;
 - (BOOL)setBrightness:(float)value;
 - (float)getBrightness;
+
+// CONTROL: contrast
+- (BOOL)canSetContrast;
+- (BOOL)canGetContrast;
 - (BOOL)setContrast:(float)value;
 - (float)getContrast;
+
+// CONTROL: saturation;
+- (BOOL)canSetSaturation;
+- (BOOL)canGetSaturation;
 - (BOOL)setSaturation:(float)value;
 - (float)getSaturation;
+
+// CONTROL: sharpness
+- (BOOL)canSetSharpness;
+- (BOOL)canGetSharpness;
 - (BOOL)setSharpness:(float)value;
 - (float)getSharpness;
+
+// CONTROL: auto white balance
+- (BOOL)canSetAutoWhiteBalance;
+- (BOOL)canGetAutoWhiteBalance;
 - (BOOL)setAutoWhiteBalance:(BOOL)enabled;
 - (BOOL)getAutoWhiteBalance;
+
+// CONTROL: white balance
+- (BOOL)canSetWhiteBalance;
+- (BOOL)canGetWhiteBalance;
 - (BOOL)setWhiteBalance:(float)value;
 - (float)getWhiteBalance;
 

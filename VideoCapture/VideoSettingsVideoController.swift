@@ -110,10 +110,20 @@ class VideoSettingsVideoController: NSViewController {
             self.uvcCameraControl = cameraControl
             
             // exposure
-            let exposure = cameraControl.getExposure()
-            if exposure >= 0.0 && exposure <= 1.0 {
-                self.buttonAutoExposure.isEnabled = true
-                self.sliderExposure.isEnabled = !cameraControl.getAutoExposure()
+            if cameraControl.canSetExposure() {
+                if cameraControl.canSetAutoExposure() {
+                    let autoExposure = cameraControl.getAutoExposure()
+                    self.buttonAutoExposure.isEnabled = true
+                    self.buttonAutoExposure.state = autoExposure ? .on : .off
+                    self.sliderExposure.isEnabled = !autoExposure
+                }
+                else {
+                    self.buttonAutoExposure.isEnabled = false
+                    self.buttonAutoExposure.state = .off
+                    self.sliderExposure.isEnabled = true
+                }
+                
+                let exposure = cameraControl.getExposure()
                 self.sliderExposure.floatValue = exposure
             }
             else {
@@ -122,8 +132,8 @@ class VideoSettingsVideoController: NSViewController {
             }
             
             // gain
-            let gain = cameraControl.getGain()
-            if gain >= 0.0 && gain <= 1.0 {
+            if cameraControl.canSetGain() {
+                let gain = cameraControl.getGain()
                 self.sliderGain.isEnabled = true
                 self.sliderGain.floatValue = gain
             }
@@ -132,10 +142,20 @@ class VideoSettingsVideoController: NSViewController {
             }
             
             // white balance
-            let whiteBalance = cameraControl.getWhiteBalance()
-            if whiteBalance >= 0.0 && whiteBalance <= 1.0 {
-                self.buttonAutoWhiteBalance.isEnabled = true
-                self.sliderWhiteBalance.isEnabled = !cameraControl.getAutoWhiteBalance()
+            if cameraControl.canSetWhiteBalance() {
+                if cameraControl.canSetAutoWhiteBalance() {
+                    let autoWhiteBalance = cameraControl.getAutoWhiteBalance()
+                    self.buttonAutoWhiteBalance.isEnabled = true
+                    self.buttonAutoWhiteBalance.state = autoWhiteBalance ? .on : .off
+                    self.sliderWhiteBalance.isEnabled = !autoWhiteBalance
+                }
+                else {
+                    self.buttonAutoWhiteBalance.isEnabled = false
+                    self.buttonAutoWhiteBalance.state = .off
+                    self.sliderWhiteBalance.isEnabled = true
+                }
+                
+                let whiteBalance = cameraControl.getWhiteBalance()
                 self.sliderWhiteBalance.floatValue = whiteBalance
             }
             else {
@@ -248,6 +268,9 @@ class VideoSettingsVideoController: NSViewController {
         if let cameraControl = self.uvcCameraControl {
             self.whileConfiguring {
                 cameraControl.setAutoExposure(enableAutoExposure)
+                if !enableAutoExposure {
+                    self.sliderExposure.floatValue = cameraControl.getExposure()
+                }
             }
         }
     }
@@ -286,6 +309,9 @@ class VideoSettingsVideoController: NSViewController {
         if let cameraControl = self.uvcCameraControl {
             self.whileConfiguring {
                 cameraControl.setAutoWhiteBalance(enableAutoWhiteBalance)
+                if !enableAutoWhiteBalance {
+                    self.sliderWhiteBalance.floatValue = cameraControl.getWhiteBalance()
+                }
             }
         }
     }
