@@ -62,20 +62,104 @@ fileprivate func parseDeviceID(deviceID: String) -> (locationID: UInt32, vendorI
     return (locationID: locationID, vendorID: vendorID, productID: productID)
 }
 
+class UCLAScope {
+    private enum Command: Int {
+        case recordingStart = 0x01
+        case recordingEnd = 0x02
+        case configureCMOS = 0x03
+        case fps5 = 0x11
+        case fps10 = 0x12
+        case fps15 = 0x13
+        case fps20 = 0x14
+        case fps30 = 0x15
+        case fps60 = 0x16
+    }
+    
+    let cameraControl: UVCCameraControl
+    
+    init?(videoDevice: AVCaptureDevice) {
+        // get UVC camera controls
+        guard let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID) else { return nil }
+        guard let uvcCameraControl = UVCCameraControl(locationID: uvcDetails.locationID) else { return nil }
+        
+        // UCLA scope most support saturation command
+        if !uvcCameraControl.canSetSaturation() {
+            DLog("UCLA: Non UCLA DAQ detected")
+            return nil
+        }
+        
+        self.cameraControl = uvcCameraControl
+    }
+    
+    private func send(command: Command) -> Bool {
+        // send command via saturation channel
+        return self.cameraControl.setData(command.rawValue, withLength: 2, forSelector: 0x07, at: 0x02)
+    }
+    
+    func configureCMOS() {
+        if !self.send(command: .configureCMOS) {
+            DLog("UCLA: Unable to configure CMOS")
+        }
+    }
+    
+    func recordingStart() {
+        if !self.send(command: .recordingStart) {
+            DLog("UCLA: Unable to send start recording signal")
+        }
+    }
+    
+    func recordingEnd() {
+        if !self.send(command: .recordingEnd) {
+            DLog("UCLA: Unable to send end recording signal")
+        }
+    }
+    
+    func setFrameRate(_ fps: Int) {
+        let command: Command
+        switch fps {
+        case 5: command = .fps5
+        case 10: command = .fps10
+        case 15: command = .fps15
+        case 20: command = .fps20
+        case 30: command = .fps30
+        case 60: command = .fps60
+        default:
+            DLog("UCLA: Invalid frame rate \(fps)")
+            return
+        }
+        
+        if !self.send(command: command) {
+            DLog("UCLA: Unable to set frame rate")
+        }
+    }
+    
+    func setExposure(_ exposure: Float) {
+        if !self.cameraControl.setBrightness(exposure) {
+            DLog("UCLA: Unable to set exposure")
+        }
+    }
+ 
+    // requires implementing: hue
+//    func setLEDBrightness(_ brightness: Float) {
+//        if !self.cameraControl.setHue
+//    }
+    
+    func setGain(_ gain: Float) {
+        if !self.cameraControl.setGain(gain) {
+            DLog("UCLA: Unable to set gain")
+        }
+    }
+}
+
 class VideoSettingsVideoController: NSViewController {
     var session: AVCaptureSession?
     var videoInput: AVCaptureDeviceInput?
     
-    var uvcCameraControl: UVCCameraControl?
+    var uclaScope: UCLAScope?
     
-    @IBOutlet var listVideoFormats: NSPopUpButton!
     @IBOutlet var listVideoFrameRates: NSPopUpButton!
-    @IBOutlet var buttonAutoExposure: NSButton!
     @IBOutlet var sliderExposure: NSSlider!
     @IBOutlet var sliderGain: NSSlider!
-    @IBOutlet var buttonAutoWhiteBalance: NSButton!
-    @IBOutlet var sliderWhiteBalance: NSSlider!
-    // @IBOutlet var textExposure: NSTextField!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -86,91 +170,21 @@ class VideoSettingsVideoController: NSViewController {
         // configure interface
         guard let videoDevice = self.videoInput?.device else { return }
         
-        // list formats
-        listVideoFormats.removeAllItems()
-        var selectedIndex = -1
-        for (index, format) in videoDevice.formats.enumerated() {
-            // add to format list
-            let item = NSMenuItem()
-            item.title = format.niceDescription
-            item.representedObject = format
-            listVideoFormats.menu?.addItem(item)
+        if let uclaScope = UCLAScope(videoDevice: videoDevice) {
+            // store scope
+            self.uclaScope = uclaScope
             
-            // ise selected?
-            if format == videoDevice.activeFormat {
-                selectedIndex = index
-            }
-        }
-        if 0 <= selectedIndex {
-            listVideoFormats.selectItem(at: selectedIndex)
-        }
-        
-        // load uvc camera control
-        if let uvcDetails = parseDeviceID(deviceID: videoDevice.uniqueID), let cameraControl = UVCCameraControl(locationID: uvcDetails.locationID) {
-            self.uvcCameraControl = cameraControl
-            
-            // exposure
-            if cameraControl.canSetExposure() {
-                if cameraControl.canSetAutoExposure() {
-                    let autoExposure = cameraControl.getAutoExposure()
-                    self.buttonAutoExposure.isEnabled = true
-                    self.buttonAutoExposure.state = autoExposure ? .on : .off
-                    self.sliderExposure.isEnabled = !autoExposure
-                }
-                else {
-                    self.buttonAutoExposure.isEnabled = false
-                    self.buttonAutoExposure.state = .off
-                    self.sliderExposure.isEnabled = true
-                }
-                
-                let exposure = cameraControl.getExposure()
-                self.sliderExposure.floatValue = exposure
-            }
-            else {
-                self.buttonAutoExposure.isEnabled = false
-                self.sliderExposure.isEnabled = false
-            }
-            
-            // gain
-            if cameraControl.canSetGain() {
-                let gain = cameraControl.getGain()
-                self.sliderGain.isEnabled = true
-                self.sliderGain.floatValue = gain
-            }
-            else {
-                self.sliderGain.isEnabled = false
-            }
-            
-            // white balance
-            if cameraControl.canSetWhiteBalance() {
-                if cameraControl.canSetAutoWhiteBalance() {
-                    let autoWhiteBalance = cameraControl.getAutoWhiteBalance()
-                    self.buttonAutoWhiteBalance.isEnabled = true
-                    self.buttonAutoWhiteBalance.state = autoWhiteBalance ? .on : .off
-                    self.sliderWhiteBalance.isEnabled = !autoWhiteBalance
-                }
-                else {
-                    self.buttonAutoWhiteBalance.isEnabled = false
-                    self.buttonAutoWhiteBalance.state = .off
-                    self.sliderWhiteBalance.isEnabled = true
-                }
-                
-                let whiteBalance = cameraControl.getWhiteBalance()
-                self.sliderWhiteBalance.floatValue = whiteBalance
-            }
-            else {
-                self.buttonAutoWhiteBalance.isEnabled = false
-                self.sliderWhiteBalance.isEnabled = false
-            }
+            // enable controls
+            self.listVideoFrameRates.isEnabled = true
+            self.sliderExposure.isEnabled = true
+            self.sliderGain.isEnabled = true
         }
         else {
-            self.uvcCameraControl = nil
+            // disable controls
+            self.listVideoFrameRates.isEnabled = false
             self.sliderExposure.isEnabled = false
             self.sliderGain.isEnabled = false
         }
-        
-        // list frame rates
-        self.refreshFrameRate(forFormat: videoDevice.activeFormat)
     }
     
     private func whileConfiguring(cb: () -> ()) {
@@ -185,154 +199,35 @@ class VideoSettingsVideoController: NSViewController {
         }
     }
     
-    func refreshFrameRate(forFormat format: AVCaptureDevice.Format) {
-        // configure interface
-        guard let videoDevice = self.videoInput?.device else { return }
-        
-        listVideoFrameRates.removeAllItems()
-        var selectedIndex = -1
-        for (index, frameRate) in format.videoSupportedFrameRateRanges.enumerated() {
-            let item = NSMenuItem()
-            item.title = String(format: "%.1f FPS / %.1f ms", frameRate.minFrameRate, frameRate.maxFrameDuration.seconds * 1_000.0)
-            item.representedObject = frameRate
-            listVideoFrameRates.menu?.addItem(item)
-            
-            if videoDevice.activeVideoMinFrameDuration == frameRate.minFrameDuration && videoDevice.activeVideoMaxFrameDuration == frameRate.maxFrameDuration {
-                //self.refreshExposure(forFrameRate: frameRate)
-                selectedIndex = index
-            }
-        }
-        if 0 <= selectedIndex {
-            listVideoFrameRates.selectItem(at: selectedIndex)
-        }
-    }
-    
-    func getFormat() -> AVCaptureDevice.Format? {
-        if let selectedVideoFormat = listVideoFormats.selectedItem {
-            guard let representedObject = selectedVideoFormat.representedObject as? AVCaptureDevice.Format else {
-                fatalError("Expected represented object.")
-            }
-            return representedObject
-        }
-        return nil
-    }
-    
-    @IBAction func selectFormat(_ sender: NSPopUpButton!) {
-        guard let format = self.getFormat() else { return }
-        self.refreshFrameRate(forFormat: format)
-        
-        // update format
-        if let videoDevice = self.videoInput?.device {
-            self.whileConfiguring {
-                videoDevice.activeFormat = format
-            }
-        }
-    }
-    
-    func getFrameRate() -> AVFrameRateRange? {
-        if let selectedFrameRate = listVideoFrameRates.selectedItem {
-            guard let representedObject = selectedFrameRate.representedObject as? AVFrameRateRange else {
-                fatalError("Expected represented object.")
-            }
-            return representedObject
-        }
-        return nil
-    }
-    
     @IBAction func selectFrameRate(_ sender: NSPopUpButton!) {
-        guard let frameRate = self.getFrameRate() else { return }
-    
-        // update frame rate
-        if let videoDevice = self.videoInput?.device {
-            // will crash if fails, bad
-            self.whileConfiguring {
-                videoDevice.activeVideoMinFrameDuration = frameRate.minFrameDuration
-                videoDevice.activeVideoMaxFrameDuration = frameRate.maxFrameDuration
-            }
-        }
-    }
-    
-    @IBAction func toggleAutoExposure(_ sender: NSButton!) {
-        let enableAutoExposure: Bool
-        switch sender.state {
-        case .on:
-            enableAutoExposure = true
-            break
-        default:
-            enableAutoExposure = false
-            break
-        }
-        self.sliderExposure.isEnabled = !enableAutoExposure
+        guard let uclaScope = self.uclaScope else { return }
         
-        // update auto exposure
-        if let cameraControl = self.uvcCameraControl {
+        if let selectedItem = sender.selectedItem {
             self.whileConfiguring {
-                cameraControl.setAutoExposure(enableAutoExposure)
-                if !enableAutoExposure {
-                    self.sliderExposure.floatValue = cameraControl.getExposure()
-                }
+                uclaScope.setFrameRate(selectedItem.tag)
             }
         }
     }
     
     @IBAction func setExposure(_ sender: NSSlider!) {
-        // update exposure
-        if let cameraControl = self.uvcCameraControl {
-            self.whileConfiguring {
-                cameraControl.setExposure(sender.floatValue)
-            }
+        guard let uclaScope = self.uclaScope else { return }
+        
+        self.whileConfiguring {
+            uclaScope.setExposure(sender.floatValue)
         }
     }
     
     @IBAction func setGain(_ sender: NSSlider!) {
-        // update gain
-        if let cameraControl = self.uvcCameraControl {
-            self.whileConfiguring {
-                cameraControl.setGain(sender.floatValue)
-            }
-        }
-    }
-    
-    @IBAction func toggleAutoWhiteBalance(_ sender: NSButton!) {
-        let enableAutoWhiteBalance: Bool
-        switch sender.state {
-        case .on:
-            enableAutoWhiteBalance = true
-            break
-        default:
-            enableAutoWhiteBalance = false
-            break
-        }
-        self.sliderWhiteBalance.isEnabled = !enableAutoWhiteBalance
+        guard let uclaScope = self.uclaScope else { return }
         
-        // update auto white balance
-        if let cameraControl = self.uvcCameraControl {
-            self.whileConfiguring {
-                cameraControl.setAutoWhiteBalance(enableAutoWhiteBalance)
-                if !enableAutoWhiteBalance {
-                    self.sliderWhiteBalance.floatValue = cameraControl.getWhiteBalance()
-                }
-            }
-        }
-    }
-    
-    @IBAction func setWhiteBalance(_ sender: NSSlider!) {
-        // update white balance
-        if let cameraControl = self.uvcCameraControl {
-            self.whileConfiguring {
-                cameraControl.setWhiteBalance(sender.floatValue)
-            }
+        // update gain
+        self.whileConfiguring {
+            uclaScope.setGain(sender.floatValue)
         }
     }
     
     override func viewWillDisappear() {
         // release camera control
-        self.uvcCameraControl = nil
-    }
-    
-    override func viewDidDisappear() {
-        // releases represented objects
-        listVideoFormats.removeAllItems()
-        listVideoFrameRates.removeAllItems()
+        self.uclaScope = nil
     }
 }

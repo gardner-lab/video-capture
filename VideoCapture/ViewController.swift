@@ -1743,6 +1743,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                         previewLayer.connection?.isVideoMirrored = false
                     }
                 }
+                
+                // UCLA: send CMOS initialization command
+                if let uclaCamera = UCLAScope(videoDevice: videoDevice) {
+                    uclaCamera.configureCMOS()
+                }
             }
         }
         else {

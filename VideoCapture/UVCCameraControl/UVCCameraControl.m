@@ -1,5 +1,13 @@
 #import "UVCCameraControl.h"
 
+// OTHER UVC_INPUT_TERMINAL_ID:
+// 0x01: SCANNING MODE CONTROL
+// 0x03: AE PRIORITY CONTROL
+// 0x05: RELATIVE EXPOSURE
+// 0x06: FOCUS ABSOLUTE
+// 0x07: FOCUS RELATIVE
+// 0x08: FOCUS AUTO
+
 
 const uvc_controls_t uvc_controls = {
 	.autoExposure = {
@@ -7,7 +15,7 @@ const uvc_controls_t uvc_controls = {
 		.selector = 0x02,
 		.size = 1,
 	},
-	.exposure = {
+	.exposure = { // ABSOLUTE EXPOSURE
 		.unit = UVC_INPUT_TERMINAL_ID,
 		.selector = 0x04,
 		.size = 4,
@@ -27,6 +35,11 @@ const uvc_controls_t uvc_controls = {
 		.selector = 0x04,
 		.size = 2,
 	},
+//    .hue = {
+//        .unit = UVC_PROCESSING_UNIT_ID,
+//        .selector = 0x06,
+//        .size = 2
+//    },
 	.saturation = {
 		.unit = UVC_PROCESSING_UNIT_ID,
 		.selector = 0x07,
