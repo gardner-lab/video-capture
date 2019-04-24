@@ -1537,18 +1537,18 @@
                                 <constraints>
                                     <constraint firstAttribute="width" constant="96" id="aEy-oh-peN"/>
                                 </constraints>
-                                <popUpButtonCell key="cell" type="push" title="5 FPS" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" imageScaling="proportionallyDown" inset="2" selectedItem="GGL-4z-vC2" id="skc-wq-wmi">
+                                <popUpButtonCell key="cell" type="push" title="30 FPS" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="30" imageScaling="proportionallyDown" inset="2" selectedItem="1f4-O8-zJ6" id="skc-wq-wmi">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="QRg-Zk-tAf">
                                         <items>
-                                            <menuItem title="5 FPS" state="on" tag="5" id="GGL-4z-vC2"/>
+                                            <menuItem title="5 FPS" tag="5" id="GGL-4z-vC2"/>
                                             <menuItem title="10 FPS" tag="10" id="H87-ty-Jil"/>
                                             <menuItem title="15 FPS" tag="15" id="0gP-I3-evB"/>
                                             <menuItem title="20 FPS" tag="20" id="4xh-Lz-P0j">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                             </menuItem>
-                                            <menuItem title="30 FPS" tag="30" id="1f4-O8-zJ6">
+                                            <menuItem title="30 FPS" state="on" tag="30" id="1f4-O8-zJ6">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                             </menuItem>
                                             <menuItem title="60 FPS" tag="60" id="jO2-Ig-1xR">
