@@ -23,6 +23,7 @@
 		D856F6A41B4AEAB500A75458 /* ORSSerial.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8C386BD1B441AD600DE70EA /* ORSSerial.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D860DEE21C0A768B0043203F /* Time.swift in Sources */ = {isa = PBXBuildFile; fileRef = D860DEE11C0A768B0043203F /* Time.swift */; };
 		D861CA1C224AA8F800DBEB6B /* MediaAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = D861CA1B224AA8F800DBEB6B /* MediaAccess.swift */; };
+		D8625D052270D30D000B5B9B /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D892B28E224D4B05001CCB2B /* IOKit.framework */; };
 		D87DB6C31B45958B00131082 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87DB6C21B45958B00131082 /* Annotations.swift */; };
 		D8875E871B40770700270CE0 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E861B40770700270CE0 /* CoreImage.framework */; };
 		D8875E891B40776100270CE0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8875E881B40776100270CE0 /* CoreFoundation.framework */; };
@@ -128,6 +129,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8625D052270D30D000B5B9B /* IOKit.framework in Frameworks */,
 				D8EDDB461BD8593F00EEA708 /* CrashReporter.framework in Frameworks */,
 				D8B715B71B6FC13F008F76D8 /* QuartzCore.framework in Frameworks */,
 				D8C386BE1B441ADA00DE70EA /* ORSSerial.framework in Frameworks */,
@@ -163,6 +165,7 @@
 				D8013F941B4037870053F452 /* VideoCapture */,
 				D81710B71C8160F10023E3D3 /* VideoCaptureTests */,
 				D8013F931B4037870053F452 /* Products */,
+				D8625D042270D30D000B5B9B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -222,6 +225,13 @@
 				D81710BA1C8160F10023E3D3 /* Info.plist */,
 			);
 			path = VideoCaptureTests;
+			sourceTree = "<group>";
+		};
+		D8625D042270D30D000B5B9B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		D892B28F224D4E51001CCB2B /* UVCCameraControl */ = {
