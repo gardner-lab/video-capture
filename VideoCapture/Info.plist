@@ -40,25 +40,25 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.12.0</string>
+	<string>0.13.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>48</string>
+	<string>52-uvc</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.education</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The app needs access to attached cameras to display a preview and record video to a local file.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019 L. Nathan Perkins &amp; Gardner Lab. All rights reserved.</string>
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>NSCameraUsageDescription</key>
-	<string>The app needs access to attached cameras to display a preview and record video to a local file.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The app needs access to attached microphones to record audio to a local file.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
