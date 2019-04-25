@@ -51,7 +51,7 @@ fileprivate func parseSubstringHexToUInt32(str: String, range: NSRange) -> UInt3
 
 fileprivate func parseDeviceID(deviceID: String) -> (locationID: UInt32, vendorID: UInt32, productID: UInt32)? {
     // validate device ID
-    let pattern = try! NSRegularExpression(pattern: "^0x([a-f0-9]{8})([a-f0-9]{4})([a-f0-9]{4})$", options: .caseInsensitive)
+    let pattern = try! NSRegularExpression(pattern: "^0x([a-f0-9]{4,8})([a-f0-9]{4})([a-f0-9]{4})$", options: .caseInsensitive)
     guard let match = pattern.firstMatch(in: deviceID, options: [], range: NSRange(deviceID.startIndex..<deviceID.endIndex, in: deviceID)) else { return nil }
     
     // pull out parts
