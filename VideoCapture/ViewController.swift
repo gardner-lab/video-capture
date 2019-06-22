@@ -2496,7 +2496,7 @@ extension ViewController: NSTableViewDataSource {
         if row < annotView.annotations.count {
             // assemble data (just dictionary with ID)
             let dict: [String: Any] = ["id": annotView.annotations[row].id]
-            let data = NSArchiver.archivedData(withRootObject: dict)
+            let data = NSKeyedArchiver.archivedData(withRootObject: dict)
             pboard.declareTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI), NSPasteboard.PasteboardType.string], owner: nil)
             pboard.setData(data, forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI))
             pboard.setString(annotView.annotations[row].name, forType: NSPasteboard.PasteboardType.string)
@@ -2611,7 +2611,7 @@ extension ViewController: NSTokenFieldDelegate {
     // Return an array of represented objects to add to the token field.
     func tokenField(_ tokenField: NSTokenField, readFrom pboard: NSPasteboard) -> [Any]? {
         var ret = [Any]()
-        if let data = pboard.data(forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI)), let un = NSUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
+        if let data = pboard.data(forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI)), let un = NSKeyedUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
             if let v = dict["id"], let id = v as? Int {
                 ret.append(TokenROI(id: id))
             }
