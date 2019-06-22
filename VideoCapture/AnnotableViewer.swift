@@ -97,7 +97,7 @@ class AnnotableViewer: NSView {
         super.init(coder: coder)
         
         let className = self.className, nibName = className.components(separatedBy: ".").last!
-        if Bundle.main.loadNibNamed(NSNib.Name(rawValue: nibName), owner: self, topLevelObjects: nil) {
+        if Bundle.main.loadNibNamed(nibName, owner: self, topLevelObjects: nil) {
             if let v = view {
                 v.frame = frame
                 addSubview(v)

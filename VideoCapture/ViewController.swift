@@ -2129,7 +2129,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 self.bufferSize = bytesTotal
             }
             
-            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
+            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: CIFormat.ARGB8, colorSpace: nil)
             
             let bytes = UnsafeBufferPointer<UInt8>(start: self.buffer!.assumingMemoryBound(to: UInt8.self), count: Int(bytesTotal))
             annotSum = [Float](repeating: 0.0, count: extractValues.count)

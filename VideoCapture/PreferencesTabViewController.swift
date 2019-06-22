@@ -13,8 +13,8 @@ class PreferencesTabViewController: NSTabViewController {
         super.viewDidLoad()
         
         // add icons
-        tabViewItems[0].image = NSImage(named: NSImage.Name(rawValue: "Arduino"))
-        tabViewItems[1].image = NSImage(named: NSImage.Name(rawValue: "Video"))
+        tabViewItems[0].image = NSImage(named: "Arduino")
+        tabViewItems[1].image = NSImage(named: "Video")
     }
 }
 
