@@ -82,12 +82,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // make request
             let url = URL(string: "https://www.nathanntg.com/gardner/videocapture/crash.php")!
-            let req = NSMutableURLRequest(url: url)
+            var req = URLRequest(url: url)
             req.httpMethod = "POST"
             req.httpBody = crashReportText?.data(using: String.Encoding.utf8)
             
-            NSURLConnection.sendAsynchronousRequest(req as URLRequest, queue: OperationQueue.main) {
-                (resp, dat, err) -> Void in
+            URLSession.shared.dataTask(with: req) { (_, _, err) in
                 if nil == err {
                     DLog("CRASH: logged")
                 }

@@ -270,15 +270,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasConnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil)
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasDisconnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasDisconnected, object: nil)
         
-        // connect document
-        if let doc = view.window?.windowController?.document {
-            document = doc as? Document
-            copyFromDocument()
-        }
-        
         // initialize preview background
-        if let view = previewView, let root = view.layer {
+        if let view = previewView {
+            let root = CALayer()
             root.backgroundColor = CGColor(gray: 0.2, alpha: 1.0)
+            root.layoutManager = CAConstraintLayoutManager()
+            view.layer = root
             //CGColorGetConstantColor(kCGColorBlack)
         }
         
@@ -294,6 +291,30 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let tf = tokenFeedback {
             tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
         }
+        
+        // connect document
+        let doc = view.window?.windowController?.document
+        checkMediaAccess([.video, .audio], onSuccess: {
+            // run on the main thread
+            DispatchQueue.main.async {
+                if let doc = doc {
+                    self.document = doc as? Document
+                    self.copyFromDocument()
+                }
+            }
+        }, onFailure: {
+            // show alert, then close
+            let alert = NSAlert()
+            alert.messageText = "Unable to access camera or microphone"
+            alert.informativeText = "The application needs access to your camera and microphone to operate. Open \"System Preferences\" and review your privacy settings to provide access."
+            alert.addButton(withTitle: "Ok")
+            
+            // can not open modal here, so defer it (hacky)
+            DispatchQueue.main.async {
+                alert.runModal()
+                self.view.window?.close()
+            }
+        })
         
         // hide/show toggle button
         buttonToggleLed?.isHidden = nil == appPreferences.pinAnalogSecondLED
@@ -319,9 +340,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         }
         
         // end any session
+        avSession?.beginConfiguration()
         stopVideoData()
         stopVideoFile()
         stopAudioFile()
+        avSession?.commitConfiguration()
+        
         stopSession()
         
         // will disappear
@@ -772,9 +796,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // turn off LED before hand (avoid bleaching)
         do {
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
             if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
+                try ioArduino?.writeTo(pin, analogValue: 0)
             }
         }
         catch { }
@@ -789,19 +813,29 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     }
     
     func startSession() {
+        let startRunning: Bool
+        
         if nil == self.avSession {
             // create capture session
             let session = AVCaptureSession()
             self.avSession = session
             session.sessionPreset = AVCaptureSession.Preset.high
             
-            session.startRunning()
+            startRunning = true
+        }
+        else {
+            startRunning = false
         }
         
         // preview layer
         if nil == self.avPreviewLayer {
             let previewLayer = AVCaptureVideoPreviewLayer(session: self.avSession!)
             self.avPreviewLayer = previewLayer
+        }
+        
+        // start session (after adding preview layer)
+        if startRunning {
+            self.avSession!.startRunning()
         }
     }
     
@@ -816,6 +850,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // begin configuring (can be nested)
         session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
         
         // raw data
         let videoData = AVCaptureVideoDataOutput()
@@ -845,9 +882,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             return false
         }
         session.addOutput(videoStill)
-        
-        // commit configuration
-        session.commitConfiguration()
         
         // create timer for redraw
         timerRedraw = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.timerUpdateValues(_:)), userInfo: nil, repeats: true)
@@ -911,6 +945,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         let movieOut = AVCaptureMovieFileOutput()
         movieOut.delegate = avFileControl
         
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
+        
         // add session
         if !session.canAddOutput(movieOut) {
             DLog("Unable to add movie file output.")
@@ -943,6 +983,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         case .aac:
             break
         }
+        
+        // commit configuration
+        avSession?.commitConfiguration()
         
         // store output
         avFileOut = movieOut
@@ -977,6 +1020,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // create nice capture
         let audioOut = AVCaptureAudioFileOutput()
         audioOut.delegate = avFileControl
+        
+        // begin configuring (can be nested)
+        session.beginConfiguration()
+        defer {
+            session.commitConfiguration()
+        }
         
         // add session
         if !session.canAddOutput(audioOut) {
@@ -1047,10 +1096,10 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             avSession?.commitConfiguration()
             return
         }
-        
+
         // start session
         startSession()
-        
+
         // lock configuration
         avSession?.beginConfiguration()
         
@@ -1058,7 +1107,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         stopVideoData()
         stopVideoFile()
         stopAudioFile()
-        
+
         // restart files / data
         if nil == avInputVideo {
             startAudioFile()
@@ -1067,7 +1116,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             startVideoData()
             startVideoFile()
         }
-        
+
         // commit configuration
         avSession?.commitConfiguration()
     }
@@ -1212,6 +1261,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
     private func setupBeforeCapture() -> Bool {
         // create video inputs
         if nil != avInputVideo {
+            // handle in a configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             if !startVideoData() {
                 return false
             }
@@ -1365,9 +1420,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // turn off led and camera
         do {
             try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
             if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
+                try ioArduino?.writeTo(pin, analogValue: 0)
             }
         }
         catch {
@@ -1468,7 +1523,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // turn off LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
                 if let pin = appPreferences.pinAnalogSecondLED {
                     try ioArduino?.writeTo(pin, analogValue: 0)
                 }
@@ -1591,6 +1646,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return
             }
             
+            // start sesion
+            startSession()
+            
+            // handle in configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             // get existing device
             if nil != avInputVideo {
                 // should be defined
@@ -1607,20 +1671,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 avSession!.removeInput(avInputVideo!)
                 avInputVideo = nil
             }
-            else {
-                // start sesion
-                startSession()
-            }
             
             // get device and add it
             if let videoDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.video, AVMediaType.muxed]) {
-                // get formats
-//                for f in videoDevice.formats {
-//                    print("\(f)")
-//                    let d = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
-//                    DLog("\(d)")
-//                }
-                
                 // add input
                 avInputVideo = addInput(videoDevice)
                 
@@ -1642,6 +1695,11 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 // should be defined
                 assert(nil != avSession)
                 
+                // handle in configuration block
+                avSession?.beginConfiguration()
+                defer {
+                    avSession?.commitConfiguration()
+                }
                 
                 // remove video
                 avSession!.removeInput(avInputVideo!)
@@ -1677,6 +1735,15 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 return
             }
             
+            // start sesion
+            startSession()
+            
+            // handle in configuration block
+            avSession?.beginConfiguration()
+            defer {
+                avSession?.commitConfiguration()
+            }
+            
             // get existing device
             if nil != avInputAudio {
                 // should be defined
@@ -1693,10 +1760,6 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 avSession!.removeInput(avInputAudio!)
                 avInputAudio = nil
             }
-            else {
-                // start sesion
-                startSession()
-            }
             
             // get device and add it
             if let audioDevice = getDevice(deviceUniqueID, mediaTypes: [AVMediaType.audio, AVMediaType.muxed]) {
@@ -1710,6 +1773,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             if nil != avInputAudio {
                 // should be defined
                 assert(nil != self.avSession)
+                
+                // handle in configuration block
+                avSession?.beginConfiguration()
+                defer {
+                    avSession?.commitConfiguration()
+                }
                 
                 // remove audio
                 avSession!.removeInput(avInputAudio!)
@@ -2129,7 +2198,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
                 self.bufferSize = bytesTotal
             }
             
-            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: kCIFormatARGB8, colorSpace: nil)
+            self.ciContext?.render(image, toBitmap: self.buffer!, rowBytes: bytesPerRow, bounds: bounds, format: CIFormat.ARGB8, colorSpace: nil)
             
             let bytes = UnsafeBufferPointer<UInt8>(start: self.buffer!.assumingMemoryBound(to: UInt8.self), count: Int(bytesTotal))
             annotSum = [Float](repeating: 0.0, count: extractValues.count)
@@ -2427,7 +2496,7 @@ extension ViewController: NSTableViewDataSource {
         if row < annotView.annotations.count {
             // assemble data (just dictionary with ID)
             let dict: [String: Any] = ["id": annotView.annotations[row].id]
-            let data = NSArchiver.archivedData(withRootObject: dict)
+            let data = NSKeyedArchiver.archivedData(withRootObject: dict)
             pboard.declareTypes([NSPasteboard.PasteboardType(rawValue: kPasteboardROI), NSPasteboard.PasteboardType.string], owner: nil)
             pboard.setData(data, forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI))
             pboard.setString(annotView.annotations[row].name, forType: NSPasteboard.PasteboardType.string)
@@ -2542,7 +2611,7 @@ extension ViewController: NSTokenFieldDelegate {
     // Return an array of represented objects to add to the token field.
     func tokenField(_ tokenField: NSTokenField, readFrom pboard: NSPasteboard) -> [Any]? {
         var ret = [Any]()
-        if let data = pboard.data(forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI)), let un = NSUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
+        if let data = pboard.data(forType: NSPasteboard.PasteboardType(rawValue: kPasteboardROI)), let un = NSKeyedUnarchiver.unarchiveObject(with: data), let dict = un as? NSDictionary {
             if let v = dict["id"], let id = v as? Int {
                 ret.append(TokenROI(id: id))
             }
