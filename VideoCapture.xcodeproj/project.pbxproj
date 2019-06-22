@@ -17,6 +17,7 @@
 		D81710B91C8160F10023E3D3 /* VideoCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81710B81C8160F10023E3D3 /* VideoCaptureTests.swift */; };
 		D81710C11C8161050023E3D3 /* ArduinoIOTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81710C01C8161050023E3D3 /* ArduinoIOTests.swift */; };
 		D827A5F71B40395900C6F4B6 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D827A5F61B40395900C6F4B6 /* AVFoundation.framework */; };
+		D8351E5422BE7C8400C7C060 /* MediaAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8351E5322BE7C8400C7C060 /* MediaAccess.swift */; };
 		D83CF03D1B6FE18900B59532 /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D83CF03A1B6FE15900B59532 /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8566ECA1B419A30006A57BF /* AnnotableViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566EC91B419A30006A57BF /* AnnotableViewer.swift */; };
 		D8566ECC1B41D57D006A57BF /* ColorSwatchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8566ECB1B41D57D006A57BF /* ColorSwatchCell.swift */; };
@@ -93,6 +94,7 @@
 		D81710BA1C8160F10023E3D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D81710C01C8161050023E3D3 /* ArduinoIOTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArduinoIOTests.swift; sourceTree = "<group>"; };
 		D827A5F61B40395900C6F4B6 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		D8351E5322BE7C8400C7C060 /* MediaAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaAccess.swift; sourceTree = "<group>"; };
 		D83CF03A1B6FE15900B59532 /* CrashReporter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CrashReporter.framework; path = Frameworks/CrashReporter.framework; sourceTree = "<group>"; };
 		D83CF03F1B6FE23900B59532 /* VideoCapture-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VideoCapture-Bridging-Header.h"; sourceTree = "<group>"; };
 		D8566EC91B419A30006A57BF /* AnnotableViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotableViewer.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				D801C9341B67DA62000954DF /* Equation.swift */,
 				D801C9311B67DA3F000954DF /* EquationParser.swift */,
 				D8E48E4A1B4593ED0052F4C7 /* Document.swift */,
+				D8351E5322BE7C8400C7C060 /* MediaAccess.swift */,
 				D8E48E0A1B458E250052F4C7 /* Preferences.swift */,
 				D8057A151C712BF50022E8A3 /* PreferencesTabViewController.swift */,
 				D8A44EBF1C6B96AC00DD8058 /* PreferencesViewController.swift */,
@@ -370,6 +373,7 @@
 				D801C9361B67E19A000954DF /* Equation.swift in Sources */,
 				D801C9321B67DA3F000954DF /* EquationParser.swift in Sources */,
 				D8E48E4B1B4593ED0052F4C7 /* Document.swift in Sources */,
+				D8351E5422BE7C8400C7C060 /* MediaAccess.swift in Sources */,
 				D8C386C01B4428B900DE70EA /* ArduinoIO.swift in Sources */,
 				D8A44EC11C6B96AC00DD8058 /* PreferencesViewController.swift in Sources */,
 				D8013F9A1B4037870053F452 /* ViewController.swift in Sources */,
@@ -464,7 +468,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -512,7 +516,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -525,6 +529,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 60;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -534,6 +539,8 @@
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 0.12.0;
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.gardner.video-capture";
 				PRODUCT_MODULE_NAME = VideoCapture;
@@ -551,6 +558,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 60;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -560,6 +568,8 @@
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks/CrashReporter.framework/Headers";
 				INFOPLIST_FILE = VideoCapture/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 0.12.0;
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "edu.gardner.video-capture";
 				PRODUCT_MODULE_NAME = VideoCapture;

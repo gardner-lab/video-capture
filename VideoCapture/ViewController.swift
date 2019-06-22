@@ -270,15 +270,12 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasConnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil)
         nc.addObserver(self, selector: #selector(ViewController.avDeviceWasDisconnected(_:)), name: NSNotification.Name.AVCaptureDeviceWasDisconnected, object: nil)
         
-        // connect document
-        if let doc = view.window?.windowController?.document {
-            document = doc as? Document
-            copyFromDocument()
-        }
-        
         // initialize preview background
-        if let view = previewView, let root = view.layer {
+        if let view = previewView {
+            let root = CALayer()
             root.backgroundColor = CGColor(gray: 0.2, alpha: 1.0)
+            root.layoutManager = CAConstraintLayoutManager()
+            view.layer = root
             //CGColorGetConstantColor(kCGColorBlack)
         }
         
@@ -294,6 +291,30 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         if let tf = tokenFeedback {
             tf.registerForDraggedTypes([NSPasteboard.PasteboardType.string, NSPasteboard.PasteboardType(rawValue: kPasteboardROI)])
         }
+        
+        // connect document
+        let doc = view.window?.windowController?.document
+        checkMediaAccess([.video, .audio], onSuccess: {
+            // run on the main thread
+            DispatchQueue.main.async {
+                if let doc = doc {
+                    self.document = doc as? Document
+                    self.copyFromDocument()
+                }
+            }
+        }, onFailure: {
+            // show alert, then close
+            let alert = NSAlert()
+            alert.messageText = "Unable to access camera or microphone"
+            alert.informativeText = "The application needs access to your camera and microphone to operate. Open \"System Preferences\" and review your privacy settings to provide access."
+            alert.addButton(withTitle: "Ok")
+            
+            // can not open modal here, so defer it (hacky)
+            DispatchQueue.main.async {
+                alert.runModal()
+                self.view.window?.close()
+            }
+        })
         
         // hide/show toggle button
         buttonToggleLed?.isHidden = nil == appPreferences.pinAnalogSecondLED
@@ -772,9 +793,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         
         // turn off LED before hand (avoid bleaching)
         do {
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
             if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
+                try ioArduino?.writeTo(pin, analogValue: 0)
             }
         }
         catch { }
@@ -1365,9 +1386,9 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
         // turn off led and camera
         do {
             try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+            try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
             if let pin = appPreferences.pinAnalogSecondLED {
-                try ioArduino?.writeTo(pin, analogValue: UInt8(0))
+                try ioArduino?.writeTo(pin, analogValue: 0)
             }
         }
         catch {
@@ -1468,7 +1489,7 @@ class ViewController: NSViewController, AVCaptureFileOutputRecordingDelegate, AV
             // turn off LED and camera
             do {
                 try ioArduino?.writeTo(appPreferences.pinDigitalCamera, digitalValue: false)
-                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: UInt8(0))
+                try ioArduino?.writeTo(appPreferences.pinAnalogLED, analogValue: 0)
                 if let pin = appPreferences.pinAnalogSecondLED {
                     try ioArduino?.writeTo(pin, analogValue: 0)
                 }
